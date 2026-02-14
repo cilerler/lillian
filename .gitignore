@@ -451,6 +451,12 @@ _site
 *.ignore/
 
 # =========================
+# local paths
+# =========================
+Directory.Build.local.props
+*.local.slnx
+
+# =========================
 # AI Files
 # =========================
 # .copilotignore
