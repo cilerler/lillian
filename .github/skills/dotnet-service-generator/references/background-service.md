@@ -479,7 +479,7 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
 ## HealthCheck.cs for Background Service
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public class {ServiceName}HealthCheck : IHealthCheck
 {
@@ -529,7 +529,7 @@ public class {ServiceName}HealthCheck : IHealthCheck
 ## Derived Service Example
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
 {
@@ -590,7 +590,7 @@ public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
 ## StartupExtensions.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public static class StartupExtensions
 {

@@ -21,7 +21,7 @@ Services/{ServiceName}/
 ## Contracts/I{ServiceName}.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName}.Contracts;
+namespace {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
 public interface I{ServiceName}
 {
@@ -32,7 +32,7 @@ public interface I{ServiceName}
 ## Constants.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public static class Constants
 {
@@ -43,7 +43,7 @@ public static class Constants
 ## Settings.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public class {ServiceName}Settings
 {
@@ -74,7 +74,7 @@ public class {ServiceName}Settings
 Custom validation attributes for Settings properties:
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName}.Validators;
+namespace {Organization}.{Product}.Services.{ServiceName}.Validators;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public sealed class NoNumericCharactersAttribute : ValidationAttribute
@@ -113,7 +113,7 @@ Common validators for Settings:
 DTOs, records, and entities:
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName}.Models;
+namespace {Organization}.{Product}.Services.{ServiceName}.Models;
 
 public record {ServiceName}Request(string Id, string Data);
 
@@ -130,7 +130,7 @@ public record {ServiceName}Item
 ## Exceptions/{Name}Exception.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName}.Exceptions;
+namespace {Organization}.{Product}.Services.{ServiceName}.Exceptions;
 
 public class {ServiceName}Exception : Exception
 {
@@ -172,7 +172,7 @@ public class {ServiceName}ValidationException : {ServiceName}Exception
 ## Mappers/{Name}Mapper.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName}.Mappers;
+namespace {Organization}.{Product}.Services.{ServiceName}.Mappers;
 
 public static class {ServiceName}Mapper
 {
@@ -194,12 +194,12 @@ public static class {ServiceName}Mapper
 ## Service.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
-using {Company}.{Product}.Services.{ServiceName}.Contracts;
-using {Company}.{Product}.Services.{ServiceName}.Exceptions;
-using {Company}.{Product}.Services.{ServiceName}.Mappers;
-using {Company}.{Product}.Services.{ServiceName}.Models;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+using {Organization}.{Product}.Services.{ServiceName}.Mappers;
+using {Organization}.{Product}.Services.{ServiceName}.Models;
 
 public class {ServiceName} : I{ServiceName}
 {
@@ -286,9 +286,9 @@ public class {ServiceName} : I{ServiceName}
 ## StartupExtensions.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
-using {Company}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
 public static class StartupExtensions
 {

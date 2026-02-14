@@ -5,7 +5,7 @@ Custom health checks for services using `IHealthCheck`.
 ## HealthCheck.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
 public class {ServiceName}HealthCheck : IHealthCheck
 {

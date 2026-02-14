@@ -5,11 +5,11 @@ Minimal API patterns using MapGroup with chained endpoint methods.
 ## Api.cs
 
 ```csharp
-namespace {Company}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName};
 
-using {Company}.{Product}.Services.{ServiceName}.Contracts;
-using {Company}.{Product}.Services.{ServiceName}.Exceptions;
-using {Company}.{Product}.Services.{ServiceName}.Models;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+using {Organization}.{Product}.Services.{ServiceName}.Models;
 
 public static class Api
 {

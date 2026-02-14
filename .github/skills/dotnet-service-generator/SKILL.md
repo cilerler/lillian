@@ -34,7 +34,7 @@ Interactive scaffolder for .NET services with full observability support.
 Ask these questions (one or two at a time):
 
 1. **Service name** - PascalCase (e.g., `PaymentProcessor`, `UserNotification`)
-2. **Namespace** - `{Company}.{Product}` (e.g., `Microsoft.Windows`)
+2. **Namespace** - `{Organization}.{Product}` (e.g., `Microsoft.Windows`)
 3. **Purpose** - Brief description (used to identify dependencies)
 4. **Output location** - Where to generate files
 
