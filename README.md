@@ -14,6 +14,35 @@ This repository provides a structured framework for AI-assisted software develop
 - **📚 Technology-Specific Instructions**: Guidelines for Blazor, C#, SQL, Infrastructure, and Testing
 - **🔄 Multi-AI Support**: Compatible with GitHub Copilot, Claude, and Gemini
 
+## Quick Setup for Multi-AI Support
+
+> [!TIP]
+> **Setting up symlinks for Claude and Google Antigravity**
+> 
+> This repository uses `.github/` as the canonical location for all agent configurations. To enable Claude Code and Google Antigravity support, create symlinks to the shared skills directory:
+> 
+> ```pwsh
+> # Create directories for Claude and Google Antigravity
+> New-Item -ItemType Directory -Force -Path ".\.agent";
+> New-Item -ItemType Directory -Force -Path ".\.claude";
+> 
+> # Link to shared skills library
+> New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target (Resolve-Path ".\.github\skills").Path;
+> New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target (Resolve-Path ".\.github\skills").Path;
+> ```
+> 
+> This ensures all AI assistants reference the same skill definitions while maintaining their own configuration conventions.
+
+
+### AI Assistant Compatibility Matrix
+
+| Feature | GitHub Copilot | Google Antigravity | Claude Code |
+|---------|---------------|-------------------|-------------|
+| **Skills** | `.github/skills/` | `.agent/skills/` | `.claude/skills/` |
+| **System Rules** | `.github/copilot-instructions.md` | `.agent/rules/` | `.claude/rules/` |
+| **Agent Prompt** | None / Custom | `.agent/prompts/` | `CLAUDE.md` (Root) |
+| **Config** | `.vscode/settings.json` | `.agent/config.json` | `.claude/config.json` |
+
 ## Agent Workflow
 
 The system follows a sequential workflow where each agent performs specific tasks and hands off to the next:
