@@ -32,42 +32,15 @@ This repository is designed as a shared AI instructions base. Add it to your cod
 Symlinks are committed and shared with all contributors.
 
 ```pwsh
-# Add as submodule
-git submodule add <this-repo-url> .ai
-
-# Create required directories
-New-Item -ItemType Directory -Force -Path ".\.github"
-New-Item -ItemType Directory -Force -Path ".\.claude"
-New-Item -ItemType Directory -Force -Path ".\.agent"
-
-# Symlink .github content (relative paths for cross-machine portability)
-New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target "..\.ai\.github\agents"
-New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target "..\.ai\.github\instructions"
-New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target "..\.ai\.github\skills"
-New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target "..\.ai\.github\prompts"
-New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target "..\.ai\.github\copilot-instructions.md"
-New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target "..\.ai\.github\CONTRIBUTING.md"
-
-# Symlink root-level AI entry points
-New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target ".ai\CLAUDE.md"
-New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target ".ai\AGENTS.md"
-New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target ".ai\GEMINI.md"
-
-# Symlink skills for Claude and Google Antigravity
-New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target "..\.ai\.github\skills"
-New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target "..\.ai\.github\skills"
+git submodule add -b main <repo-url> .ai;
 ```
 
-Other contributors after cloning:
+After cloning:
+
+Pull updates
 
 ```pwsh
-git submodule update --init --recursive
-```
-
-Pull updates from the base repo:
-
-```pwsh
-git submodule update --remote .ai
+git submodule update --remote .ai;
 ```
 
 ### Public Repositories (Local Clone)
@@ -75,8 +48,7 @@ git submodule update --remote .ai
 Nothing is committed. Each developer runs the setup locally.
 
 ```pwsh
-# Clone locally (not a submodule)
-git clone <this-repo-url> .ai
+git clone <repo-url> .ai;
 
 # Exclude from git tracking (local-only, never committed)
 @"
@@ -94,38 +66,67 @@ GEMINI.md
 .github/prompts
 .github/copilot-instructions.md
 .github/CONTRIBUTING.md
-"@ | Add-Content -Path ".\.git\info\exclude"
-
-# Create required directories
-New-Item -ItemType Directory -Force -Path ".\.github"
-New-Item -ItemType Directory -Force -Path ".\.claude"
-New-Item -ItemType Directory -Force -Path ".\.agent"
-
-# Create symlinks (absolute paths are fine since nothing is committed)
-New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target (Resolve-Path ".\.ai\.github\agents").Path
-New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target (Resolve-Path ".\.ai\.github\instructions").Path
-New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
-New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target (Resolve-Path ".\.ai\.github\prompts").Path
-New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target (Resolve-Path ".\.ai\.github\copilot-instructions.md").Path
-New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target (Resolve-Path ".\.ai\.github\CONTRIBUTING.md").Path
-New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target (Resolve-Path ".\.ai\CLAUDE.md").Path
-New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target (Resolve-Path ".\.ai\AGENTS.md").Path
-New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target (Resolve-Path ".\.ai\GEMINI.md").Path
-New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
-New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
+"@ | Add-Content -Path ".\.git\info\exclude";
 ```
 
 Pull updates:
 
 ```pwsh
-cd .ai; git pull; cd ..
+cd .ai; git pull; cd ..;
+```
+
+### Create Symlinks
+
+Run once after either setup above:
+
+```pwsh
+# Create required directories
+New-Item -ItemType Directory -Force -Path ".\.github";
+New-Item -ItemType Directory -Force -Path ".\.claude";
+New-Item -ItemType Directory -Force -Path ".\.agent";
+
+# Symlink .github content
+New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target (Resolve-Path ".\.ai\.github\agents").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target (Resolve-Path ".\.ai\.github\instructions").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target (Resolve-Path ".\.ai\.github\prompts").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target (Resolve-Path ".\.ai\.github\copilot-instructions.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target (Resolve-Path ".\.ai\.github\CONTRIBUTING.md").Path;
+
+# Symlink root-level AI entry points
+New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target (Resolve-Path ".\.ai\CLAUDE.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target (Resolve-Path ".\.ai\AGENTS.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target (Resolve-Path ".\.ai\GEMINI.md").Path;
+
+# Symlink skills for Claude and Google Antigravity
+New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path;
+New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path;
 ```
 
 ### Setup Notes
 
-- Private repos use relative symlink targets so they work across machines; public repos use absolute paths since nothing is committed
 - If your repo already has `.github/CONTRIBUTING.md` or `.github/copilot-instructions.md`, skip those symlinks and keep your project-specific files
 - `.claude/settings.local.json` is project-specific — copy and customize per project rather than symlinking
+
+### Managing Symlinks
+
+**List all symlinks** (recursively, including hidden items):
+
+```pwsh
+Get-ChildItem -Recurse -Force | Where-Object {$_.LinkType};
+```
+
+**Remove a symlink** (does not delete the target — omit `-Recurse` to avoid accidentally deleting target contents):
+
+```pwsh
+# File symlink
+Remove-Item -Path ".\CLAUDE.md";
+
+# Directory symlink
+Remove-Item -Path ".\.github\agents";
+```
+
+> **Reference:** [New-Item (Microsoft.PowerShell.Management)](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-item) · [about_Symbolic_Links](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_symbolic_links)
 
 ---
 
