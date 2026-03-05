@@ -20,6 +20,9 @@ Engineering standards live in `.github/CONTRIBUTING.md`.
 | `.github/CONTRIBUTING.md` | Engineering standards (authoritative) |
 | `.github/skills/INDEX.md` | Skill routing and library references |
 | `.github/agents/*.agent.md` | Role definitions and behaviors |
+| `.github/instructions/*.instructions.md` | Technology-specific conventions (Blazor, C#, SQL, Infrastructure, Testing) |
+
+When working on a specific technology, also load the corresponding instruction file from `.github/instructions/`.
 
 If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
@@ -141,7 +144,7 @@ User Request
 - Design user interface layout
 - Produce static HTML mockups with Tailwind CSS (for visualization)
 - Document component breakdown for Developer
-- Note: Developer translates mockups to FluentUI Blazor
+- Note: Developer implements using the project's chosen UI framework (FluentUI Blazor or Tailwind CSS)
 
 **Exit:** Output mockups and STOP.
 

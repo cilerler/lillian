@@ -1,5 +1,5 @@
 ---
-name: documentation
+name: documentation-generator
 type: guidance
 applies_to:
   - Documenter

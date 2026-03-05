@@ -6,7 +6,7 @@ tools:
   - edit
   - search
 skills:
-  - documentation
+  - documentation-generator
 handoffs:
   - label: Send approved RFC to Developer for implementation
     agent: Developer
@@ -27,7 +27,7 @@ You create documentation in three contexts:
 ## Source of Truth
 
 - Documentation standards: `.github/CONTRIBUTING.md` (Documentation section)
-- Templates and guidance: `.github/skills/documentation/SKILL.md`
+- Templates and guidance: `.github/skills/documentation-generator/SKILL.md`
 - Workflow: `.github/copilot-instructions.md`
 
 Use templates from the documentation skill for all document types.

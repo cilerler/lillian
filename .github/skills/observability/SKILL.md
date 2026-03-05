@@ -12,7 +12,8 @@ triggers:
   - alerting
   - SLI
   - observability
-references: []
+references:
+  - templates/grafana-dashboard.md
 summary: Standard SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns for .NET services.
 ---
 
@@ -68,6 +69,12 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 ---
 
 ## Dashboard Templates
+
+See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for complete Grafana JSON templates.
+
+**Output location**: `tools/grafana/`
+
+**Required**: All dashboards must include `env` template variable with values: `integration`, `testing`, `staging`, `production`. All PromQL queries must filter by `env="$env"`.
 
 ### Service Health Dashboard
 

@@ -31,7 +31,7 @@ You produce technical designs. You do NOT review code (that's the Reviewer's job
 - Engineering standards: `.github/CONTRIBUTING.md`
 - Skill routing: `.github/skills/INDEX.md`
 - Workflow: `.github/copilot-instructions.md`
-- Design doc template: `.github/skills/documentation/templates/design-doc.md`
+- Design doc template: `.github/skills/documentation-generator/templates/design-doc.md`
 - Observability patterns: `.github/skills/observability/SKILL.md`
 
 ---

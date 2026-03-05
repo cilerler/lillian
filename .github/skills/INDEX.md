@@ -5,19 +5,6 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## dotnet-transformation-service
-- Path: `.github/skills/dotnet-transformation-service/SKILL.md`
-- Applies to: Developer (implementation), Architect (design)
-- Mandatory when:
-  - Creating a new transformation service project
-  - Scaffolding ETL service repository structure
-- Triggers:
-  - "create transformation service"
-  - "new etl service"
-  - "create service repository"
-
----
-
 ## dotnet-service-generator
 - Path: `.github/skills/dotnet-service-generator/SKILL.md`
 - Applies to: Developer (implementation), Architect (review)
@@ -47,8 +34,8 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## plantuml-sequence
-- Path: `.github/skills/plantuml-sequence/SKILL.md`
+## plantuml-sequence-diagram-generator
+- Path: `.github/skills/plantuml-sequence-diagram-generator/SKILL.md`
 - Applies to: Planner, Developer, Architect
 - Mandatory when:
   - A sequence or interaction diagram is requested
@@ -93,8 +80,8 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## documentation
-- Path: `.github/skills/documentation/SKILL.md`
+## documentation-generator
+- Path: `.github/skills/documentation-generator/SKILL.md`
 - Applies to: Documenter, Architect (ADRs, RFCs)
 - Mandatory when:
   - Creating ADRs or RFCs
@@ -111,6 +98,21 @@ If multiple skills match a task, apply all applicable skills.
   - "SOP"
   - "handover"
   - "data dictionary"
+
+---
+
+## excalidraw-diagram-generator
+- Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
+- Applies to: Developer, Architect, Documenter
+- Mandatory when:
+  - Creating visual diagrams of workflows, architectures, or concepts
+  - Generating Excalidraw JSON files
+- Triggers:
+  - "excalidraw"
+  - "diagram"
+  - "visualize"
+  - "architecture diagram"
+  - "workflow diagram"
 
 ---
 

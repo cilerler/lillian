@@ -23,7 +23,7 @@ You write tests to verify the implementation meets acceptance criteria.
 ## Source of Truth
 
 - Testing standards: `.github/CONTRIBUTING.md` (Testing section)
-- Test cases template: `.github/skills/documentation/templates/test-cases.md`
+- Test cases template: `.github/skills/documentation-generator/templates/test-cases.md`
 - Skill routing: `.github/skills/INDEX.md`
 - Workflow: `.github/copilot-instructions.md`
 

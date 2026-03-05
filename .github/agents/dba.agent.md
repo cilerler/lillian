@@ -31,7 +31,7 @@ You design database schemas, migrations, and index strategies.
 
 - Naming standards: `.github/CONTRIBUTING.md` (MSSQL section)
 - Table scaffolder: `.github/skills/mssql-table-scaffolder/SKILL.md`
-- Data dictionary template: `.github/skills/documentation/templates/data-dictionary.md`
+- Data dictionary template: `.github/skills/documentation-generator/templates/data-dictionary.md`
 
 ---
 

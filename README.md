@@ -14,26 +14,6 @@ This repository provides a structured framework for AI-assisted software develop
 - **📚 Technology-Specific Instructions**: Guidelines for Blazor, C#, SQL, Infrastructure, and Testing
 - **🔄 Multi-AI Support**: Compatible with GitHub Copilot, Claude, and Gemini
 
-## Quick Setup for Multi-AI Support
-
-> [!TIP]
-> **Setting up symlinks for Claude and Google Antigravity**
-> 
-> This repository uses `.github/` as the canonical location for all agent configurations. To enable Claude Code and Google Antigravity support, create symlinks to the shared skills directory:
-> 
-> ```pwsh
-> # Create directories for Claude and Google Antigravity
-> New-Item -ItemType Directory -Force -Path ".\.agent";
-> New-Item -ItemType Directory -Force -Path ".\.claude";
-> 
-> # Link to shared skills library
-> New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target (Resolve-Path ".\.github\skills").Path;
-> New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target (Resolve-Path ".\.github\skills").Path;
-> ```
-> 
-> This ensures all AI assistants reference the same skill definitions while maintaining their own configuration conventions.
-
-
 ### AI Assistant Compatibility Matrix
 
 | Feature | GitHub Copilot | Google Antigravity | Claude Code |
@@ -42,6 +22,112 @@ This repository provides a structured framework for AI-assisted software develop
 | **System Rules** | `.github/copilot-instructions.md` | `.agent/rules/` | `.claude/rules/` |
 | **Agent Prompt** | None / Custom | `.agent/prompts/` | `CLAUDE.md` (Root) |
 | **Config** | `.vscode/settings.json` | `.agent/config.json` | `.claude/config.json` |
+
+## Usage in Your Repositories
+
+This repository is designed as a shared AI instructions base. Add it to your code repositories as a submodule (private) or local clone (public), then symlink the contents into place.
+
+### Private Repositories (Git Submodule)
+
+Symlinks are committed and shared with all contributors.
+
+```pwsh
+# Add as submodule
+git submodule add <this-repo-url> .ai
+
+# Create required directories
+New-Item -ItemType Directory -Force -Path ".\.github"
+New-Item -ItemType Directory -Force -Path ".\.claude"
+New-Item -ItemType Directory -Force -Path ".\.agent"
+
+# Symlink .github content (relative paths for cross-machine portability)
+New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target "..\.ai\.github\agents"
+New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target "..\.ai\.github\instructions"
+New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target "..\.ai\.github\skills"
+New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target "..\.ai\.github\prompts"
+New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target "..\.ai\.github\copilot-instructions.md"
+New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target "..\.ai\.github\CONTRIBUTING.md"
+
+# Symlink root-level AI entry points
+New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target ".ai\CLAUDE.md"
+New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target ".ai\AGENTS.md"
+New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target ".ai\GEMINI.md"
+
+# Symlink skills for Claude and Google Antigravity
+New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target "..\.ai\.github\skills"
+New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target "..\.ai\.github\skills"
+```
+
+Other contributors after cloning:
+
+```pwsh
+git submodule update --init --recursive
+```
+
+Pull updates from the base repo:
+
+```pwsh
+git submodule update --remote .ai
+```
+
+### Public Repositories (Local Clone)
+
+Nothing is committed. Each developer runs the setup locally.
+
+```pwsh
+# Clone locally (not a submodule)
+git clone <this-repo-url> .ai
+
+# Exclude from git tracking (local-only, never committed)
+@"
+
+# AI instructions base
+.ai/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
+.agent/
+.github/agents
+.github/instructions
+.github/skills
+.github/prompts
+.github/copilot-instructions.md
+.github/CONTRIBUTING.md
+"@ | Add-Content -Path ".\.git\info\exclude"
+
+# Create required directories
+New-Item -ItemType Directory -Force -Path ".\.github"
+New-Item -ItemType Directory -Force -Path ".\.claude"
+New-Item -ItemType Directory -Force -Path ".\.agent"
+
+# Create symlinks (absolute paths are fine since nothing is committed)
+New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target (Resolve-Path ".\.ai\.github\agents").Path
+New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target (Resolve-Path ".\.ai\.github\instructions").Path
+New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
+New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target (Resolve-Path ".\.ai\.github\prompts").Path
+New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target (Resolve-Path ".\.ai\.github\copilot-instructions.md").Path
+New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target (Resolve-Path ".\.ai\.github\CONTRIBUTING.md").Path
+New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target (Resolve-Path ".\.ai\CLAUDE.md").Path
+New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target (Resolve-Path ".\.ai\AGENTS.md").Path
+New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target (Resolve-Path ".\.ai\GEMINI.md").Path
+New-Item -ItemType SymbolicLink -Path ".\.claude\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
+New-Item -ItemType SymbolicLink -Path ".\.agent\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path
+```
+
+Pull updates:
+
+```pwsh
+cd .ai; git pull; cd ..
+```
+
+### Setup Notes
+
+- Private repos use relative symlink targets so they work across machines; public repos use absolute paths since nothing is committed
+- If your repo already has `.github/CONTRIBUTING.md` or `.github/copilot-instructions.md`, skip those symlinks and keep your project-specific files
+- `.claude/settings.local.json` is project-specific — copy and customize per project rather than symlinking
+
+---
 
 ## Agent Workflow
 
@@ -93,11 +179,23 @@ root/
 │   │   ├── infrastructure.instructions.md
 │   │   ├── sql.instructions.md
 │   │   └── tests.instructions.md
+│   ├── prompts/                   # Agent invocation prompts
+│   │   ├── add-grafana-dashboard.prompt.md
+│   │   ├── add-tests.prompt.md
+│   │   ├── code-review.prompt.md
+│   │   ├── my-code-review-comprehensive.prompt.md
+│   │   ├── my-code-review-requirements.prompt.md
+│   │   ├── my-repo-analysis.prompt.md
+│   │   ├── new-service.prompt.md
+│   │   ├── scaffold-table.prompt.md
+│   │   ├── sequence-plantuml-diagram.prompt.md
+│   │   └── update-docs.prompt.md
 │   ├── skills/                    # Reusable domain skills
 │   │   ├── INDEX.md
+│   │   ├── documentation-generator/
 │   │   ├── dotnet-service-generator/
-│   │   ├── mssql-table-scaffolder/
 │   │   ├── infrastructure/
+│   │   ├── mssql-table-scaffolder/
 │   │   ├── observability/
 │   │   └── plantuml-sequence-diagram-generator/
 │   ├── CONTRIBUTING.md            # Engineering standards (source of truth)
@@ -112,9 +210,10 @@ root/
 
 The repository includes production-ready skills for common engineering tasks:
 
+- **documentation-generator**: Templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, and more
 - **dotnet-service-generator**: Scaffolds .NET service modules with observability and DI conventions
-- **mssql-table-scaffolder**: Generates MSSQL tables or migration scripts following enterprise conventions
 - **infrastructure**: Docker and Kubernetes patterns for .NET services
+- **mssql-table-scaffolder**: Generates MSSQL tables or migration scripts following enterprise conventions
 - **observability**: SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns
 - **plantuml-sequence-diagram-generator**: Generates professional PlantUML sequence diagrams
 
@@ -130,7 +229,7 @@ See [.github/skills/INDEX.md](.github/skills/INDEX.md) for detailed skill docume
 
 ### For Developers
 
-1. Clone this repository as a template for AI-assisted projects
+1. Add this repository to your project (see [Usage in Your Repositories](#usage-in-your-repositories))
 2. Review `.github/CONTRIBUTING.md` for engineering standards
 3. Customize agent roles in `.github/agents/` as needed
 4. Add project-specific skills to `.github/skills/`

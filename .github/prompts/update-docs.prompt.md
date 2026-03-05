@@ -7,6 +7,6 @@ description: Update documentation for changes
 
 Load and follow `.github/agents/documenter.agent.md`.
 
-Also load `.github/skills/documentation/SKILL.md` for available templates.
+Also load `.github/skills/documentation-generator/SKILL.md` for available templates.
 
 The agent contains complete documentation workflow, and the skill contains all template references.
