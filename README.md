@@ -40,7 +40,7 @@ After cloning:
 Pull updates
 
 ```pwsh
-git submodule update --remote .ai;
+git submodule update --remote ".ai";
 ```
 
 ### Public Repositories (Local Clone)
