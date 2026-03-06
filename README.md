@@ -32,7 +32,7 @@ This repository is designed as a shared AI instructions base. Add it to your cod
 Symlinks are committed and shared with all contributors.
 
 ```pwsh
-git submodule add -b main <repo-url> .ai;
+git submodule add -b main https://github.com/cilerler/melis.git ".ai";
 ```
 
 After cloning:
@@ -48,7 +48,7 @@ git submodule update --remote .ai;
 Nothing is committed. Each developer runs the setup locally.
 
 ```pwsh
-git clone <repo-url> .ai;
+git clone https://github.com/cilerler/melis.git ".ai";
 
 # Exclude from git tracking (local-only, never committed)
 @"
