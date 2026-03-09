@@ -25,12 +25,12 @@ triggers:
   - performance improvement
   - test cases
 references:
-  - templates/adr.md
-  - templates/rfc.md
+  - templates/architecture-decision-record.md
+  - templates/request-for-comments.md
   - templates/design-doc.md
   - templates/runbook.md
   - templates/postmortem.md
-  - templates/sop.md
+  - templates/standard-operating-procedure.md
   - templates/handover.md
   - templates/data-dictionary.md
   - templates/business-glossary.md
@@ -72,7 +72,7 @@ Provides standardized templates for all documentation types used in the reposito
 ## Templates
 
 ### Architecture Decision Record (ADR)
-**Template:** [templates/adr.md](templates/adr.md)
+**Template:** [templates/architecture-decision-record.md](templates/architecture-decision-record.md)
 
 Use when making or changing architecture. Documents:
 - Context and assumptions
@@ -85,7 +85,7 @@ Use when making or changing architecture. Documents:
 ---
 
 ### Request for Comments (RFC)
-**Template:** [templates/rfc.md](templates/rfc.md)
+**Template:** [templates/request-for-comments.md](templates/request-for-comments.md)
 
 Use before implementing big changes. Documents:
 - Context and proposal
@@ -161,7 +161,7 @@ Use after incidents. Documents:
 ---
 
 ### Standard Operating Procedure (SOP)
-**Template:** [templates/sop.md](templates/sop.md)
+**Template:** [templates/standard-operating-procedure.md](templates/standard-operating-procedure.md)
 
 Use for repetitive tasks requiring compliance and consistency. Documents:
 - Purpose and frequency

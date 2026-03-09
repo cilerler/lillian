@@ -254,7 +254,7 @@ Documenter is invoked twice in the workflow:
 **Entry:** Approved technical design from Architect
 
 **Responsibilities:**
-- Create RFC from Architect's technical design using `templates/rfc.md`
+- Create RFC from Architect's technical design using `templates/request-for-comments.md`
 
 **Exit:** Output RFC and STOP.
 

@@ -44,7 +44,7 @@ Use templates from the documentation skill for all document types.
 - Schema design from DBA (if applicable)
 - UI mockups from Designer (if applicable)
 
-**Action:** Create RFC using `templates/rfc.md` from documentation skill.
+**Action:** Create RFC using `templates/request-for-comments.md` from documentation skill.
 
 **Exit:** Output RFC and STOP.
 
