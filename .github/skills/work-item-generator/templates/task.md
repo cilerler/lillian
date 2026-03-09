@@ -2,8 +2,11 @@
 
 ## Classification
 
+<!-- All classification fields are optional. Include only those that have been provided. -->
+
 | Field | Value |
 |-------|-------|
+| Area Path | <!-- e.g., Backend/Auth, Frontend/Dashboard --> |
 | Effort | <!-- Story points: 1, 2, 3, 5, 8, 13, 21 --> |
 
 ## Description

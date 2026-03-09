@@ -2,8 +2,11 @@
 
 ## Classification
 
+<!-- All classification fields are optional. Include only those that have been provided. -->
+
 | Field | Value |
 |-------|-------|
+| Area Path | <!-- e.g., Backend/Auth, Frontend/Dashboard --> |
 | Value Area | <!-- 👷 Architecture / 🧑‍💼 Business --> |
 | Value Ranking | <!-- 🪨 Platinum / 🥇 Gold / 🥈 Silver / 🥉 Bronze --> |
 | Priority | <!-- 🔴 Urgent / 🟡 High / 🟢 Medium / 🔵 Low --> |

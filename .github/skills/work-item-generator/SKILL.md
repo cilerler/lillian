@@ -63,9 +63,15 @@ Product Side                    Developer Side
 | Enhancement | 🛠️ | Developer | An improvement to refactoring or technical debt |
 | Task | ✔️ | Developer | A specific piece of work (child of Story, Bug, Spike, or Enhancement) |
 
-## Shared Classification Fields
+## Classification Fields
 
-These fields appear on templates depending on the tier. Product-side items carry Value Area, Value Ranking, and Priority. Developer-side items (Story, Bug, Spike, Enhancement) carry all five. Tasks carry only Effort.
+All classification fields are **optional**. Offer them when relevant, but accept whatever the user provides. If a field is not provided, **omit it entirely** from the generated output — no empty placeholders, no "N/A" rows.
+
+The creator may be a non-technical user documenting a need, or a developer in a rush capturing a situation. Classification is typically refined later during backlog refinement, not at creation time.
+
+### Area Path
+
+A hierarchical label indicating which part of the product or codebase this item belongs to (e.g., `Backend/Auth`, `Frontend/Dashboard`). Applicable to all types.
 
 ### Impact (developer-side only, single value)
 
@@ -108,6 +114,8 @@ The primary dimension this work affects. Each item has exactly one Impact.
 
 Story points using the Fibonacci sequence: **1, 2, 3, 5, 8, 13, 21**
 
+Formula: `MapToClosestFibonacci(Hours × Complexity × Risk)`
+
 Effort is estimated at the developer-item and task level. Product-side items derive their effort from the sum of their children.
 
 ### Links
@@ -127,56 +135,74 @@ If the user hasn't specified a type, ask them to pick one.
 
 If the type is implied by their message (e.g. "something is broken" implies Bug, "we should investigate" implies Spike), confirm the inferred type before proceeding.
 
-### Step 2: Gather Missing Information
+**Gentle steering:** If the description sounds like a different type than what the user picked, gently suggest the better fit. For example:
+- A "bug" that describes how something *could* work better (but isn't broken) is likely an **Enhancement**.
+- A request for a "new feature" that is really about refactoring internal code is likely an **Enhancement** (see [Enhancement vs. Bug](#enhancement-vs-bug) below).
+- A "story" with no clear user benefit might be a **Task** or **Spike**.
 
-Each type has required and optional fields. Parse what the user has already provided, then ask only for what's missing. Group related questions together and ask in a single prompt rather than one at a time. Mark which questions are optional so the user can skip them.
+Accept the user's choice if they insist — the goal is to guide, not gate-keep.
 
-The required fields per type are listed below. Read the corresponding template for the full structure.
+### Step 2: Gather Content
+
+Each type has content fields that describe the work itself. Parse what the user has already provided, then ask only for what's missing. Group related questions together and ask in a single prompt rather than one at a time.
+
+Classification fields (Area Path, Impact, Value Area, Value Ranking, Priority, Effort) are **never required at creation time**. If the user provides them, include them. If not, omit them silently. You may offer to help fill them in if the conversation feels unhurried, but never block on them.
+
+The content fields per type are listed below. Read the corresponding template for the full structure.
 
 #### Initiative (🎯)
-**Required:** Title, Vision/Strategic Goal, Business Objectives
-**Ask if missing:** Value Area, Value Ranking, Priority, Success Metrics, Scope, Timeline, Stakeholders, Links
+**Gather:** Title, Vision/Strategic Goal, Business Objectives
+**Offer if relevant:** Success Metrics, Scope, Timeline, Stakeholders, Links
 
 #### Epic (🚀)
-**Required:** Title, Description, Business Value
-**Ask if missing:** Value Area, Value Ranking, Priority, Acceptance Criteria, Success Metrics, Target Timeline, Child Features, Links
+**Gather:** Title, Description, Business Value
+**Offer if relevant:** Acceptance Criteria, Success Metrics, Target Timeline, Child Features, Links
 
 #### Feature (🎁)
-**Required:** Title, Description, User/Customer Value, Acceptance Criteria
-**Ask if missing:** Value Area, Value Ranking, Priority, Dependencies, Design Considerations, Out of Scope, Links
+**Gather:** Title, Description, User/Customer Value, Acceptance Criteria
+**Offer if relevant:** Dependencies, Design Considerations, Out of Scope, Links
 
 #### Story (💡)
-**Required:** Title, User Story statement (As a ... I want ... so that ...), Acceptance Criteria
-**Ask if missing:** Impact, Value Area, Value Ranking, Priority, Effort, Definition of Done, Notes/Context, Links
+**Gather:** Title, User Story statement (As a ... I want ... so that ...), Acceptance Criteria
+**Offer if relevant:** Definition of Done, Notes/Context, Links
 
 #### Bug (🪲)
-**Required:** Title, Expected Behavior, Actual Behavior, Steps to Reproduce
-**Ask if missing:** Impact, Value Area, Value Ranking, Priority, Effort, Environment, Frequency, Screenshots/Logs, Workaround, Links
+**Gather:** Title, Expected Behavior, Actual Behavior, Steps to Reproduce
+**Offer if relevant:** Environment, Frequency, Screenshots/Logs, Workaround, Links
 
 #### Spike (🔬)
-**Required:** Title, Question/Hypothesis, Timebox
-**Ask if missing:** Impact, Value Area, Value Ranking, Priority, Effort, Context/Background, Expected Output, Success Criteria, Links
+**Gather:** Title, Question/Hypothesis, Timebox
+**Offer if relevant:** Context/Background, Expected Output, Success Criteria, Links
 
 #### Enhancement (🛠️)
-**Required:** Title, Current State, Proposed Improvement, Justification
-**Ask if missing:** Impact, Value Area, Value Ranking, Priority, Effort, Affected Areas, Risks, Migration Plan, Links
+**Gather:** Title, Current State, Proposed Improvement, Justification
+**Offer if relevant:** Affected Areas, Risks, Migration Plan, Links
 
 #### Task (✔️)
-**Required:** Title, Description, Acceptance Criteria
-**Ask if missing:** Effort, Links
+**Gather:** Title, Description, Acceptance Criteria
+**Offer if relevant:** Links
 
 ### Step 3: Generate the Document
 
-Once you have the required information:
+Once you have enough content:
 
 1. Read the corresponding template from `templates/`
 2. Fill in all provided fields
-3. Leave optional sections with placeholder markers for the user to fill later
-4. Present the completed document to the user
+3. Include classification fields **only** if the user provided them
+4. **Omit** any section that has no content — no empty tables, no placeholder rows, no "N/A"
+5. Present the completed document to the user
 
 ## Guidelines
 
+- **Offer, don't enforce.** Classification fields are helpful but never mandatory at creation time. If the user provides them, include them. If not, omit them entirely. Never block generation on missing classification data.
 - **Be conversational.** Ask questions naturally, not like a form. If the user gives a paragraph explaining a bug, extract the relevant parts rather than asking them to repeat themselves in a structured format.
 - **Infer where possible.** If the user says "the button doesn't work on mobile Safari," you already have environment info (mobile Safari) and partial reproduction context. Don't re-ask for things they've already told you.
-- **Suggest Impact.** If the user doesn't specify Impact, suggest one based on context. A bug about data corruption is clearly 🗃️ Data. A request for a new API endpoint is 🧬 Functionality. A complaint about slow load times is ⚖️ Performance & Stability.
+- **Suggest, don't assign.** If context makes an Impact or Priority obvious, you may suggest it (e.g., "This sounds like a 🗃️ Data impact — want me to include that?"). Accept "no" gracefully and omit the field.
 - **Keep it lean.** Don't pad the output with boilerplate the user will just delete. If a section has no content, omit it rather than leaving "N/A" everywhere.
+- **Gently steer.** If the user's description doesn't match their chosen type, suggest the better fit — but accept their decision. The goal is guidance, not gatekeeping.
+
+## Enhancement vs. Bug {#enhancement-vs-bug}
+
+An **Enhancement** (🛠️) covers refactoring, tech debt reduction, and improvements to existing functionality that isn't broken. A **Bug** (🪲) is something that is objectively broken or behaves differently than specified.
+
+If someone files a "bug" that describes how something *could* work better rather than something that's actually broken, gently suggest it might be an Enhancement. Conversely, if an "enhancement" describes broken behavior, suggest Bug instead.
