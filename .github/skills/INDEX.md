@@ -101,6 +101,27 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## work-item-generator
+- Path: `.github/skills/work-item-generator/SKILL.md`
+- Applies to: Planner, Developer, Architect
+- Mandatory when:
+  - Creating work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks)
+  - Filing bugs or logging issues
+- Triggers:
+  - "initiative"
+  - "epic"
+  - "feature"
+  - "story"
+  - "bug"
+  - "spike"
+  - "enhancement"
+  - "task"
+  - "create issue"
+  - "create ticket"
+  - "file a bug"
+
+---
+
 ## excalidraw-diagram-generator
 - Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
 - Applies to: Developer, Architect, Documenter
