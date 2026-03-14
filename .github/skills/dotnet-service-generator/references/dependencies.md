@@ -4,21 +4,66 @@ Patterns for optional service dependencies. Add to constructor after core depend
 
 ## IHttpClientFactory
 
+**Important**: Resilience policies (retry, circuit breaker, timeout) MUST be configured in the service's own `StartupExtensions.cs`, colocated with the HTTP client registration. Do NOT add resilience at the host level (`ProgramExtensions.cs` / `ConfigureHttpClientDefaults`) — it stacks rather than overrides, causing double retries and conflicting timeouts.
+
 ```csharp
 // Field
-private readonly HttpClient _httpClient;
+private readonly IHttpClientFactory _httpClientFactory;
 
 // Constructor parameter
 IHttpClientFactory httpClientFactory
 
 // Constructor body
-_httpClient = httpClientFactory.CreateClient(nameof({ServiceName}));
+_httpClientFactory = httpClientFactory;
 
-// StartupExtensions - add to required services
-typeof(IHttpClientFactory)
+// Service method usage
+var httpClient = _httpClientFactory.CreateClient(Constants.HttpClientName);
+var response = await httpClient.PostAsync(url, content);
 
-// Usage
-var response = await _httpClient.GetAsync(requestUri, cancellationToken);
+// Settings - add HttpTimeout property with a sensible default
+public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(120);
+
+// StartupExtensions - register named client with resilience pipeline
+// StartupExtensions - register named client with resilience pipeline
+services.AddHttpClient(Constants.HttpClientName)
+    .AddResilienceHandler("{ServiceName}Pipeline", static (builder, context) =>
+    {
+        var settings = context.ServiceProvider.GetRequiredService<IOptions<{ServiceName}Settings>>().Value;
+
+        builder.AddRetry(new HttpRetryStrategyOptions
+        {
+            BackoffType = DelayBackoffType.Exponential,
+            MaxRetryAttempts = settings.MaxRetryAttempts,
+            UseJitter = true
+        });
+
+        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            SamplingDuration = TimeSpan.FromSeconds(90),
+            FailureRatio = 0.2,
+            MinimumThroughput = 100,
+            ShouldHandle = static args =>
+            {
+                return ValueTask.FromResult(args is
+                {
+                    Outcome.Result.StatusCode:
+                        HttpStatusCode.RequestTimeout or
+                        HttpStatusCode.TooManyRequests or
+                        HttpStatusCode.InternalServerError or
+                        HttpStatusCode.BadGateway or
+                        HttpStatusCode.ServiceUnavailable or
+                        HttpStatusCode.GatewayTimeout
+                });
+            }
+        });
+
+        builder.AddTimeout(settings.HttpTimeout);
+    });
+
+// Required usings in StartupExtensions
+// using System.Net;
+// using Microsoft.Extensions.Http.Resilience;
+// using Polly;
 ```
 
 ## HybridCache
