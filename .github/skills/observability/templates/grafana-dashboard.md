@@ -10,6 +10,7 @@ Grafana dashboard JSON templates for .NET services with environment separation.
 tools/grafana/
 ├── service-health-dashboard.json
 ├── api-performance-dashboard.json
+├── background-worker-dashboard.json
 └── resource-usage-dashboard.json
 ```
 
@@ -38,13 +39,13 @@ Every dashboard **must** include these three Grafana template variables. Place t
 {
   "name": "env",
   "type": "custom",
-  "query": "integration,testing,staging,production",
-  "current": { "text": "production", "value": "production" },
+  "query": "Integration,Testing,Staging,Production",
+  "current": { "text": "Production", "value": "Production" },
   "options": [
-    { "text": "integration", "value": "integration", "selected": false },
-    { "text": "testing", "value": "testing", "selected": false },
-    { "text": "staging", "value": "staging", "selected": false },
-    { "text": "production", "value": "production", "selected": true }
+    { "text": "Integration", "value": "Integration", "selected": false },
+    { "text": "Testing", "value": "Testing", "selected": false },
+    { "text": "Staging", "value": "Staging", "selected": false },
+    { "text": "Production", "value": "Production", "selected": true }
   ],
   "hide": 0,
   "label": "Environment",
@@ -153,6 +154,64 @@ sum by (generation) (rate(process_runtime_dotnet_gc_collections_total{env="$env"
 process_runtime_dotnet_thread_pool_threads_count{env="$env", service_name="$service"}
 ```
 
+### Background Worker - Execution Rate
+
+```promql
+sum(rate(app_${worker}_total{env="$env", service_name="$service"}[5m]))
+```
+
+### Background Worker - Success / Failure Rate
+
+```promql
+# Success rate
+sum(rate(app_${worker}_success{env="$env", service_name="$service"}[5m]))
+
+# Failure rate
+sum(rate(app_${worker}_failed{env="$env", service_name="$service"}[5m]))
+```
+
+### Background Worker - Failure Ratio (%)
+
+```promql
+sum(rate(app_${worker}_failed{env="$env", service_name="$service"}[5m]))
+/
+sum(rate(app_${worker}_total{env="$env", service_name="$service"}[5m]))
+* 100
+```
+
+### Background Worker - Active Executions
+
+```promql
+sum(app_${worker}_active{env="$env", service_name="$service"})
+```
+
+### Background Worker - Skipped Executions
+
+```promql
+sum(rate(app_${worker}_skipped{env="$env", service_name="$service"}[5m]))
+```
+
+### Background Worker - Retry Rate
+
+```promql
+sum(rate(app_${worker}_retries{env="$env", service_name="$service"}[5m]))
+```
+
+### Background Worker - Duration Percentiles
+
+```promql
+# p50
+histogram_quantile(0.50, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env="$env", service_name="$service"}[5m])))
+
+# p95
+histogram_quantile(0.95, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env="$env", service_name="$service"}[5m])))
+
+# p99
+histogram_quantile(0.99, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env="$env", service_name="$service"}[5m])))
+```
+
+> **Note**: `${worker}` is the snake_case service class name (e.g., `payment_processor` for `PaymentProcessor`). The base class generates metric names as `app_{snake_case_class_name}_{metric}`.
+
 ---
 
 ## Service Health Dashboard
@@ -183,13 +242,13 @@ Full template. Replace `$(SERVICE_NAME)` with the actual service name.
       {
         "name": "env",
         "type": "custom",
-        "query": "integration,testing,staging,production",
-        "current": { "text": "production", "value": "production" },
+        "query": "Integration,Testing,Staging,Production",
+        "current": { "text": "Production", "value": "Production" },
         "options": [
-          { "text": "integration", "value": "integration", "selected": false },
-          { "text": "testing", "value": "testing", "selected": false },
-          { "text": "staging", "value": "staging", "selected": false },
-          { "text": "production", "value": "production", "selected": true }
+          { "text": "Integration", "value": "Integration", "selected": false },
+          { "text": "Testing", "value": "Testing", "selected": false },
+          { "text": "Staging", "value": "Staging", "selected": false },
+          { "text": "Production", "value": "Production", "selected": true }
         ],
         "hide": 0,
         "label": "Environment",
@@ -638,10 +697,287 @@ Replace `$(SERVICE_NAME)` with the actual service name. Uses the same template v
 
 ---
 
+## Background Worker Dashboard
+
+For services extending `WorkerBackgroundService<TSettings>`. Replace `$(SERVICE_NAME)` with the actual service name and `$(WORKER)` with the snake_case class name (e.g., `payment_processor`).
+
+### Additional Template Variable
+
+```json
+{
+  "name": "worker",
+  "type": "custom",
+  "query": "$(WORKER)",
+  "current": { "text": "$(WORKER)", "value": "$(WORKER)" },
+  "hide": 2,
+  "label": "Worker"
+}
+```
+
+### Panel Definitions
+
+| Panel | Type | Query Summary |
+|-------|------|---------------|
+| Execution Rate | timeseries | `sum(rate(app_${worker}_total{...}[5m]))` |
+| Success / Failure Ratio | timeseries (stacked) | `sum(rate(app_${worker}_success{...}[5m]))` + `_failed` |
+| Active Executions | stat | `sum(app_${worker}_active{...})` |
+| Skip Rate | timeseries | `sum(rate(app_${worker}_skipped{...}[5m]))` |
+| Retry Rate | timeseries | `sum(rate(app_${worker}_retries{...}[5m]))` |
+| Execution Duration | timeseries | `histogram_quantile(0.50/0.95/0.99, ... app_${worker}_duration_seconds_bucket ...)` |
+
+### Dashboard Shell
+
+```json
+{
+  "uid": "$(SERVICE_NAME)-worker",
+  "title": "$(SERVICE_NAME) - Background Worker",
+  "tags": ["generated", "background-worker"],
+  "timezone": "browser",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "default", "value": "default" },
+        "hide": 0,
+        "label": "Datasource"
+      },
+      {
+        "name": "env",
+        "type": "custom",
+        "query": "Integration,Testing,Staging,Production",
+        "current": { "text": "Production", "value": "Production" },
+        "options": [
+          { "text": "Integration", "value": "Integration", "selected": false },
+          { "text": "Testing", "value": "Testing", "selected": false },
+          { "text": "Staging", "value": "Staging", "selected": false },
+          { "text": "Production", "value": "Production", "selected": true }
+        ],
+        "hide": 0,
+        "label": "Environment",
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(app_$(WORKER)_total{env=\"$env\"}, service_name)",
+        "current": {},
+        "hide": 0,
+        "label": "Service",
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1
+      },
+      {
+        "name": "worker",
+        "type": "custom",
+        "query": "$(WORKER)",
+        "current": { "text": "$(WORKER)", "value": "$(WORKER)" },
+        "hide": 2,
+        "label": "Worker"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Execution Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(rate(app_${worker}_total{env=\"$env\", service_name=\"$service\"}[5m]))",
+          "legendFormat": "exec/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "fillOpacity": 10, "lineWidth": 2 }
+        }
+      }
+    },
+    {
+      "title": "Success / Failure Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(rate(app_${worker}_success{env=\"$env\", service_name=\"$service\"}[5m]))",
+          "legendFormat": "success",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(app_${worker}_failed{env=\"$env\", service_name=\"$service\"}[5m]))",
+          "legendFormat": "failed",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "fillOpacity": 30, "lineWidth": 2, "stacking": { "mode": "normal" } }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "success" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "Failure Ratio",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(rate(app_${worker}_failed{env=\"$env\", service_name=\"$service\"}[5m])) / sum(rate(app_${worker}_total{env=\"$env\", service_name=\"$service\"}[5m])) * 100",
+          "legendFormat": "failure %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "fillOpacity": 10, "lineWidth": 2 },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 25 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Active Executions",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(app_${worker}_active{env=\"$env\", service_name=\"$service\"})",
+          "legendFormat": "active",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Skip Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(rate(app_${worker}_skipped{env=\"$env\", service_name=\"$service\"}[5m]))",
+          "legendFormat": "skipped/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "fillOpacity": 10, "lineWidth": 2 },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.08 },
+              { "color": "red", "value": 0.33 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Retry Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "sum(rate(app_${worker}_retries{env=\"$env\", service_name=\"$service\"}[5m]))",
+          "legendFormat": "retries/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "fillOpacity": 10, "lineWidth": 2 },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.17 },
+              { "color": "red", "value": 0.83 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Execution Duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env=\"$env\", service_name=\"$service\"}[5m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env=\"$env\", service_name=\"$service\"}[5m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env=\"$env\", service_name=\"$service\"}[5m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "fillOpacity": 10, "lineWidth": 2 }
+        }
+      }
+    }
+  ],
+  "time": { "from": "now-1h", "to": "now" }
+}
+```
+
+---
+
 ## Generation Rules
 
 1. **Output location**: Always generate under `tools/grafana/`
-2. **Environment variable**: Every dashboard must include the `env` template variable with exactly these values: `integration`, `testing`, `staging`, `production`
+2. **Environment variable**: Every dashboard must include the `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`
 3. **Datasource variable**: Every dashboard must include the `$datasource` variable
 4. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"`
 5. **Placeholder**: Use `$(SERVICE_NAME)` for dashboard uid and title - replaced during deployment

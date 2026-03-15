@@ -30,6 +30,8 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 
 ## Standard SLIs
 
+### API / HTTP Services
+
 | SLI | Description | Target | Measurement |
 |-----|-------------|--------|-------------|
 | Latency p50 | Median response time | < 100ms | Histogram quantile |
@@ -39,6 +41,18 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 | Availability | Successful health checks / total | > 99.9% | Uptime probe |
 | Saturation | CPU/Memory utilization | < 80% | Resource metrics |
 | Throughput | Requests per second | Service-specific | Counter rate |
+
+### Background Workers
+
+| SLI | Description | Target | Measurement |
+|-----|-------------|--------|-------------|
+| Execution Duration p50 | Median execution time | Service-specific | Histogram quantile |
+| Execution Duration p95 | 95th percentile execution time | < 2× average | Histogram quantile |
+| Failure Rate | Failed executions / total | < 1% | Counter ratio |
+| Skip Rate | Skipped (overlapping) / total | < 0.1% | Counter ratio |
+| Retry Rate | Retries / total executions | < 5% | Counter ratio |
+| Availability | Successful health checks / total | > 99.9% | Uptime probe |
+| Saturation | CPU/Memory utilization | < 80% | Resource metrics |
 
 ---
 
@@ -65,6 +79,10 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 | Queue age (oldest msg) | > 5 min | > 15 min | 5 min / 2 min |
 | Health check failures | 1 failure | 3 consecutive | immediate / 1 min |
 | Connection pool exhaustion | > 80% | > 95% | 5 min / 2 min |
+| Worker execution failure rate | > 10% | > 25% | 5 min / 2 min |
+| Worker skip rate | > 5/min | > 20/min | 5 min / 2 min |
+| Worker retry rate | > 10/min | > 50/min | 5 min / 2 min |
+| Worker execution duration p95 | > 2× avg | > 5× avg | 5 min / 2 min |
 
 ---
 
@@ -74,7 +92,7 @@ See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for complet
 
 **Output location**: `tools/grafana/`
 
-**Required**: All dashboards must include `env` template variable with values: `integration`, `testing`, `staging`, `production`. All PromQL queries must filter by `env="$env"`.
+**Required**: All dashboards must include `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`. All PromQL queries must filter by `env="$env"`.
 
 ### Service Health Dashboard
 
@@ -94,6 +112,16 @@ Required panels:
 3. **Error Breakdown by Status Code** - 4xx vs 5xx distribution
 4. **Request Volume by Endpoint** - Traffic distribution
 5. **Request Duration Heatmap** - Time vs latency visualization
+
+### Background Worker Dashboard
+
+Required panels for services extending `WorkerBackgroundService<TSettings>`:
+1. **Execution Rate** - Executions per second over time
+2. **Success / Failure Ratio** - Stacked success vs failed executions
+3. **Active Executions** - Currently running executions gauge
+4. **Skip Rate** - Skipped executions (previous still running)
+5. **Retry Rate** - Retry attempts over time
+6. **Execution Duration** - p50, p95, p99 percentiles from histogram
 
 ### Resource Usage Dashboard
 
@@ -136,6 +164,12 @@ public MyService(
 builder.ConfigureOpenTelemetry();
 ```
 
+### Environment Attribution
+
+The OpenTelemetry library is expected to automatically set `deployment.environment` as a resource attribute on all telemetry (metrics, traces, logs) using `builder.Environment.EnvironmentName`. This value comes from `ASPNETCORE_ENVIRONMENT` (set per environment in K8s overlays) and is what Grafana dashboards filter on via the `$env` template variable.
+
+For traces, an activity processor should also stamp each span with `deployment.environment` as a tag.
+
 ### Configuration
 
 ```json
@@ -166,9 +200,9 @@ app.UseHttpBodyCapture(); // Must be after UseRouting
 app.MapControllers();
 ```
 
-### Custom Metrics
+### Instrumentation Example
 
-Use `IMeterFactory` for metrics. Combined with `ILogger<T>` and `IDistributedTracing`, these form the observability triad.
+Complete example combining all three: structured logging, distributed tracing, and custom metrics.
 
 ```csharp
 public class MyService : IDisposable
@@ -210,6 +244,8 @@ public class MyService : IDisposable
     public async Task ProcessAsync(Item item)
     {
         using var activity = _tracer.StartActivity("ProcessItem");
+        activity.SetTag("item.id", item.Id);
+        activity.SetTag("item.type", item.Type);
         var sw = Stopwatch.StartNew();
 
         try
@@ -223,6 +259,8 @@ public class MyService : IDisposable
         {
             _itemsProcessed.Add(1, new TagList { { "status", "failure" } });
             activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity.SetTag("exception.type", ex.GetType().FullName);
+            activity.SetTag("exception.message", ex.Message);
             _logger.LogError(ex, "Failed to process item {ItemId}", item.Id);
             throw;
         }
@@ -240,57 +278,15 @@ public class MyService : IDisposable
 }
 ```
 
-### Custom Traces
-
-Use `IDistributedTracing` interface for distributed tracing. This is injected via constructor.
-
-```csharp
-public class MyService
-{
-    private readonly ILogger<MyService> _logger;
-    private readonly IDistributedTracing _tracer;
-
-    public MyService(
-        ILogger<MyService> logger,
-        IDistributedTracing distributedTracing)
-    {
-        _logger = logger;
-        _tracer = distributedTracing;
-    }
-
-    public async Task ProcessAsync(Item item)
-    {
-        using var activity = _tracer.StartActivity("ProcessItem");
-        activity.SetTag("item.id", item.Id);
-        activity.SetTag("item.type", item.Type);
-
-        try
-        {
-            _logger.LogInformation("Processing item {ItemId}", item.Id);
-            // Process item
-            activity.SetStatus(ActivityStatusCode.Ok);
-        }
-        catch (Exception ex)
-        {
-            activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity.SetTag("exception.type", ex.GetType().FullName);
-            activity.SetTag("exception.message", ex.Message);
-            _logger.LogError(ex, "Failed to process item {ItemId}", item.Id);
-            throw;
-        }
-    }
-}
-```
-
 ### Semantic Conventions
 
 Use OpenTelemetry semantic conventions for tag names:
 
 | Category | Convention | Example |
 |----------|------------|---------|
-| HTTP | `http.method`, `http.status_code`, `http.url` | `http.method=POST` |
-| Database | `db.system`, `db.name`, `db.statement` | `db.system=mssql` |
-| Messaging | `messaging.system`, `messaging.destination` | `messaging.system=rabbitmq` |
+| HTTP | `http.request.method`, `http.response.status_code`, `url.full` | `http.request.method=POST` |
+| Database | `db.system`, `db.namespace`, `db.query.text` | `db.system=mssql` |
+| Messaging | `messaging.system`, `messaging.destination.name` | `messaging.system=rabbitmq` |
 | Exception | `exception.type`, `exception.message` | `exception.type=InvalidOperationException` |
 
 ---
