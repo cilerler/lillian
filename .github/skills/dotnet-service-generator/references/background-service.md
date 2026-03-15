@@ -23,6 +23,8 @@ Services/{ServiceName}/
 | Feature | Behavior |
 |---------|----------|
 | Schedule | Cron, continuous, or one-shot |
+| Idle Backoff | Configurable delay when `IdleCycle = true` (no data), `TimeSpan.Zero` = disabled |
+| Delay Between Executions | Fixed delay between consecutive executions, `TimeSpan.Zero` = disabled |
 | Health | `IHealthCheck` - unhealthy if degraded or no completion in X time |
 | Retry | Optional, exponential + jitter, configurable count (default 3) |
 | Concurrency | Skips if previous run still executing |
@@ -103,6 +105,12 @@ public class WorkerBackgroundServiceSettings
 
     // Shutdown settings
     public int ShutdownTimeoutSeconds { get; set; } = 30;
+
+    // Delay settings
+    public TimeSpan DelayBetweenExecutions { get; set; } = TimeSpan.Zero;
+
+    // Idle backoff settings
+    public TimeSpan IdleBackoffDuration { get; set; } = TimeSpan.Zero;
 
     public bool RunContinuously => string.IsNullOrWhiteSpace(ScheduleCronExpression);
 
@@ -195,6 +203,8 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
         _executionDuration = _meter.CreateHistogram<double>(
             $"app_{serviceName}_duration_seconds", "s", "Execution duration");
     }
+
+    protected bool IdleCycle { get; set; }
 
     public abstract Task DoWorkAsync(CancellationToken cancellationToken);
 
@@ -294,6 +304,7 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
             var shouldExecute = !isFirstExecution || _settings.RunImmediately || _settings.RunContinuously;
             if (shouldExecute)
             {
+                IdleCycle = false;
                 await ExecuteWorkAsync(cancellationToken);
             }
             else
@@ -302,6 +313,38 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
             }
 
             isFirstExecution = false;
+
+            if (cancellationToken.IsCancellationRequested) break;
+
+            // Apply idle backoff if no data was found
+            if (IdleCycle && _settings.IdleBackoffDuration > TimeSpan.Zero)
+            {
+                _logger.LogDebug("Idle cycle detected. Backing off for {Duration}.", _settings.IdleBackoffDuration);
+                try
+                {
+                    await Task.Delay(_settings.IdleBackoffDuration, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+            }
+
+            if (cancellationToken.IsCancellationRequested) break;
+
+            // Apply artificial delay between executions if configured
+            if (_settings.DelayBetweenExecutions > TimeSpan.Zero)
+            {
+                _logger.LogDebug("Waiting {Delay} before next execution.", _settings.DelayBetweenExecutions);
+                try
+                {
+                    await Task.Delay(_settings.DelayBetweenExecutions, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+            }
 
             if (cancellationToken.IsCancellationRequested) break;
 
@@ -558,8 +601,16 @@ public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
             _logger.LogInformation("Processing batch");
 
             // Implementation - check cancellation frequently
+            var items = GetItems();
+
+            // Signal the base class when there's no data to process.
+            // If IdleBackoffDuration is configured, the base class will
+            // automatically delay before the next execution.
+            IdleCycle = items.Count == 0;
+            if (IdleCycle) return;
+
             var processed = 0;
-            foreach (var item in GetItems())
+            foreach (var item in items)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await ProcessItemAsync(item, cancellationToken);
@@ -642,6 +693,8 @@ public static class StartupExtensions
     "RetryEnabled": true,
     "RetryCount": 3,
     "RetryBaseDelaySeconds": 1,
+    "DelayBetweenExecutions": "00:00:00",
+    "IdleBackoffDuration": "00:00:30",
     "HealthSampleSize": 5,
     "HealthDegradedThresholdMultiplier": 2.0,
     "HealthHardTimeout": "01:00:00",
@@ -658,6 +711,8 @@ public static class StartupExtensions
 | `RetryEnabled` | Enable exponential backoff + jitter |
 | `RetryCount` | Max retry attempts (default 3) |
 | `RetryBaseDelaySeconds` | Base delay for backoff (default 1) |
+| `DelayBetweenExecutions` | Fixed delay between executions, `00:00:00` = disabled |
+| `IdleBackoffDuration` | Delay when `IdleCycle = true`, `00:00:00` = disabled |
 | `HealthSampleSize` | Rolling sample size for average calculation |
 | `HealthDegradedThresholdMultiplier` | Last duration > avg × multiplier = degraded |
 | `HealthHardTimeout` | Max time since last success before unhealthy |
