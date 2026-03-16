@@ -32,6 +32,8 @@ Services/{ServiceName}/
 | Shutdown | Graceful with configurable timeout for K8s |
 | Observability | Base provides protected meter/tracer, derived adds service-specific metrics |
 
+> **⚠️ Continuous mode warning**: When `ScheduleCronExpression` is null/empty (continuous mode), the loop has no built-in delay between iterations. Always set `DelayBetweenExecutions` to a non-zero value (e.g., `"00:00:01"`) to prevent tight-loop CPU spinning.
+
 ## Required Extensions
 
 ### ScheduleValidationAttribute.cs
@@ -104,7 +106,7 @@ public class WorkerBackgroundServiceSettings
     public TimeSpan? HealthHardTimeout { get; set; }
 
     // Shutdown settings
-    public int ShutdownTimeoutSeconds { get; set; } = 30;
+    public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
     // Delay settings
     public TimeSpan DelayBetweenExecutions { get; set; } = TimeSpan.Zero;
@@ -248,12 +250,11 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
             return;
         }
 
-        var timeout = TimeSpan.FromSeconds(_settings.ShutdownTimeoutSeconds);
-        using var timeoutCts = new CancellationTokenSource(timeout);
+        using var timeoutCts = new CancellationTokenSource(_settings.ShutdownTimeout);
 
         try
         {
-            var completedTask = await Task.WhenAny(_executingTask, Task.Delay(timeout, CancellationToken.None));
+            var completedTask = await Task.WhenAny(_executingTask, Task.Delay(_settings.ShutdownTimeout, CancellationToken.None));
 
             if (completedTask == _executingTask)
             {
@@ -263,8 +264,8 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
             else
             {
                 _logger.LogWarning(
-                    "Shutdown timeout ({TimeoutSeconds}s) exceeded. Work may be incomplete.",
-                    _settings.ShutdownTimeoutSeconds);
+                    "Shutdown timeout ({ShutdownTimeout}) exceeded. Work may be incomplete.",
+                    _settings.ShutdownTimeout);
             }
         }
         catch (OperationCanceledException)
@@ -698,7 +699,7 @@ public static class StartupExtensions
     "HealthSampleSize": 5,
     "HealthDegradedThresholdMultiplier": 2.0,
     "HealthHardTimeout": "01:00:00",
-    "ShutdownTimeoutSeconds": 30
+    "ShutdownTimeout": "00:00:30"
   }
 }
 ```
@@ -716,15 +717,15 @@ public static class StartupExtensions
 | `HealthSampleSize` | Rolling sample size for average calculation |
 | `HealthDegradedThresholdMultiplier` | Last duration > avg × multiplier = degraded |
 | `HealthHardTimeout` | Max time since last success before unhealthy |
-| `ShutdownTimeoutSeconds` | Graceful shutdown timeout (default 30) |
+| `ShutdownTimeout` | Graceful shutdown timeout, `TimeSpan` (default `00:00:30`) |
 
 ## K8s Deployment Notes
 
-Ensure pod spec aligns with `ShutdownTimeoutSeconds`:
+Ensure pod spec aligns with `ShutdownTimeout`:
 
 ```yaml
 spec:
-  terminationGracePeriodSeconds: 35  # Slightly more than ShutdownTimeoutSeconds
+  terminationGracePeriodSeconds: 35  # Slightly more than ShutdownTimeout
   containers:
     - name: worker
       lifecycle:
