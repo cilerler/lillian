@@ -92,7 +92,7 @@ BEGIN
         UPDATE TOP (@BatchSize) tt
         SET tt.IsProcessed = 1
         OUTPUT inserted.ID INTO [BulkProcessTracking].[yyyyMMddHHmm_InProgress] (ID)
-        FROM [BulkProcessTracking].[yyyyMMddHHmm_Tracker] AS tt WITH (ROWLOCK, UPDLOCK)
+        FROM [BulkProcessTracking].[yyyyMMddHHmm_Tracker] AS tt WITH (ROWLOCK, UPDLOCK, READPAST)
         WHERE tt.IsProcessed = 0;
 
         SET @TrackerRowsInBatch = @@ROWCOUNT;
