@@ -74,6 +74,7 @@ DECLARE @ProgressPercentage INT;
 DECLARE @QueryStartTime DATETIME2 = SYSDATETIME();
 DECLARE @BatchStartTime DATETIME2;
 DECLARE @BatchCounter INT = 0;
+DECLARE @CheckpointErrorMessage NVARCHAR(4000);
 
 RAISERROR (N'Process starting...', 0, 1) WITH NOWAIT;
 
@@ -111,8 +112,8 @@ BEGIN
         -- Calculate and print progress
         SET @ProgressMessage = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss.fff') +
             N' [' + FORMAT(@BatchCounter,'0000000') +']' +
-            N' [Duration: ' + FORMAT(DATEADD(MILLISECOND, DATEDIFF(MILLISECOND, @QueryStartTime, SYSDATETIME()), 0), 'HH:mm:ss.fff') + ']' +
-            N' [Elapsed: ' + FORMAT(DATEADD(MILLISECOND, DATEDIFF(MILLISECOND,@BatchStartTime, SYSDATETIME()), 0), 'HH:mm:ss.fff') + ']' +
+            N' [Duration: ' + FORMAT(DATEADD(MILLISECOND, DATEDIFF_BIG(MILLISECOND, @QueryStartTime, SYSDATETIME()), 0), 'HH:mm:ss.fff') + ']' +
+            N' [Elapsed: ' + FORMAT(DATEADD(MILLISECOND, DATEDIFF_BIG(MILLISECOND, @BatchStartTime, SYSDATETIME()), 0), 'HH:mm:ss.fff') + ']' +
             N' [Tracked: '  + FORMAT(@TrackerRowsInBatch,'0,0') + ']' +
             N' [Updated: '  + FORMAT(@AffectedRowsInBatch,'0,0') + ']' +
             N' [TotalProcessed: '  + FORMAT(@TotalProcessedRows,'0,0') + ' / ' + FORMAT(@TotalRowCount,'N0') + ']' +
@@ -127,7 +128,7 @@ BEGIN
                 CHECKPOINT;
             END TRY
             BEGIN CATCH
-                DECLARE @CheckpointErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+                SET @CheckpointErrorMessage = ERROR_MESSAGE();
                 RAISERROR('Checkpoint failed: %s', 0, 1, @CheckpointErrorMessage) WITH NOWAIT;
             END CATCH
         END
