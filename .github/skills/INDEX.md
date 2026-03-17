@@ -122,6 +122,26 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## mssql-bulk-data-operations
+- Path: `.github/skills/mssql-bulk-data-operations/SKILL.md`
+- Applies to: Developer (implementation), DBA (operations)
+- Mandatory when:
+  - Performing large-scale INSERT, UPDATE, or DELETE operations (millions of rows)
+  - Generating batched T-SQL scripts for bulk data processing
+- Triggers:
+  - "bulk update"
+  - "bulk insert"
+  - "bulk delete"
+  - "update millions of records"
+  - "insert millions of records"
+  - "batch update"
+  - "batch insert"
+  - "large data operation"
+  - "mass update"
+  - "mass insert"
+
+---
+
 ## excalidraw-diagram-generator
 - Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
 - Applies to: Developer, Architect, Documenter
