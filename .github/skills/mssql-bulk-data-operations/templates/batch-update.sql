@@ -80,7 +80,7 @@ RAISERROR (N'Process starting...', 0, 1) WITH NOWAIT;
 
 WHILE (@AffectedRowsInBatch > 0 AND (@MaxBatchesToProcess = 0 OR @BatchCounter < @MaxBatchesToProcess))
 BEGIN
-    -- Clear progress table before each batch (crash-safe: prevents PK violation if prior batch committed but post-commit TRUNCATE didn't run)
+    -- Clear progress table before each batch
     TRUNCATE TABLE [BulkProcessTracking].[yyyyMMddHHmm_InProgress];
 
     BEGIN TRANSACTION;
@@ -104,9 +104,6 @@ BEGIN
 
         SET @AffectedRowsInBatch = @@ROWCOUNT;
         COMMIT TRANSACTION;
-
-        -- Clear progress table for the next batch
-        TRUNCATE TABLE [BulkProcessTracking].[yyyyMMddHHmm_InProgress];
 
         -- Update progress counters
         SET @TotalProcessedRows = @TotalProcessedRows + @AffectedRowsInBatch;
