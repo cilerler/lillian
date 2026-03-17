@@ -118,6 +118,10 @@ See reference files:
 - **Optional dependencies**: [references/dependencies.md](references/dependencies.md)
 - **Health checks**: [references/health-check.md](references/health-check.md)
 
+## Observability Guidance
+
+For log level selection and `ActivityKind` usage in generated code, see the [Observability Skill](../observability/SKILL.md#log-levels) — specifically the **Log Levels** and **Activity Kinds** sections.
+
 ## Key Conventions
 
 ### Naming

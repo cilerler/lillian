@@ -243,7 +243,7 @@ public class {ServiceName} : I{ServiceName}
     public async Task<TResult> DoWorkAsync(CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
-        using var activity = _tracer.StartActivity("DoWork");
+        using var activity = _tracer.StartActivity("DoWork", ActivityKind.Internal);
         activity.SetTag("service.name", nameof({ServiceName}));
 
         using (_logger.BeginScope("{TraceId}, {SpanId}", activity.TraceId, activity.SpanId))

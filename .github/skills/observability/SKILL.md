@@ -157,6 +157,40 @@ public MyService(
     IMeterFactory meterFactory)
 ```
 
+### Log Levels
+
+Every operation should be logged to provide a complete activity flow. Use the appropriate level:
+
+| LogLevel | Value | When to Use |
+|----------|-------|-------------|
+| `Trace` | 0 | Most detailed messages. May contain sensitive data. Disabled by default; never enable in production. |
+| `Debug` | 1 | Debugging and development. Use with caution in production due to high volume. |
+| `Information` | 2 | General flow of the application. May have long-term value. |
+| `Warning` | 3 | Abnormal or unexpected events. Errors or conditions that don't cause the app to fail. |
+| `Error` | 4 | Errors and exceptions that cannot be handled. Failure in the current operation or request, not app-wide. |
+| `Critical` | 5 | Failures requiring immediate attention (data loss, out of disk space). |
+| `None` | 6 | Suppresses all logging for a category. |
+
+Severity increases from Trace (lowest) to Critical (highest).
+
+### Activity Kinds
+
+When creating OpenTelemetry activities/spans, choose the correct `ActivityKind`:
+
+| Kind | When to Use |
+|------|-------------|
+| `ActivityKind.Client` | Making a synchronous outbound call to an external system (DB, HTTP, gRPC) |
+| `ActivityKind.Server` | Handling an incoming synchronous request |
+| `ActivityKind.Producer` | Initiating an asynchronous request — sending a message to a queue, pub/sub topic, or event bus |
+| `ActivityKind.Consumer` | Processing a message received asynchronously from a queue, pub/sub topic, or event bus |
+| `ActivityKind.Internal` | In-process operation with no external call (default) |
+
+Example:
+```csharp
+using var activity = _tracer.StartActivity("ProcessItem", ActivityKind.Internal);
+using var dbActivity = _tracer.StartActivity("QueryDatabase", ActivityKind.Client);
+```
+
 ### Registration
 
 ```csharp

@@ -594,7 +594,7 @@ public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
 
     public override async Task DoWorkAsync(CancellationToken cancellationToken)
     {
-        using var activity = _tracer.StartActivity("DoWork");
+        using var activity = _tracer.StartActivity("DoWork", ActivityKind.Internal);
         activity.SetTag("service.name", nameof({ServiceName}));
 
         try
