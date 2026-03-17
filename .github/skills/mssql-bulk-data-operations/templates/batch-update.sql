@@ -80,6 +80,9 @@ RAISERROR (N'Process starting...', 0, 1) WITH NOWAIT;
 
 WHILE (@AffectedRowsInBatch > 0 AND (@MaxBatchesToProcess = 0 OR @BatchCounter < @MaxBatchesToProcess))
 BEGIN
+    -- Clear progress table before each batch (crash-safe: prevents PK violation if prior batch committed but post-commit TRUNCATE didn't run)
+    TRUNCATE TABLE [BulkProcessTracking].[yyyyMMddHHmm_InProgress];
+
     BEGIN TRANSACTION;
     BEGIN TRY
         SET @BatchStartTime = SYSDATETIME();
