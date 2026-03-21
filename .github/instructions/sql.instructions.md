@@ -35,6 +35,27 @@ Services/
 4. **Schema validation** - Check table/schema existence before operations
 5. **Use QUOTENAME()** - For dynamic object names to prevent injection
 6. **DEBUG mode** - Always include a debug parameter and commented test block
+7. **Table aliases** - Use table aliases consistently for table references in SQL statements. For MSSQL `UPDATE` and `DELETE`, the target table must be referenced through the `FROM` clause with an alias, and all `WHERE` clause columns must be prefixed with that alias.
+8. **Transaction error handling** - When a script performs transactional data changes, use `SET XACT_ABORT ON`, wrap the transaction in `TRY...CATCH`, roll back when `@@TRANCOUNT > 0`, and rethrow with `THROW`.
+
+### Transaction Error Handling Pattern
+
+Use this pattern for transactional SQL scripts:
+
+```sql
+SET XACT_ABORT ON;
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+    --...
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+```
 
 ### DEBUG Mode Pattern
 
@@ -63,11 +84,12 @@ DECLARE @Debug BIT = COALESCE(@pN, 0);
 -- ... validation logic ...
 
 DECLARE @Sql NVARCHAR(MAX) = N'...';
+DECLARE @Id BIGINT = 123;
 
 IF @Debug = 1
 BEGIN
     PRINT '-- DEBUG: Generated SQL';
-    PRINT @Sql;
+    RAISERROR (N'==> [DEBUG] @Sql: %s, @Id: %I64d', 0, 1, @Sql, @Id) WITH NOWAIT;
 END
 ELSE
 BEGIN
