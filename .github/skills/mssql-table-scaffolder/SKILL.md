@@ -75,7 +75,7 @@ GO
 -- [2] ADD MISSING COLUMNS
 ALTER TABLE [Schema].[TableName] ADD 
     RowGuid UNIQUEIDENTIFIER ROWGUIDCOL NOT NULL
-        CONSTRAINT DF_TableName_RowGuid DEFAULT (NEWSEQUENTIALID()),
+        CONSTRAINT DF_TableName_RowGuid DEFAULT (NEWID()),
     -- ... other columns
 GO
 
