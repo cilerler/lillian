@@ -2,319 +2,56 @@
 applyTo: "**"
 ---
 
-# Agent Workflow
-
-This file defines the **agent workflow** for this repository.
-Engineering standards live in `.github/CONTRIBUTING.md`.
-
-**Note:** All agent transitions require human interaction. There are no automatic handoffs - the user must explicitly invoke each agent or approve to continue.
-
-> **CRITICAL INSTRUCTION:** When you adopt a role (e.g., Planner, Developer), you **MUST** first read the corresponding specific definition file in `.github/agents/<role>.agent.md`. You are strictly bound by the "Output Format", "Validation", and "Behavioral Rules" sections in that file.
-
----
-
-## Source of Truth
-
-| Document | Purpose |
-|----------|---------|
-| `.github/CONTRIBUTING.md` | Engineering standards (authoritative) |
-| `.github/skills/INDEX.md` | Skill routing and library references |
-| `.github/agents/*.agent.md` | Role definitions and behaviors |
-| `.github/instructions/*.instructions.md` | Technology-specific conventions (Blazor, C#, SQL, Infrastructure, Testing) |
-
-When working on a specific technology, also load the corresponding instruction file from `.github/instructions/`.
-
-If there is any conflict, `.github/CONTRIBUTING.md` wins.
-
----
-
-## Workflow Diagram
-
-```
-User Request
-      │
-      ▼
-┌─────────┐
-│ Planner │
-└─────┬───┘
-      ▼
-┌───────────┐
-│ Architect │◄──── APPROVAL ───────────────┐
-└─────┬─────┘                              │
-      ├                       ┌──────────┐ │
-      ├─── If UI involved ──► │ Designer ├─┤
-      │                       └──────────┘ │
-      │                       ┌─────────┐  │
-      ├─── If DB changes ───► │   DBA   ├──┘
-      │                       └─────────┘
-      │                       ┌────────────┐
-      ├─── If RFC needed ───► │ Documenter │
-      │                       └─────┬──────┘
-      │◄────────────────────────────┘
-      ▼
-┌───────────┐
-│ Developer │◄────┐
-└─────┬─────┘     │
-      ▼           │
-┌──────────┐ FAIL │
-│ Reviewer ├──────┘
-└─────┬────┘
-      │ PASS
-      │                        ┌────────┐
-      ├─── If tests needed ───►│ Tester │◄──────┐
-      │                        └────┬───┘       │
-      │                             ▼           │
-      │                       ┌──────────┐ FAIL │
-      │                       │ Reviewer ├──────┘
-      │                       └─────┬────┘
-      │                             │ PASS
-      │◄────────────────────────────┘
-      │                       ┌────────────┐
-      ├─── If docs needed ───►│ Documenter │
-      │    (README, ADR,      └─────┬──────┘
-      │     Runbook, SOP,           │
-      │     Glossary, Tech Stack,   │
-      │     Business Case)          │
-      │◄────────────────────────────┘
-      ▼
-   Complete
-```
-
----
-
-## Roles Summary
-
-| Role | When Invoked | Produces | Special Approval |
-|------|--------------|----------|------------------|
-| Planner | Always | Plan with acceptance criteria | - |
-| Architect | Always | Technical design, observability requirements | Approves Designer/DBA output |
-| Designer | If UI involved | HTML/Tailwind mockups | - |
-| DBA | If DB changes | Schema design, migrations, index strategy | - |
-| Documenter | If RFC needed (pre-impl) | RFC from Architect's design | - |
-| Developer | Always | Code, Docker, K8s, dashboards, runbook drafts | - |
-| Reviewer | Always (1-2x) | PASS/FAIL verdict | 3 FAILs → escalate |
-| Tester | If tests needed | Test cases, unit/integration tests | - |
-| Documenter | If docs needed (post-impl) | README, ADRs, runbooks, SOPs, glossary, tech stack, business case | - |
-
-**Note:** Every role outputs and stops. User decides when to proceed to next agent.
-
----
-
-## Role Details
-
-### Planner
-
-**Entry:** User request or problem statement
-
-**Responsibilities:**
-- Analyze request scope and constraints
-- Produce clear plan with numbered steps
-- Define testable acceptance criteria
-- Identify required skills from INDEX.md
-- Determine which optional roles are needed (Designer, DBA, Tester, Documenter post-impl)
-
-**Exit:** Output plan and STOP.
-
----
-
-### Architect
-
-**Entry:** Approved plan from Planner
-
-**Responsibilities:**
-- Design component structure and data flow
-- Enforce clean architecture boundaries
-- Define observability requirements:
-  - Which SLIs matter
-  - Required dashboards
-  - Alert conditions and thresholds
-- Identify applicable skills
-- If Designer involved: approve UI mockups
-- If DBA involved: approve schema design
-
-**Exit:** Output technical design and STOP.
-
----
-
-### Designer
-
-**Entry:** Approved plan and technical design (when UI is involved)
-
-**Responsibilities:**
-- Design user interface layout
-- Produce static HTML mockups with Tailwind CSS (for visualization)
-- Document component breakdown for Developer
-- Note: Developer implements using the project's chosen UI framework (FluentUI Blazor or Tailwind CSS)
-
-**Exit:** Output mockups and STOP.
-
----
-
-### DBA
-
-**Entry:** Technical design from Architect (when database changes required)
-
-**Responsibilities:**
-- Design schema following CONTRIBUTING.md conventions
-- Apply mssql-table-scaffolder skill
-- Define index strategy (check existing indexes first)
-- Plan migration path
-- Consider cascade behaviors and triggers
-
-**Exit:** Output schema design and STOP. Architect must approve before proceeding.
-
----
-
-### Developer
-
-**Entry:** All approved designs (plan, architecture, UI mockups, schema)
-
-**Responsibilities:**
-
-*Code:*
-- Implement per technical design
-- Apply all applicable skills from INDEX.md
-- Comply fully with CONTRIBUTING.md
-
-*Infrastructure (no separate DevOps role):*
-- Create/update Dockerfile
-- Create/update Kubernetes manifests
-- Configure health probes (liveness, readiness)
-- Set resource limits
-- Implement graceful shutdown
-
-*Observability (per Architect's requirements):*
-- Instrument with OpenTelemetry
-- Create Grafana dashboard definitions
-- Configure alert rules
-- Draft runbook (Documenter polishes)
-
-**Validation before handoff:**
-- `dotnet build` passes
-- `dotnet test` passes
-- Analyzers clean
-
-**Exit:** Request Reviewer review. If FAIL, fix checklist items and return.
-
----
-
-### Reviewer
-
-**Entry:** Developer implementation OR Tester tests
-
-**Responsibilities:**
-- Review strictly against CONTRIBUTING.md
-- Verify applicable skills were applied
-- Issue PASS or FAIL verdict
-- Provide fix checklist on FAIL
-- List optional improvements on PASS
-
-**Finding severity:**
-- **Blocker:** Prevents merge, violates standards, breaks build
-- **Major:** Significant quality issue, must fix
-- **Minor:** Style, optimization, low-risk
-
-**Escalation:** After 3 consecutive FAILs, escalate to user.
-
-**Exit:**
-- FAIL: Return to Developer/Tester with fix checklist
-- PASS: List optional improvements and STOP
-
----
-
-### Tester
-
-**Entry:** Developer implementation passed Reviewer (when tests needed)
-
-**When invoked:**
-- New features requiring test coverage
-- Complex logic requiring verification
-- Changes to critical paths
-
-**Responsibilities:**
-- Create test cases for QA using `templates/test-cases.md`
-- Write unit tests (MSTest, mocks/fakes)
-- Write integration tests (Testcontainers)
-- Cover all acceptance criteria
-- Cover edge cases and error paths
-- Update test cases during review iterations
-
-**Validation:** `dotnet test` passes
-
-**Exit:** Request Reviewer review. If FAIL, fix checklist items and return.
-
----
-
-### Documenter
-
-Documenter is invoked twice in the workflow:
-
-#### Pre-Implementation (If RFC needed)
-
-**Entry:** Approved technical design from Architect
-
-**Responsibilities:**
-- Create RFC from Architect's technical design using `templates/request-for-comments.md`
-
-**Exit:** Output RFC and STOP.
-
-#### Post-Implementation (If docs needed)
-
-**Entry:** Implementation and tests passed Reviewer
-
-**Responsibilities:**
-- Update README if behavior changed
-- Create ADR for architectural decisions
-- Polish runbook drafts for on-call engineers
-- Create SOP for repetitive operational tasks
-- Update Business Glossary if new terms introduced
-- Update Tech Stack Overview if new technologies added
-- Create Business Case if feature needs stakeholder presentation
-
-**Exit:** Output documentation and STOP.
-
----
-
-## Key Responsibilities Clarification
-
-### Developer Handles DevOps
-There is no separate DevOps role. Developer is responsible for:
-- Dockerfile creation
-- Kubernetes manifests
-- Health/readiness/liveness probes
-- Resource limits
-- Graceful shutdown
-- Grafana dashboard creation
-- Alert rule configuration
-- Runbook drafts
-
-### Architect Defines Observability
-Architect specifies in technical design:
-- What SLIs matter for this service
-- What dashboards are needed
-- What alert conditions apply
-
-Developer implements per these requirements.
-
-### Reviewer Reviews Once or Twice
-1. Always: Developer's implementation
-2. If Tester invoked: Tester's tests
-
-Same standards apply to both reviews.
-
-### Documenter Polishes Runbooks
-Developer creates runbook drafts. Documenter polishes for clarity and readability by on-call engineers unfamiliar with the service.
-
----
-
-## Definition of Done
-
-A change is done only when:
-
-1. Acceptance criteria satisfied
-2. CONTRIBUTING.md fully complied with
-3. Applicable skills applied
-4. Reviewer returned PASS for implementation
-5. Reviewer returned PASS for tests (if Tester invoked)
-6. Documentation updated (if applicable)
-7. Optional improvements either implemented (with approval) or explicitly declined
+> [!TIP]
+> Engineering standards live in `.github/CONTRIBUTING.md`.
+
+# Workflow Orchestration
+
+## 1. Plan Node Default
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- If something goes sideways, STOP and re-plan immediately – don't keep pushing
+- Use plan mode for verification steps, not just building
+- Write detailed specs upfront to reduce ambiguity
+
+## 2. Subagent Strategy
+- Use subagents liberally to keep main context window clean
+- Offload research, exploration, and parallel analysis to subagents
+- For complex problems, throw more compute at it via subagents
+- One tack per subagent for focused execution
+
+## 3. Self-Improvement Loop
+- After ANY correction from the user: update `tasks/lessons.md` with the pattern
+- Write rules for yourself that prevent the same mistake
+- Ruthlessly iterate on these lessons until mistake rate drops
+- Review lessons at session start for relevant project
+
+## 4. Verification Before Done
+- Never mark a task complete without proving it works
+- Diff behavior between main and your changes when relevant
+- Ask yourself: "Would a staff engineer approve this?"
+- Run tests, check logs, demonstrate correctness
+
+## 5. Demand Elegance (Balanced)
+- For non-trivial changes: pause and ask "is there a more elegant way?"
+- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
+- Skip this for simple, obvious fixes – don't over-engineer
+- Challenge your own work before presenting it
+
+## 6. Autonomous Bug Fixing
+- When given a bug report: just fix it. Don't ask for hand-holding
+- Point at logs, errors, failing tests – then resolve them
+- Zero context switching required from the user
+- Go fix failing CI tests without being told how
+
+## Task Management
+1. **Plan First**: Write plan to `tasks/todo.md` with checkable items
+2. **Verify Plan**: Check in before starting implementation
+3. **Track Progress**: Mark items complete as you go
+4. **Explain Changes**: High-level summary at each step
+5. **Document Results**: Add review section to `tasks/todo.md`
+6. **Capture Lessons**: Update `tasks/lessons.md` after corrections
+
+## Core Principles
+- **Simplicity First**: Make every change as simple as possible. Impact minimal code.
+- **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
+- **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
