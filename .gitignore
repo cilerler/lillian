@@ -455,7 +455,6 @@ _site
 # =========================
 Directory.Build.local.props
 *.local.slnx
-.claude/settings.local.json
 
 # =========================
 # AI Files
@@ -472,3 +471,5 @@ Directory.Build.local.props
 # .geminiignore
 # .claude/
 # .agent/
+CLAUDE.local.md
+.claude/settings.local.json
