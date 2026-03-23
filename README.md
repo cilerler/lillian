@@ -32,22 +32,22 @@ All platforms share the same content via the [sync script](tools/sync-ai-platfor
 
 ## Usage in Your Repositories
 
-This repository is designed as a shared AI instructions base. Add it to your code repositories as a submodule (private) or local clone (public), then run the sync script to generate platform-specific files.
+This repository is designed as a shared AI instructions base. Add it to your code repositories as a submodule (private) or local clone (public), then create symlinks and run the sync script.
 
-> In the examples below, `<path>` is the local directory you choose for the submodule or clone (e.g. `.ai`, `vendor/ai-templates`).
+> In the examples below, `.ai` is the local directory you choose for the submodule or clone (e.g. `.ai`, `vendor/ai-templates`).
 
 ### Private Repositories (Git Submodule)
 
-Generated files are committed and shared with all contributors.
+Symlinks are committed and shared with all contributors.
 
 ```pwsh
-git submodule add -b main https://github.com/cilerler/melis.git "<path>";
+git submodule add -b main https://github.com/cilerler/melis.git ".ai";
 ```
 
 Pull updates:
 
 ```pwsh
-git submodule update --remote "<path>";
+git submodule update --remote ".ai";
 ```
 
 ### Public Repositories (Local Clone)
@@ -55,18 +55,18 @@ git submodule update --remote "<path>";
 Nothing is committed. Each developer runs the setup locally.
 
 ```pwsh
-git clone https://github.com/cilerler/melis.git "<path>";
+git clone https://github.com/cilerler/melis.git ".ai";
 
 # Exclude from git tracking (local-only, never committed)
 @"
 
 # AI instructions base
-<path>/
+.ai/
 CLAUDE.md
 AGENTS.md
 GEMINI.md
-.claude/
-.agent/
+.claude
+.agent
 .github/agents
 .github/instructions
 .github/skills
@@ -79,27 +79,67 @@ GEMINI.md
 Pull updates:
 
 ```pwsh
-cd <path>; git pull; cd ..;
+cd .ai; git pull; cd ..;
+```
+
+### Create Symlinks
+
+Run once after either setup above (requires elevated PowerShell on Windows):
+
+```pwsh
+# Create required directories
+New-Item -ItemType Directory -Force -Path ".\.github";
+
+# Symlink root-level AI entry points
+New-Item -ItemType SymbolicLink -Path ".\CLAUDE.md" -Target (Resolve-Path ".\.ai\CLAUDE.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\AGENTS.md" -Target (Resolve-Path ".\.ai\AGENTS.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\GEMINI.md" -Target (Resolve-Path ".\.ai\GEMINI.md").Path;
+
+# Symlink .github content (GitHub Copilot reads these natively)
+New-Item -ItemType SymbolicLink -Path ".\.github\skills" -Target (Resolve-Path ".\.ai\.github\skills").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\agents" -Target (Resolve-Path ".\.ai\.github\agents").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\instructions" -Target (Resolve-Path ".\.ai\.github\instructions").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\prompts" -Target (Resolve-Path ".\.ai\.github\prompts").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\copilot-instructions.md" -Target (Resolve-Path ".\.ai\.github\copilot-instructions.md").Path;
+New-Item -ItemType SymbolicLink -Path ".\.github\CONTRIBUTING.md" -Target (Resolve-Path ".\.ai\.github\CONTRIBUTING.md").Path;
+
+# Symlink platform directories (sync script generates content inside these)
+New-Item -ItemType SymbolicLink -Path ".\.claude" -Target (Resolve-Path ".\.ai\.claude").Path;
+New-Item -ItemType SymbolicLink -Path ".\.agent" -Target (Resolve-Path ".\.ai\.agent").Path;
 ```
 
 ### Sync AI Platforms
 
-Run once after setup, and again after pulling updates. No symlinks or admin privileges required:
+Run once after setup, and again after pulling updates:
 
 ```pwsh
-& ".\<path>\tools\sync-ai-platforms.ps1" -BasePath "." -SourcePath "<path>";
+& ".\.ai\tools\sync-ai-platforms.ps1";
 ```
 
-This single command:
-- Copies `.github/` content (skills, agents, instructions, prompts, CONTRIBUTING.md, copilot-instructions.md)
-- Copies root entry points (CLAUDE.md, GEMINI.md, AGENTS.md)
-- Generates `.claude/` files (rules, commands, agents, skills) with Claude-native frontmatter and paths
-- Generates `.agent/` files (rules, prompts, skills) with Gemini-native frontmatter and paths
+This generates platform-specific files inside `.claude/` and `.agent/` with transformed frontmatter, filenames, and paths. Since those directories are symlinked, the consumer repo sees them automatically.
 
 ### Setup Notes
 
-- If your repo already has `.github/CONTRIBUTING.md` or `.github/copilot-instructions.md`, back them up before syncing — the script will overwrite them
+- If your repo already has `.github/CONTRIBUTING.md` or `.github/copilot-instructions.md`, skip those symlinks and keep your project-specific files
 - `.claude/settings.local.json` is project-specific — copy and customize per project rather than syncing
+
+### Managing Symlinks
+
+**List all symlinks** (recursively, including hidden items):
+
+```pwsh
+Get-ChildItem -Recurse -Force | Where-Object { $_.LinkType };
+```
+
+**Remove a symlink** (does not delete the target):
+
+```pwsh
+# File symlink
+(Get-Item ".\CLAUDE.md").Delete();
+
+# Directory symlink
+(Get-Item ".\.claude").Delete();
+```
 
 ---
 
