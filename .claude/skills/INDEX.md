@@ -159,28 +159,28 @@ If multiple skills match a task, apply all applicable skills.
 
 # Libraries
 
-Workspace libraries in `libraries/parasite/src/`. Use these instead of custom implementations.
+Workspace libraries in `common-libraries/`. Use these instead of custom implementations.
 Each library has a README with usage instructions.
 
 | Library | Purpose | README |
 |---------|---------|--------|
-| MyOrganization.OpenTelemetry | OpenTelemetry configuration and instrumentation | [README](../../../libraries/parasite/src/MyOrganization.OpenTelemetry/README.md) |
-| MyOrganization.Diagnostics | Diagnostic utilities, distributed tracing helpers | [README](../../../libraries/parasite/src/MyOrganization.Diagnostics/README.md) |
-| MyOrganization.Diagnostics.Abstractions | Diagnostic abstractions | [README](../../../libraries/parasite/src/MyOrganization.Diagnostics.Abstractions/README.md) |
-| MyOrganization.Services.DistributedLock | Distributed locking with heartbeat support | [README](../../../libraries/parasite/src/MyOrganization.Services.DistributedLock/README.md) |
-| MyOrganization.Services.DistributedLock.Abstractions | Distributed lock abstractions | [README](../../../libraries/parasite/src/MyOrganization.Services.DistributedLock.Abstractions/README.md) |
-| MyOrganization.Services.DistributedLock.Redis | Redis-based distributed lock implementation | [README](../../../libraries/parasite/src/MyOrganization.Services.DistributedLock.Redis/README.md) |
-| MyOrganization.Services.MessageQueue | Provider-agnostic messaging infrastructure | [README](../../../libraries/parasite/src/MyOrganization.Services.MessageQueue/README.md) |
-| MyOrganization.Services.MessageQueue.RabbitMq | RabbitMQ messaging implementation | [README](../../../libraries/parasite/src/MyOrganization.Services.MessageQueue.RabbitMq/README.md) |
-| MyOrganization.Services.CloudStorage.Abstractions | Provider-agnostic cloud storage | [README](../../../libraries/parasite/src/MyOrganization.Services.CloudStorage.Abstractions/README.md) |
-| MyOrganization.Services.TokenBroker | JWT service-to-service authentication | [README](../../../libraries/parasite/src/MyOrganization.Services.TokenBroker/README.md) |
-| MyOrganization.EntityFrameworkCore.SqlServer | EF Core bulk operations via SqlBulkCopy | [README](../../../libraries/parasite/src/MyOrganization.EntityFrameworkCore.SqlServer/README.md) |
-| MyOrganization.Extensions.Configuration | Configuration extensions | [README](../../../libraries/parasite/src/MyOrganization.Extensions.Configuration/README.md) |
-| MyOrganization.Extensions.DependencyInjection | DI extensions | [README](../../../libraries/parasite/src/MyOrganization.Extensions.DependencyInjection/README.md) |
-| MyOrganization.Extensions.Hosting | Hosting extensions | [README](../../../libraries/parasite/src/MyOrganization.Extensions.Hosting/README.md) |
-| MyOrganization.AspNetCore.Middleware | ASP.NET Core middleware | [README](../../../libraries/parasite/src/MyOrganization.AspNetCore.Middleware/README.md) |
-| MyOrganization.Primitives | Common primitives | [README](../../../libraries/parasite/src/MyOrganization.Primitives/README.md) |
-| MyOrganization.Testing.Primitives | Testing utilities | [README](../../../libraries/parasite/src/MyOrganization.Testing.Primitives/README.md) |
-| MyOrganization.System.Xml.Serialization | XML serialization utilities | [README](../../../libraries/parasite/src/MyOrganization.System.Xml.Serialization/README.md) |
-| MyOrganization.Kiota.Client | Kiota HTTP client | [README](../../../libraries/parasite/src/MyOrganization.Kiota.Client/README.md) |
-| MyOrganization.OData.Client | OData client | [README](../../../libraries/parasite/src/MyOrganization.OData.Client/README.md) |
+| MyOrganization.OpenTelemetry | OpenTelemetry configuration and instrumentation | [README](common-libraries/MyOrganization.OpenTelemetry/README.md) |
+| MyOrganization.Diagnostics | Diagnostic utilities, distributed tracing helpers | [README](common-libraries/MyOrganization.Diagnostics/README.md) |
+| MyOrganization.Diagnostics.Abstractions | Diagnostic abstractions | [README](common-libraries/MyOrganization.Diagnostics.Abstractions/README.md) |
+| MyOrganization.Services.DistributedLock | Distributed locking with heartbeat support | [README](common-libraries/MyOrganization.Services.DistributedLock/README.md) |
+| MyOrganization.Services.DistributedLock.Abstractions | Distributed lock abstractions | [README](common-libraries/MyOrganization.Services.DistributedLock.Abstractions/README.md) |
+| MyOrganization.Services.DistributedLock.Redis | Redis-based distributed lock implementation | [README](common-libraries/MyOrganization.Services.DistributedLock.Redis/README.md) |
+| MyOrganization.Services.MessageQueue | Provider-agnostic messaging infrastructure | [README](common-libraries/MyOrganization.Services.MessageQueue/README.md) |
+| MyOrganization.Services.MessageQueue.RabbitMq | RabbitMQ messaging implementation | [README](common-libraries/MyOrganization.Services.MessageQueue.RabbitMq/README.md) |
+| MyOrganization.Services.CloudStorage.Abstractions | Provider-agnostic cloud storage | [README](common-libraries/MyOrganization.Services.CloudStorage.Abstractions/README.md) |
+| MyOrganization.Services.TokenBroker | JWT service-to-service authentication | [README](common-libraries/MyOrganization.Services.TokenBroker/README.md) |
+| MyOrganization.EntityFrameworkCore.SqlServer | EF Core bulk operations via SqlBulkCopy | [README](common-libraries/MyOrganization.EntityFrameworkCore.SqlServer/README.md) |
+| MyOrganization.Extensions.Configuration | Configuration extensions | [README](common-libraries/MyOrganization.Extensions.Configuration/README.md) |
+| MyOrganization.Extensions.DependencyInjection | DI extensions | [README](common-libraries/MyOrganization.Extensions.DependencyInjection/README.md) |
+| MyOrganization.Extensions.Hosting | Hosting extensions | [README](common-libraries/MyOrganization.Extensions.Hosting/README.md) |
+| MyOrganization.AspNetCore.Middleware | ASP.NET Core middleware | [README](common-libraries/MyOrganization.AspNetCore.Middleware/README.md) |
+| MyOrganization.Primitives | Common primitives | [README](common-libraries/MyOrganization.Primitives/README.md) |
+| MyOrganization.Testing.Primitives | Testing utilities | [README](common-libraries/MyOrganization.Testing.Primitives/README.md) |
+| MyOrganization.System.Xml.Serialization | XML serialization utilities | [README](common-libraries/MyOrganization.System.Xml.Serialization/README.md) |
+| MyOrganization.Kiota.Client | Kiota HTTP client | [README](common-libraries/MyOrganization.Kiota.Client/README.md) |
+| MyOrganization.OData.Client | OData client | [README](common-libraries/MyOrganization.OData.Client/README.md) |

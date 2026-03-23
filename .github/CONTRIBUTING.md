@@ -213,7 +213,7 @@ References:
 ## Dependency Management
 
 * **Third-party library approval required** – any new external dependency is subject to approval before being added
-* **Prefer workspace libraries** – use existing shared libraries in `libraries/parasite/src/` instead of writing custom implementations:
+* **Prefer workspace libraries** – use existing shared libraries in `common-libraries/` instead of writing custom implementations:
   * **Services.MessageQueue** – for messaging infrastructure (provider-agnostic)
   * **Services.CloudStorage** – for cloud storage operations (provider-agnostic)
   * **Services.DistributedLock** – for distributed locking with heartbeat support

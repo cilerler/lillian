@@ -137,7 +137,7 @@ Required panels:
 
 ## OpenTelemetry Patterns
 
-Use `MyOrganization.OpenTelemetry` library. See [README](../../../libraries/parasite/src/MyOrganization.OpenTelemetry/README.md).
+Use `MyOrganization.OpenTelemetry` library. See [README](common-libraries/MyOrganization.OpenTelemetry/README.md).
 
 ### Observability Triad
 
