@@ -455,6 +455,7 @@ _site
 # =========================
 Directory.Build.local.props
 *.local.slnx
+.claude/settings.local.json
 
 # =========================
 # AI Files
