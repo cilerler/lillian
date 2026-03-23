@@ -27,6 +27,7 @@
       "Bash(dotnet clean:*)",
       "Bash(kubectl logs:*)",
       "Bash(kubectl get:*)",
+      "Bash(kustomize build:*)",
       "Skill(documentation-generator)",
       "Skill(plantuml-sequence-diagram-generator)",
       "Skill(dotnet-service-generator)",
