@@ -28,15 +28,17 @@
 
 [Describe the proposed solution in detail. Be specific about what will change.]
 
+> **Audience note:** RFCs are read by a mixed audience including non-technical stakeholders. Do **not** include exact source code, compiler-specific syntax, or implementation-level snippets. When illustrating logic, algorithms, or flows, use **pseudo code**, plain-language descriptions, diagrams, or flowcharts that a non-developer can follow.
+
 ## Alternatives
 
 ### Alternative 1: [Name]
 
-[Description and why it was not chosen]
+[Description and why it was not chosen. Use pseudo code or plain language — not exact source code — when comparing approaches.]
 
 ### Alternative 2: [Name]
 
-[Description and why it was not chosen]
+[Description and why it was not chosen. Use pseudo code or plain language — not exact source code — when comparing approaches.]
 
 ## Open Questions
 
