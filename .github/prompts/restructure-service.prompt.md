@@ -110,5 +110,4 @@ After restructuring the service itself:
 ## Constraints
 - **Preserve all business logic** — only restructure, never change behavior
 - **Do not touch other services** — only modify the target service and its parent module/component scaffolding
-- **No "Ruya" references** — the worker base class namespace is `MyOrganization.Extensions.Hosting`
 - **Ask before splitting** — if a Worker/Service split or API split is needed, confirm the approach before executing
