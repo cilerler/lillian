@@ -561,5 +561,15 @@ public static class StartupExtensions
 
         return services;
     }
+
+    public static WebApplication Map{ServiceName}(this WebApplication app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        if (app.Configuration.GetFeatureFlag<{ServiceName}Settings>())
+            app.Map{ServiceName}Api();
+
+        return app;
+    }
 }
 ```
