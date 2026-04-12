@@ -15,7 +15,7 @@ Services/{ServiceName}/
 ├── Api/                             # optional — if HTTP endpoints exposed
 ├── Clients/                         # External HTTP dependencies
 ├── Configuration/
-│   └── Settings.cs                  # Extends WorkerBackgroundServiceSettings
+│   └── {ServiceName}Settings.cs     # Extends WorkerBackgroundServiceSettings
 ├── Contracts/                       # Internal interfaces
 │   └── I{ServiceName}.cs
 ├── Exceptions/
@@ -31,9 +31,9 @@ Services/{ServiceName}/
 │   └── SQL/
 ├── Validators/
 ├── Constants.cs
-├── Service.cs                       # Core business logic
-├── Worker.cs                        # Extends WorkerBackgroundService<Settings>
-└── HealthCheck.cs
+├── {ServiceName}Service.cs          # Core business logic
+├── {ServiceName}Worker.cs           # Extends WorkerBackgroundService<{ServiceName}Settings>
+└── {ServiceName}HealthCheck.cs
 ```
 
 ## Features
@@ -545,7 +545,7 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
 
-public class Settings : WorkerBackgroundServiceSettings
+public class {ServiceName}Settings : WorkerBackgroundServiceSettings
 {
     public new const string ConfigurationSectionName = nameof({ServiceName});
     public new static readonly string FeatureFlag = ConfigurationSectionName;
@@ -559,12 +559,12 @@ public class Settings : WorkerBackgroundServiceSettings
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
-public class HealthCheck : IHealthCheck
+public class {ServiceName}HealthCheck : IHealthCheck
 {
-    private readonly Worker _worker;
-    private readonly Settings _settings;
+    private readonly {ServiceName}Worker _worker;
+    private readonly {ServiceName}Settings _settings;
 
-    public HealthCheck(Worker worker, IOptions<Settings> options)
+    public {ServiceName}HealthCheck({ServiceName}Worker worker, IOptions<{ServiceName}Settings> options)
     {
         _worker = worker;
         _settings = options.Value;
@@ -608,22 +608,22 @@ public class HealthCheck : IHealthCheck
 
 > **Separation of concerns**: Worker handles scheduling, retries, concurrency, and health. Service handles business logic. This makes business logic testable without standing up a hosted service, and lets you swap the trigger (cron, queue, HTTP) without touching business logic.
 
-### Service.cs
+### {ServiceName}Service.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
 using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
-public class Service : I{ServiceName}
+public class {ServiceName}Service : I{ServiceName}
 {
-    private readonly ILogger<Service> _logger;
+    private readonly ILogger<{ServiceName}Service> _logger;
     private readonly IDistributedTracing _tracer;
     private readonly Meter _meter;
     private readonly Counter<long> _itemsProcessed;
 
     public Service(
-        ILogger<Service> logger,
+        ILogger<{ServiceName}Service> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory)
     {
@@ -685,7 +685,7 @@ public class Service : I{ServiceName}
 }
 ```
 
-### Worker.cs
+### {ServiceName}Worker.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
@@ -693,15 +693,15 @@ namespace {Organization}.{Product}.Services.{ServiceName};
 using {Organization}.{Product}.Services.{ServiceName}.Configuration;
 using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
-public class Worker : WorkerBackgroundService<Settings>
+public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings>
 {
     private readonly I{ServiceName} _service;
 
     public Worker(
-        ILogger<Worker> logger,
+        ILogger<{ServiceName}Worker> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
-        IOptions<Settings> options,
+        IOptions<{ServiceName}Settings> options,
         IEnumerable<IHealthCheck> healthChecks,
         I{ServiceName} service)
         : base(logger, distributedTracing, meterFactory, options, healthChecks)
@@ -731,7 +731,7 @@ public static class StartupExtensions
 {
     public static IServiceCollection Add{ServiceName}(
         this IServiceCollection services,
-        Action<Settings>? setupAction = null)
+        Action<{ServiceName}Settings>? setupAction = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -739,11 +739,11 @@ public static class StartupExtensions
             typeof(IDistributedTracing),
             typeof(IMeterFactory));
 
-        services.AddOptions<Settings>()
-            .BindConfiguration(Settings.ConfigurationSectionName)
+        services.AddOptions<{ServiceName}Settings>()
+            .BindConfiguration({ServiceName}Settings.ConfigurationSectionName)
             .Configure<IConfiguration>((settings, config) =>
             {
-                settings.Enabled = config.GetFeatureFlag<Settings>();
+                settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
@@ -753,11 +753,11 @@ public static class StartupExtensions
             services.Configure(setupAction);
         }
 
-        services.AddScoped<I{ServiceName}, Service>();
-        services.AddSingleton<Worker>();
-        services.AddSingleton<IHostedLifecycleService>(sp => sp.GetRequiredService<Worker>());
+        services.AddScoped<I{ServiceName}, {ServiceName}Service>();
+        services.AddSingleton<{ServiceName}Worker>();
+        services.AddSingleton<IHostedLifecycleService>(sp => sp.GetRequiredService<{ServiceName}Worker>());
         services.AddHealthChecks()
-            .AddCheck<HealthCheck>("{ServiceName}", tags: ["ready"]);
+            .AddCheck<{ServiceName}HealthCheck>("{ServiceName}", tags: ["ready"]);
 
         return services;
     }

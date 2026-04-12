@@ -22,7 +22,7 @@ Services/{ServiceName}/
 │   ├── I{ExternalApi}Client.cs
 │   └── {ExternalApi}Client.cs
 ├── Configuration/
-│   └── Settings.cs
+│   └── {ServiceName}Settings.cs
 ├── Contracts/                       # Internal interfaces
 │   └── I{ServiceName}.cs           # Default: internal (move to Abstractions/Interfaces/ if externally consumed)
 ├── Exceptions/
@@ -46,9 +46,9 @@ Services/{ServiceName}/
 ├── Validators/
 │   └── {Name}Attribute.cs
 ├── Constants.cs                     # Includes Metrics nested class
-├── Service.cs                       # Core business logic
-├── Worker.cs                        # optional — if background/cron
-└── HealthCheck.cs                   # optional — if health monitoring needed
+├── {ServiceName}Service.cs          # Core business logic
+├── {ServiceName}Worker.cs           # optional — if background/cron
+└── {ServiceName}HealthCheck.cs      # optional — if health monitoring needed
 ```
 
 ## Contracts/I{ServiceName}.cs
@@ -106,14 +106,14 @@ public static class Constants
 }
 ```
 
-## Configuration/Settings.cs
+## Configuration/{ServiceName}Settings.cs
 
 > **No domain-specific defaults in settings classes.** Domain-specific string properties (connection strings, resource names, endpoint URLs, queue names, topic names, etc.) must not have hardcoded default values — use `= null!;` and supply values via `appsettings.json` or environment variables. Operational numeric properties (timeouts, retry counts, batch sizes, intervals) may have sensible defaults.
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
 
-public class Settings
+public class {ServiceName}Settings
 {
     public const string ConfigurationSectionName = nameof({ServiceName});
     public static readonly string FeatureFlag = ConfigurationSectionName;
@@ -258,7 +258,7 @@ public static class {ServiceName}Mapper
 }
 ```
 
-## Service.cs
+## {ServiceName}Service.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
@@ -270,22 +270,22 @@ using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
 using {Organization}.{Product}.Services.{ServiceName}.Mappers;
 using {Organization}.{Product}.Services.{ServiceName}.Models;
 
-public class {ServiceName} : I{ServiceName}
+public class {ServiceName}Service : I{ServiceName}
 {
-    private readonly ILogger<{ServiceName}> _logger;
+    private readonly ILogger<{ServiceName}Service> _logger;
     private readonly IDistributedTracing _tracer;
     private readonly Meter _meter;
-    private readonly Settings _settings;
+    private readonly {ServiceName}Settings _settings;
 
     private readonly UpDownCounter<int> _activeRequests;
     private readonly Counter<long> _operationCounter;
     private readonly Histogram<double> _operationDuration;
 
     public {ServiceName}(
-        ILogger<{ServiceName}> logger,
+        ILogger<{ServiceName}Service> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
-        IOptions<Settings> options)
+        IOptions<{ServiceName}Settings> options)
     {
         _logger = logger;
         _tracer = distributedTracing;
@@ -351,7 +351,7 @@ public class {ServiceName} : I{ServiceName}
 }
 ```
 
-## Worker.cs
+## {ServiceName}Worker.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
@@ -359,15 +359,15 @@ namespace {Organization}.{Product}.Services.{ServiceName};
 using {Organization}.{Product}.Services.{ServiceName}.Configuration;
 using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
-public class Worker : WorkerBackgroundService<Settings>
+public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings>
 {
     private readonly I{ServiceName} _service;
 
     public Worker(
-        ILogger<Worker> logger,
+        ILogger<{ServiceName}Worker> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
-        IOptions<Settings> options,
+        IOptions<{ServiceName}Settings> options,
         IEnumerable<IHealthCheck> healthChecks,
         I{ServiceName} service)
         : base(logger, distributedTracing, meterFactory, options, healthChecks)
@@ -388,18 +388,18 @@ public class Worker : WorkerBackgroundService<Settings>
 
 Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse. See `references/background-service.md` for the `WorkerBackgroundService` base class.
 
-## HealthCheck.cs
+## {ServiceName}HealthCheck.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
 using {Organization}.{Product}.Services.{ServiceName}.Configuration;
 
-public class HealthCheck : IHealthCheck
+public class {ServiceName}HealthCheck : IHealthCheck
 {
-    private readonly Settings _settings;
+    private readonly {ServiceName}Settings _settings;
 
-    public HealthCheck(IOptions<Settings> options)
+    public HealthCheck(IOptions<{ServiceName}Settings> options)
     {
         _settings = options.Value;
     }
@@ -535,7 +535,7 @@ public static class StartupExtensions
 {
     public static IServiceCollection Add{ServiceName}(
         this IServiceCollection services,
-        Action<Settings>? setupAction = null)
+        Action<{ServiceName}Settings>? setupAction = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -543,11 +543,11 @@ public static class StartupExtensions
             typeof(IDistributedTracing),
             typeof(IMeterFactory));
 
-        services.AddOptions<Settings>()
-            .BindConfiguration(Settings.ConfigurationSectionName)
+        services.AddOptions<{ServiceName}Settings>()
+            .BindConfiguration({ServiceName}Settings.ConfigurationSectionName)
             .Configure<IConfiguration>((settings, config) =>
             {
-                settings.Enabled = config.GetFeatureFlag<Settings>();
+                settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
@@ -557,7 +557,7 @@ public static class StartupExtensions
             services.Configure(setupAction);
         }
 
-        services.AddScoped<I{ServiceName}, {ServiceName}>();
+        services.AddScoped<I{ServiceName}, {ServiceName}Service>();
 
         return services;
     }

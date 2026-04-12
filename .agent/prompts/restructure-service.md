@@ -32,7 +32,7 @@ Scan `{{Service path}}` and produce a report:
 | Current location | Target folder | Reason |
 |---|---|---|
 | `I{ServiceName}.cs` at root | `Contracts/I{ServiceName}.cs` | Internal interface (default) |
-| `{ServiceName}Settings.cs` | `Configuration/Settings.cs` | Rename class to `Settings`, update namespace |
+| `{ServiceName}Settings.cs` | `Configuration/{ServiceName}Settings.cs` | Move to Configuration folder, update namespace |
 | `StartupExtensions.cs` | `Extensions/StartupExtensions.cs` | Update namespace |
 | Request/Response DTOs | `Abstractions/Requests/` or `Abstractions/Responses/` | Public contract types |
 | Domain events | `Abstractions/Events/` | Public contract types |
@@ -42,8 +42,8 @@ Scan `{{Service path}}` and produce a report:
 | Exception classes | `Exceptions/` | Keep existing |
 | Validator attributes | `Validators/` | Keep existing |
 | `Api.cs` (single file) | `Api/Api.cs` + split endpoints | One file per endpoint |
-| Background service extending `WorkerBackgroundService` | `Worker.cs` | Business logic stays in `Service.cs` |
-| Health check | `HealthCheck.cs` | Rename class if prefixed with service name |
+| Background service extending `WorkerBackgroundService` | `{ServiceName}Worker.cs` | Business logic stays in `{ServiceName}Service.cs` |
+| Health check | `{ServiceName}HealthCheck.cs` | File and class name match |
 | HTTP client wrappers | `Clients/` | Interface + implementation |
 | Internal helpers | `Internals/` | Interfaces go to `Contracts/` |
 
@@ -77,7 +77,7 @@ After approval, execute the restructuring:
 3. Move files to their new locations
 4. Update namespaces in all moved files
 5. Update `using` statements across all files to reflect new namespaces
-6. Rename classes per convention (`{ServiceName}Settings` → `Settings`, `{ServiceName}HealthCheck` → `HealthCheck`, service implementation `{ServiceName}` → `Service`, `{ServiceName}Worker` → `Worker`). **Do NOT rename**: `I{ServiceName}` (interface keeps the service name) and exception classes like `{ServiceName}Exception`.
+6. Rename files and classes per convention: core service files use `{ServiceName}` prefix — `{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`, `I{ServiceName}.cs`, and exception classes. File name must match class name.
 7. **After each rename, grep for the old class name across the entire service folder** and update every reference — generic type parameters, field declarations, constructor parameters, DI registrations, logger types, static member access, `nameof()`, etc. Zero occurrences of the old name must remain.
 8. Split `Api.cs` into `Api/Api.cs` + individual endpoint files if applicable
 9. Split Worker/Service if the service extends `WorkerBackgroundService`:

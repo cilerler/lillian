@@ -95,11 +95,11 @@ Output to `{OutputLocation}/{ServiceName}/`:
 
 | Path | Purpose |
 |------|---------|
-| `Configuration/Settings.cs` | Configuration with validation |
+| `Configuration/{ServiceName}Settings.cs` | Configuration with validation |
 | `Contracts/I{ServiceName}.cs` | Service interface (internal by default) |
 | `Extensions/StartupExtensions.cs` | DI registration |
 | `Constants.cs` | Domain constants + Metrics nested class |
-| `Service.cs` | Core business logic implementation |
+| `{ServiceName}Service.cs` | Core business logic implementation |
 
 ### Create When Needed
 
@@ -121,8 +121,8 @@ Folders are created only when they have content. Do not create empty folders.
 | Grafana dashboard | `Observability/Grafana/` |
 | Embedded resources (SQL, templates, etc.) | `Resources/` with subfolders by type |
 | Custom validation attributes | `Validators/` |
-| Background/cron service | `Worker.cs` |
-| Health monitoring | `HealthCheck.cs` |
+| Background/cron service | `{ServiceName}Worker.cs` |
+| Health monitoring | `{ServiceName}HealthCheck.cs` |
 | API exposure | `tests/{ServiceName}.http` — HTTP test file for the service's endpoints |
 
 ## Code Patterns
@@ -143,8 +143,8 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 ## Key Conventions
 
 ### Architecture Rule: Service.cs Owns All Business Logic
-- `Service.cs` is the single home for business logic, accessed through `I{ServiceName}`
-- `Worker.cs` and `Api/` endpoints are **thin adapters** — they translate between their protocol (HTTP, cron) and `I{ServiceName}`, never containing business logic themselves
+- `{ServiceName}Service.cs` is the single home for business logic, accessed through `I{ServiceName}`
+- `{ServiceName}Worker.cs` and `Api/` endpoints are **thin adapters** — they translate between their protocol (HTTP, cron) and `I{ServiceName}`, never containing business logic themselves
 - API endpoints call `I{ServiceName}` methods and map results to HTTP responses — nothing more
 - Worker calls `I{ServiceName}` methods and manages scheduling/lifecycle — nothing more
 
@@ -154,11 +154,11 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 - `Contracts/` = internal interfaces (what stays within this service module)
 - `Models/` = internal entities only (public DTOs go in `Abstractions/`)
 - `Internals/` = internal helper implementations (their interfaces go in `Contracts/`)
-- Avoid redundant `{ServiceName}` prefix on files inside the service folder (except `I{ServiceName}.cs`)
+- Core service files use `{ServiceName}` prefix: `{ServiceName}Service.cs`, `{ServiceName}Settings.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `I{ServiceName}.cs`, exception classes. Other files (endpoints, mappers, validators, helpers) use descriptive names without the prefix.
 
 ### Naming
 - Variables match interface: `IDistributedCache` → `_distributedCache`
-- Settings class: `Settings` (in `Configuration/` folder, namespace provides context)
+- Settings class: `{ServiceName}Settings` (in `Configuration/` folder — keeps the prefix for cross-service disambiguation)
 - ConfigurationSectionName: `nameof({ServiceName})`
 
 ### Constructor Order

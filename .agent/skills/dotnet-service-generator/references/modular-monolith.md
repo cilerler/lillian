@@ -74,9 +74,9 @@ src/
 │   │   │   │   │   └── SQL/
 │   │   │   │   ├── Validators/                # Custom validation attributes
 │   │   │   │   ├── Constants.cs               # Service constants + Metrics nested class
-│   │   │   │   ├── Service.cs                 # Core business logic
-│   │   │   │   ├── Worker.cs                  # Background service lifecycle (optional)
-│   │   │   │   └── HealthCheck.cs             # Health monitoring (optional)
+│   │   │   │   ├── {ServiceName}Service.cs    # Core business logic
+│   │   │   │   ├── {ServiceName}Worker.cs     # Background service lifecycle (optional)
+│   │   │   │   └── {ServiceName}HealthCheck.cs # Health monitoring (optional)
 │   │   │   │
 │   │   │   └── {ServiceName2}/
 │   │   │
