@@ -6,7 +6,7 @@ Minimal API patterns using `Api/` folder with route group definition and separat
 
 ```
 Api/
-├── Api.cs                     # Route group definition, shared middleware
+├── {ServiceName}Api.cs        # Route group definition, shared middleware
 ├── GetAllEndpoint.cs
 ├── GetByIdEndpoint.cs
 ├── CreateEndpoint.cs
@@ -14,14 +14,14 @@ Api/
 └── DeleteEndpoint.cs
 ```
 
-## Api/Api.cs
+## Api/{ServiceName}Api.cs
 
 Route group definition and endpoint registration:
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Api;
 
-public static class Api
+public static class {ServiceName}Api
 {
     public static WebApplication Map{ServiceName}Api(this WebApplication app)
     {
@@ -315,7 +315,7 @@ Api/
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Api;
 
-public static class Api
+public static class {ServiceName}Api
 {
     public static WebApplication Map{ServiceName}Api(this WebApplication app)
     {

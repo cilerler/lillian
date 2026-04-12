@@ -16,7 +16,7 @@ Services/{ServiceName}/
 │   └── Responses/
 │       └── {Name}Response.cs
 ├── Api/                             # optional — if HTTP endpoints exposed
-│   ├── Api.cs                       # Route group definition
+│   ├── {ServiceName}Api.cs          # Route group definition
 │   └── {Verb}Endpoint.cs            # One file per endpoint
 ├── Clients/                         # External HTTP dependencies
 │   ├── I{ExternalApi}Client.cs

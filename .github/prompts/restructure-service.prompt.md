@@ -42,7 +42,7 @@ Scan `{{Service path}}` and produce a report:
 | Mapper classes | `Mappers/` | Keep existing |
 | Exception classes | `Exceptions/` | Keep existing |
 | Validator attributes | `Validators/` | Keep existing |
-| `Api.cs` (single file) | `Api/Api.cs` + split endpoints | One file per endpoint |
+| `Api.cs` (single file) | `Api/{ServiceName}Api.cs` + split endpoints | One file per endpoint |
 | Background service extending `WorkerBackgroundService` | `{ServiceName}Worker.cs` | Business logic stays in `{ServiceName}Service.cs` |
 | Health check | `{ServiceName}HealthCheck.cs` | File and class name match |
 | HTTP client wrappers | `Clients/` | Interface + implementation |

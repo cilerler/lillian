@@ -112,7 +112,7 @@ Folders are created only when they have content. Do not create empty folders.
 | Public domain events | `Abstractions/Events/` |
 | Interface externally consumed | `Abstractions/Interfaces/` (move `I{ServiceName}.cs` from `Contracts/`) |
 | Shared enums, value objects | `Abstractions/Models/` |
-| API exposure | `Api/Api.cs` + `Api/{Verb}Endpoint.cs` per endpoint |
+| API exposure | `Api/{ServiceName}Api.cs` + `Api/{Verb}Endpoint.cs` per endpoint |
 | External HTTP API wrappers | `Clients/` |
 | Custom exceptions | `Exceptions/` |
 | Internal helper implementations | `Internals/` (interfaces go to `Contracts/`) |
