@@ -123,6 +123,7 @@ Folders are created only when they have content. Do not create empty folders.
 | Custom validation attributes | `Validators/` |
 | Background/cron service | `Worker.cs` |
 | Health monitoring | `HealthCheck.cs` |
+| API exposure | `tests/{ServiceName}.http` — HTTP test file for the service's endpoints |
 
 ## Code Patterns
 

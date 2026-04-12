@@ -246,6 +246,62 @@ public static class DeleteEndpoint
 app.Map{ServiceName}Api();
 ```
 
+## HTTP Test Files
+
+When API endpoints are created, generate a corresponding `.http` test file under `/tests`. Files follow the same hierarchy as the code:
+
+| Level | File path | Scope |
+|-------|-----------|-------|
+| Service | `tests/{ServiceName}.http` | Tests for one service's endpoints |
+| Component | `tests/{ComponentName}.http` | Cross-service tests within a component |
+| Module | `tests/{ModuleName}.http` | Cross-component tests within a module |
+| App | `tests/App.http` | Cross-module or global tests |
+
+Example `tests/{ServiceName}.http`:
+
+```http
+@baseUrl = https://localhost:5001
+@contentType = application/json
+
+###
+# Get all {ServiceName} items
+# @name GetAll
+GET {{baseUrl}}/api/{service-kebab}
+Accept: {{contentType}}
+
+###
+# Get a specific {ServiceName} by ID
+# @name GetById
+GET {{baseUrl}}/api/{service-kebab}/{{id}}
+Accept: {{contentType}}
+
+###
+# Create a new {ServiceName}
+# @name Create
+POST {{baseUrl}}/api/{service-kebab}
+Content-Type: {{contentType}}
+
+{
+  "id": "sample-id",
+  "data": "sample-data"
+}
+
+###
+# Update an existing {ServiceName}
+# @name Update
+PUT {{baseUrl}}/api/{service-kebab}/{{id}}
+Content-Type: {{contentType}}
+
+{
+  "data": "updated-data"
+}
+
+###
+# Delete a {ServiceName}
+# @name Delete
+DELETE {{baseUrl}}/api/{service-kebab}/{{id}}
+```
+
 ## Single Action Pattern
 
 For services with one primary action, use the same folder structure with fewer endpoints:
