@@ -2,9 +2,76 @@
 
 Patterns for optional service dependencies. Add to constructor after core dependencies (ILogger, IDistributedTracing, IMeterFactory, IOptions) in alphabetical order.
 
+## Clients/ — External HTTP API Wrappers
+
+For services that wrap an external HTTP API, use the `Clients/` folder with a typed client pattern. This separates HTTP concerns (serialization, retries, auth headers) from business logic.
+
+```
+Clients/
+├── I{ExternalApi}Client.cs       # Interface
+└── {ExternalApi}Client.cs        # Implementation
+```
+
+```csharp
+// Clients/I{ExternalApi}Client.cs
+namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+
+public interface I{ExternalApi}Client
+{
+    Task<TResponse> GetByIdAsync(string id, CancellationToken cancellationToken);
+    Task<TResponse> CreateAsync(TRequest request, CancellationToken cancellationToken);
+}
+```
+
+```csharp
+// Clients/{ExternalApi}Client.cs
+namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+
+public class {ExternalApi}Client : I{ExternalApi}Client
+{
+    private readonly HttpClient _httpClient;
+
+    public {ExternalApi}Client(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task<TResponse> GetByIdAsync(string id, CancellationToken cancellationToken)
+    {
+        var response = await _httpClient.GetAsync($"/api/resource/{id}", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken)!;
+    }
+
+    public async Task<TResponse> CreateAsync(TRequest request, CancellationToken cancellationToken)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/resource", request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken)!;
+    }
+}
+```
+
+Registration in `Extensions/StartupExtensions.cs` using typed client with resilience:
+
+```csharp
+services.AddHttpClient<I{ExternalApi}Client, {ExternalApi}Client>(client =>
+{
+    client.BaseAddress = new Uri(settings.BaseUrl);
+    client.Timeout = settings.HttpTimeout;
+})
+.AddStandardResilienceHandler();
+```
+
+Service.cs then injects `I{ExternalApi}Client` directly (not `IHttpClientFactory`).
+
+> **When to use Clients/ vs IHttpClientFactory**: Use `Clients/` when wrapping an external API with multiple methods, response mapping, and error translation. Use `IHttpClientFactory` directly (below) for simple one-off HTTP calls.
+
 ## IHttpClientFactory
 
-**Important**: Resilience policies (retry, circuit breaker, timeout) MUST be configured in the service's own `StartupExtensions.cs`, colocated with the HTTP client registration. Do NOT add resilience at the host level (`ProgramExtensions.cs` / `ConfigureHttpClientDefaults`) — it stacks rather than overrides, causing double retries and conflicting timeouts.
+For simple HTTP calls that don't warrant a full client wrapper.
+
+**Important**: Resilience policies (retry, circuit breaker, timeout) MUST be configured in the service's own `Extensions/StartupExtensions.cs`, colocated with the HTTP client registration. Do NOT add resilience at the host level (`ProgramExtensions.cs` / `ConfigureHttpClientDefaults`) — it stacks rather than overrides, causing double retries and conflicting timeouts.
 
 ```csharp
 // Field

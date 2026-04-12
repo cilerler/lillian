@@ -4,14 +4,20 @@ Grafana dashboard JSON templates for .NET services with environment separation.
 
 ---
 
-## Output Directory
+## Output Directories
+
+Dashboards live at the level they monitor:
 
 ```
-tools/grafana/
-├── service-health-dashboard.json
-├── api-performance-dashboard.json
-├── background-worker-dashboard.json
-└── resource-usage-dashboard.json
+src/
+├── Observability/Grafana/                         # App-wide: platform overview
+│   └── dashboard.json
+├── Modules/{ModuleName}/Observability/Grafana/    # Module: domain health
+│   └── dashboard.json
+├── .../{ComponentName}/Observability/Grafana/     # Component: sub-domain aggregation
+│   └── dashboard.json
+├── .../{ServiceName}/Observability/Grafana/       # Service: individual metrics
+│   └── dashboard.json
 ```
 
 ---

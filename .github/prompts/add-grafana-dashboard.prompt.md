@@ -9,7 +9,11 @@ Load and follow `.github/skills/observability/SKILL.md` and its template at `.gi
 
 ## Requirements
 
-1. **Output location**: Generate all dashboard JSON files under `tools/grafana/`
+1. **Output location**: Dashboards live alongside the code they monitor:
+   - Service-level: `{ServicePath}/Observability/Grafana/dashboard.json`
+   - Component-level: `{ComponentPath}/Observability/Grafana/dashboard.json`
+   - Module-level: `{ModulePath}/Observability/Grafana/dashboard.json`
+   - App-wide: `src/Observability/Grafana/dashboard.json`
 2. **Environment separation**: Every dashboard must include an `env` template variable with values: `integration`, `testing`, `staging`, `production`
 3. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"` selectors
 4. **Datasource variable**: Every dashboard must use a `$datasource` template variable

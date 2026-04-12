@@ -7,14 +7,17 @@ Custom health checks for services using `IHealthCheck`.
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
-public class {ServiceName}HealthCheck : IHealthCheck
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public class HealthCheck : IHealthCheck
 {
     private readonly I{ServiceName} _service;
-    private readonly {ServiceName}Settings _settings;
+    private readonly Settings _settings;
 
-    public {ServiceName}HealthCheck(
+    public HealthCheck(
         I{ServiceName} service,
-        IOptions<{ServiceName}Settings> options)
+        IOptions<Settings> options)
     {
         _service = service;
         _settings = options.Value;
@@ -46,11 +49,11 @@ public class {ServiceName}HealthCheck : IHealthCheck
 }
 ```
 
-## Registration in StartupExtensions.cs
+## Registration in Extensions/StartupExtensions.cs
 
 ```csharp
 services.AddHealthChecks()
-    .AddCheck<{ServiceName}HealthCheck>("{ServiceName}", tags: ["ready"]);
+    .AddCheck<HealthCheck>("{ServiceName}", tags: ["ready"]);
 ```
 
 ## Common Health Check Patterns

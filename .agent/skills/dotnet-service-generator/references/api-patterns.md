@@ -1,15 +1,25 @@
 # API Patterns
 
-Minimal API patterns using MapGroup with chained endpoint methods.
+Minimal API patterns using `Api/` folder with route group definition and separate endpoint files.
 
-## Api.cs
+## File Structure
+
+```
+Api/
+├── Api.cs                     # Route group definition, shared middleware
+├── GetAllEndpoint.cs
+├── GetByIdEndpoint.cs
+├── CreateEndpoint.cs
+├── UpdateEndpoint.cs
+└── DeleteEndpoint.cs
+```
+
+## Api/Api.cs
+
+Route group definition and endpoint registration:
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
-
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
-using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
-using {Organization}.{Product}.Services.{ServiceName}.Models;
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
 
 public static class Api
 {
@@ -25,8 +35,20 @@ public static class Api
 
         return app;
     }
+}
+```
 
-    private static RouteGroupBuilder MapGetAll(this RouteGroupBuilder group)
+## Api/GetAllEndpoint.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public static class GetAllEndpoint
+{
+    public static RouteGroupBuilder MapGetAll(this RouteGroupBuilder group)
     {
         group.MapGet("/", async (
             [FromServices] I{ServiceName} service,
@@ -43,13 +65,25 @@ public static class Api
             }
         })
         .WithName("GetAll{ServiceName}")
-        .Produces<IEnumerable<TModel>>(StatusCodes.Status200OK)
+        .Produces<IEnumerable<Response>>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return group;
     }
+}
+```
 
-    private static RouteGroupBuilder MapGetById(this RouteGroupBuilder group)
+## Api/GetByIdEndpoint.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public static class GetByIdEndpoint
+{
+    public static RouteGroupBuilder MapGetById(this RouteGroupBuilder group)
     {
         group.MapGet("/{id:guid}", async (
             Guid id,
@@ -69,17 +103,31 @@ public static class Api
             }
         })
         .WithName("Get{ServiceName}ById")
-        .Produces<TModel>(StatusCodes.Status200OK)
+        .Produces<Response>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return group;
     }
+}
+```
 
-    private static RouteGroupBuilder MapCreate(this RouteGroupBuilder group)
+## Api/CreateEndpoint.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+
+public static class CreateEndpoint
+{
+    public static RouteGroupBuilder MapCreate(this RouteGroupBuilder group)
     {
         group.MapPost("/", async (
-            [FromBody] TCreateRequest request,
+            [FromBody] CreateRequest request,
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
@@ -98,18 +146,32 @@ public static class Api
             }
         })
         .WithName("Create{ServiceName}")
-        .Produces<TModel>(StatusCodes.Status201Created)
+        .Produces<Response>(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return group;
     }
+}
+```
 
-    private static RouteGroupBuilder MapUpdate(this RouteGroupBuilder group)
+## Api/UpdateEndpoint.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+
+public static class UpdateEndpoint
+{
+    public static RouteGroupBuilder MapUpdate(this RouteGroupBuilder group)
     {
         group.MapPut("/{id:guid}", async (
             Guid id,
-            [FromBody] TUpdateRequest request,
+            [FromBody] UpdateRequest request,
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
@@ -130,15 +192,26 @@ public static class Api
             }
         })
         .WithName("Update{ServiceName}")
-        .Produces<TModel>(StatusCodes.Status200OK)
+        .Produces<Response>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return group;
     }
+}
+```
 
-    private static RouteGroupBuilder MapDelete(this RouteGroupBuilder group)
+## Api/DeleteEndpoint.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public static class DeleteEndpoint
+{
+    public static RouteGroupBuilder MapDelete(this RouteGroupBuilder group)
     {
         group.MapDelete("/{id:guid}", async (
             Guid id,
@@ -175,9 +248,17 @@ app.Map{ServiceName}Api();
 
 ## Single Action Pattern
 
-For services with one primary action:
+For services with one primary action, use the same folder structure with fewer endpoints:
+
+```
+Api/
+├── Api.cs
+└── ExecuteEndpoint.cs
+```
 
 ```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
 public static class Api
 {
     public static WebApplication Map{ServiceName}Api(this WebApplication app)
@@ -188,11 +269,22 @@ public static class Api
 
         return app;
     }
+}
+```
 
-    private static RouteGroupBuilder MapExecute(this RouteGroupBuilder group)
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public static class ExecuteEndpoint
+{
+    public static RouteGroupBuilder MapExecute(this RouteGroupBuilder group)
     {
         group.MapPost("/execute", async (
-            [FromBody] TRequest request,
+            [FromBody] ExecuteRequest request,
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {

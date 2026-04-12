@@ -90,7 +90,11 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 
 See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for complete Grafana JSON templates.
 
-**Output location**: `tools/grafana/`
+**Output locations** (dashboards live at the level they monitor):
+- Service: `{ServicePath}/Observability/Grafana/dashboard.json`
+- Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
+- Module: `{ModulePath}/Observability/Grafana/dashboard.json`
+- App-wide: `src/Observability/Grafana/dashboard.json`
 
 **Required**: All dashboards must include `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`. All PromQL queries must filter by `env="$env"`.
 

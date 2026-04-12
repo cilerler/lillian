@@ -15,6 +15,7 @@ references:
   - references/api-patterns.md
   - references/dependencies.md
   - references/health-check.md
+  - references/modular-monolith.md
 summary: Interactive scaffolder for .NET service modules with observability and DI conventions.
 ---
 
@@ -27,7 +28,8 @@ Interactive scaffolder for .NET services with full observability support.
 1. Gather information interactively
 2. Identify dependencies from service purpose
 3. Present dependency checklist for confirmation
-4. Generate files to specified location
+4. Determine service lifetime
+5. Generate files to specified location
 
 ## Step 1: Gather Basic Info
 
@@ -36,7 +38,8 @@ Ask these questions (one or two at a time):
 1. **Service name** - PascalCase (e.g., `PaymentProcessor`, `UserNotification`)
 2. **Namespace** - `{Organization}.{Product}` (e.g., `Microsoft.Windows`)
 3. **Purpose** - Brief description (used to identify dependencies)
-4. **Output location** - Where to generate files
+4. **Output location** - Where to generate files (standalone: `Services/{ServiceName}/`, modular monolith: `Modules/{ModuleName}/{ComponentName}/{ServiceName}/`)
+5. **Interface visibility** - Is `I{ServiceName}` consumed by other modules? (default: **no** → placed in `Contracts/`)
 
 ## Step 2: Identify Dependencies
 
@@ -44,14 +47,15 @@ Based on service purpose:
 
 | If the service... | Likely needs |
 |-------------------|--------------|
-| Calls external APIs | IHttpClientFactory |
+| Calls external APIs | `Clients/` with typed HTTP client |
+| Makes simple HTTP calls | IHttpClientFactory |
 | Caches data | HybridCache or IDistributedCache |
 | Reads/writes database | DbContext |
 | Uploads/downloads files | ICloudStorageFactory |
 | Sends/receives messages | IMessageQueueFactory |
 | Needs coordination/locking | IDistributedLock |
-| Runs on schedule/background | WorkerBackgroundService |
-| Exposes HTTP endpoints | Api.cs |
+| Runs on schedule/background | Worker.cs (extends WorkerBackgroundService) |
+| Exposes HTTP endpoints | `Api/` folder |
 
 ## Step 3: Confirm Dependencies
 
@@ -59,18 +63,18 @@ Present numbered checklist:
 
 ```
 Based on your description, I identified:
-[x] 1. IHttpClientFactory (for external API calls)
+[x] 1. Clients/ with typed HTTP client (for external API calls)
 [x] 2. HybridCache (for caching responses)
 
 Additional options:
 [ ] 3. IDistributedCache
 [ ] 4. IDistributedLock
 [ ] 5. DbContext (direct)
-[ ] 6. Repository/UoW pattern
+[ ] 6. Repository/UoW pattern (in Internals/)
 [ ] 7. ICloudStorageFactory
 [ ] 8. IMessageQueueFactory
-[ ] 9. Background service
-[ ] 10. API endpoints
+[ ] 9. Worker.cs (background service)
+[ ] 10. Api/ folder (HTTP endpoints)
 
 Confirm or adjust (e.g., "add 4, remove 2"):
 ```
@@ -85,28 +89,40 @@ Suggest based on dependencies:
 
 ## Step 5: Generate Files
 
-Output to `{OutputLocation}/Services/{ServiceName}/`:
+Output to `{OutputLocation}/{ServiceName}/`:
 
 ### Always Generate
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `Contracts/I{ServiceName}.cs` | Service interface |
-| `Constants.cs` | Domain constants |
-| `Settings.cs` | Configuration with validation |
-| `Service.cs` | Implementation |
-| `StartupExtensions.cs` | DI registration |
+| `Configuration/Settings.cs` | Configuration with validation |
+| `Contracts/I{ServiceName}.cs` | Service interface (internal by default) |
+| `Extensions/StartupExtensions.cs` | DI registration |
+| `Constants.cs` | Domain constants + Metrics nested class |
+| `Service.cs` | Core business logic implementation |
 
-### Conditionally Generate
+### Create When Needed
 
-| Condition | File |
+Folders are created only when they have content. Do not create empty folders.
+
+| Condition | Path |
 |-----------|------|
-| API exposure | `Api.cs` |
-| Settings validation | `Validators/{Name}Attribute.cs` |
+| Public request DTOs | `Abstractions/Requests/` |
+| Public response DTOs | `Abstractions/Responses/` |
+| Public domain events | `Abstractions/Events/` |
+| Interface externally consumed | `Abstractions/Interfaces/` (move `I{ServiceName}.cs` from `Contracts/`) |
+| Shared enums, value objects | `Abstractions/Models/` |
+| API exposure | `Api/Api.cs` + `Api/{Verb}Endpoint.cs` per endpoint |
+| External HTTP API wrappers | `Clients/` |
+| Custom exceptions | `Exceptions/` |
+| Internal helper implementations | `Internals/` (interfaces go to `Contracts/`) |
+| Object mapping needed | `Mappers/` |
+| Internal entities/domain objects | `Models/` |
+| Grafana dashboard | `Observability/Grafana/` |
+| Embedded resources (SQL, templates, etc.) | `Resources/` with subfolders by type |
+| Custom validation attributes | `Validators/` |
+| Background/cron service | `Worker.cs` |
 | Health monitoring | `HealthCheck.cs` |
-| DTOs/records needed | `Models/{Name}.cs` |
-| Custom exceptions | `Exceptions/{Name}Exception.cs` |
-| Object mapping | `Mappers/{Name}Mapper.cs` |
 
 ## Code Patterns
 
@@ -117,6 +133,7 @@ See reference files:
 - **API patterns**: [references/api-patterns.md](references/api-patterns.md)
 - **Optional dependencies**: [references/dependencies.md](references/dependencies.md)
 - **Health checks**: [references/health-check.md](references/health-check.md)
+- **Modular monolith**: [references/modular-monolith.md](references/modular-monolith.md)
 
 ## Observability Guidance
 
@@ -124,9 +141,23 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 
 ## Key Conventions
 
+### Architecture Rule: Service.cs Owns All Business Logic
+- `Service.cs` is the single home for business logic, accessed through `I{ServiceName}`
+- `Worker.cs` and `Api/` endpoints are **thin adapters** — they translate between their protocol (HTTP, cron) and `I{ServiceName}`, never containing business logic themselves
+- API endpoints call `I{ServiceName}` methods and map results to HTTP responses — nothing more
+- Worker calls `I{ServiceName}` methods and manages scheduling/lifecycle — nothing more
+
+### Folder Organization
+- Folders are created only when they have content — do not create empty folders
+- `Abstractions/` = public contract (what other modules/consumers reference)
+- `Contracts/` = internal interfaces (what stays within this service module)
+- `Models/` = internal entities only (public DTOs go in `Abstractions/`)
+- `Internals/` = internal helper implementations (their interfaces go in `Contracts/`)
+- Avoid redundant `{ServiceName}` prefix on files inside the service folder (except `I{ServiceName}.cs`)
+
 ### Naming
 - Variables match interface: `IDistributedCache` → `_distributedCache`
-- Settings: `{ServiceName}Settings`
+- Settings class: `Settings` (in `Configuration/` folder, namespace provides context)
 - ConfigurationSectionName: `nameof({ServiceName})`
 
 ### Constructor Order
@@ -147,6 +178,20 @@ _meter = meterFactory.Create(new MeterOptions(Startup.AssemblyName)
         { "code.class", GetType().Name }
     }
 });
+```
+
+### Metric Constants
+Define metric names in `Constants.Metrics` nested class to ensure consistency between code and Grafana dashboards:
+```csharp
+public static class Constants
+{
+    public static class Metrics
+    {
+        public const string ActiveRequests = "active_requests";
+        public const string OperationTotal = "operation_total";
+        public const string OperationDuration = "operation_duration_seconds";
+    }
+}
 ```
 
 ## Output Format

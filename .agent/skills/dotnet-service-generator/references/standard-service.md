@@ -4,21 +4,56 @@
 
 ```
 Services/{ServiceName}/
-├── Contracts/
-│   └── I{ServiceName}.cs
-├── Models/                # DTOs, records, entities
-├── Validators/            # Custom validation attributes
-├── Exceptions/            # Custom exceptions
-├── Mappers/               # Object mapping
-├── Constants.cs
-├── Settings.cs
-├── Service.cs
-├── HealthCheck.cs         # If needed
-├── StartupExtensions.cs
-└── Api.cs                 # If API exposed
+├── Abstractions/                    # Public contract — crosses module boundary
+│   ├── Events/
+│   │   └── {Name}Event.cs
+│   ├── Interfaces/
+│   │   └── I{ServiceName}.cs        # Only when externally consumed
+│   ├── Models/
+│   │   └── {Name}.cs                # Enums, value objects, shared DTOs
+│   ├── Requests/
+│   │   └── {Name}Request.cs
+│   └── Responses/
+│       └── {Name}Response.cs
+├── Api/                             # optional — if HTTP endpoints exposed
+│   ├── Api.cs                       # Route group definition
+│   └── {Verb}Endpoint.cs            # One file per endpoint
+├── Clients/                         # External HTTP dependencies
+│   ├── I{ExternalApi}Client.cs
+│   └── {ExternalApi}Client.cs
+├── Configuration/
+│   └── Settings.cs
+├── Contracts/                       # Internal interfaces
+│   └── I{ServiceName}.cs           # Default: internal (move to Abstractions/Interfaces/ if externally consumed)
+├── Exceptions/
+│   └── {Name}Exception.cs
+├── Extensions/
+│   └── StartupExtensions.cs
+├── Internals/                       # Internal helper implementations
+│   └── {Name}.cs                    # Repository, UnitOfWork, Decorator, etc.
+├── Mappers/
+│   └── {Name}Mapper.cs
+├── Models/                          # Internal entities/DTOs only
+│   └── {Name}.cs
+├── Observability/
+│   └── Grafana/
+│       └── dashboard.json
+├── Resources/                       # optional — embedded resource files (SQL, templates, etc.)
+│   └── SQL/
+│       ├── {Name}.sql
+│       ├── ResourceLoader.cs        # Lazy loader for embedded resources
+│       └── Constants.cs             # Resource file name constants
+├── Validators/
+│   └── {Name}Attribute.cs
+├── Constants.cs                     # Includes Metrics nested class
+├── Service.cs                       # Core business logic
+├── Worker.cs                        # optional — if background/cron
+└── HealthCheck.cs                   # optional — if health monitoring needed
 ```
 
 ## Contracts/I{ServiceName}.cs
+
+> **Placement rule**: `I{ServiceName}.cs` defaults to `Contracts/` (internal). Move to `Abstractions/` only when other modules or external consumers need to reference it.
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Contracts;
@@ -29,6 +64,30 @@ public interface I{ServiceName}
 }
 ```
 
+## Abstractions/Requests/{Name}Request.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
+
+public record Process{ServiceName}Request(string Id, string Data);
+```
+
+## Abstractions/Responses/{Name}Response.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+
+public record {ServiceName}Response(string Id, string Result, DateTime ProcessedAt);
+```
+
+## Abstractions/Events/{Name}Event.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Events;
+
+public record {ServiceName}CompletedEvent(string Id, DateTime CompletedAt);
+```
+
 ## Constants.cs
 
 ```csharp
@@ -37,15 +96,24 @@ namespace {Organization}.{Product}.Services.{ServiceName};
 public static class Constants
 {
     public const string DefaultValue = "default";
+    
+    public static class Metrics
+    {
+        public const string ActiveRequests = "active_requests";
+        public const string OperationTotal = "operation_total";
+        public const string OperationDuration = "operation_duration_seconds";
+    }
 }
 ```
 
-## Settings.cs
+## Configuration/Settings.cs
+
+> **No domain-specific defaults in settings classes.** Domain-specific string properties (connection strings, resource names, endpoint URLs, queue names, topic names, etc.) must not have hardcoded default values — use `= null!;` and supply values via `appsettings.json` or environment variables. Operational numeric properties (timeouts, retry counts, batch sizes, intervals) may have sensible defaults.
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
 
-public class {ServiceName}Settings
+public class Settings
 {
     public const string ConfigurationSectionName = nameof({ServiceName});
     public static readonly string FeatureFlag = ConfigurationSectionName;
@@ -110,14 +178,10 @@ Common validators for Settings:
 
 ## Models/{Name}.cs
 
-DTOs, records, and entities:
+Internal entities and domain objects. Public DTOs (requests, responses) belong in `Abstractions/`.
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Models;
-
-public record {ServiceName}Request(string Id, string Data);
-
-public record {ServiceName}Response(string Id, string Result, DateTime ProcessedAt);
 
 public record {ServiceName}Item
 {
@@ -174,6 +238,9 @@ public class {ServiceName}ValidationException : {ServiceName}Exception
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Mappers;
 
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Models;
+
 public static class {ServiceName}Mapper
 {
     public static {ServiceName}Response ToResponse(this {ServiceName}Item item)
@@ -196,6 +263,8 @@ public static class {ServiceName}Mapper
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
+using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
 using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
 using {Organization}.{Product}.Services.{ServiceName}.Mappers;
@@ -206,7 +275,7 @@ public class {ServiceName} : I{ServiceName}
     private readonly ILogger<{ServiceName}> _logger;
     private readonly IDistributedTracing _tracer;
     private readonly Meter _meter;
-    private readonly {ServiceName}Settings _settings;
+    private readonly Settings _settings;
 
     private readonly UpDownCounter<int> _activeRequests;
     private readonly Counter<long> _operationCounter;
@@ -216,7 +285,7 @@ public class {ServiceName} : I{ServiceName}
         ILogger<{ServiceName}> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
-        IOptions<{ServiceName}Settings> options)
+        IOptions<Settings> options)
     {
         _logger = logger;
         _tracer = distributedTracing;
@@ -231,13 +300,12 @@ public class {ServiceName} : I{ServiceName}
         });
         _settings = options.Value;
 
-        var serviceName = GetType().Name.ToSnakeCase();
         _activeRequests = _meter.CreateUpDownCounter<int>(
-            $"app_{serviceName}_active", "requests", "Active requests");
+            Constants.Metrics.ActiveRequests, "requests", "Active requests");
         _operationCounter = _meter.CreateCounter<long>(
-            $"app_{serviceName}_total", "operations", "Total operations");
+            Constants.Metrics.OperationTotal, "operations", "Total operations");
         _operationDuration = _meter.CreateHistogram<double>(
-            $"app_{serviceName}_duration_seconds", "s", "Operation duration");
+            Constants.Metrics.OperationDuration, "s", "Operation duration");
     }
 
     public async Task<TResult> DoWorkAsync(CancellationToken cancellationToken)
@@ -283,18 +351,191 @@ public class {ServiceName} : I{ServiceName}
 }
 ```
 
-## StartupExtensions.cs
+## Worker.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public class Worker : WorkerBackgroundService<Settings>
+{
+    private readonly I{ServiceName} _service;
+
+    public Worker(
+        ILogger<Worker> logger,
+        IDistributedTracing distributedTracing,
+        IMeterFactory meterFactory,
+        IOptions<Settings> options,
+        IEnumerable<IHealthCheck> healthChecks,
+        I{ServiceName} service)
+        : base(logger, distributedTracing, meterFactory, options, healthChecks)
+    {
+        _service = service;
+    }
+
+    public override async Task DoWorkAsync(CancellationToken cancellationToken)
+    {
+        var hasData = await _service.CheckForNewDataAsync(cancellationToken);
+        IdleCycle = !hasData;
+        if (IdleCycle) return;
+
+        await _service.ProcessAsync(cancellationToken);
+    }
+}
+```
+
+Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse. See `references/background-service.md` for the `WorkerBackgroundService` base class.
+
+## HealthCheck.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName};
+
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
+
+public class HealthCheck : IHealthCheck
+{
+    private readonly Settings _settings;
+
+    public HealthCheck(IOptions<Settings> options)
+    {
+        _settings = options.Value;
+    }
+
+    public Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
+    {
+        // Implement service-specific health checks
+        return Task.FromResult(HealthCheckResult.Healthy());
+    }
+}
+```
+
+## Clients/I{ExternalApi}Client.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+
+public interface I{ExternalApi}Client
+{
+    Task<TResponse> GetAsync(string id, CancellationToken cancellationToken);
+}
+```
+
+## Clients/{ExternalApi}Client.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+
+public class {ExternalApi}Client : I{ExternalApi}Client
+{
+    private readonly HttpClient _httpClient;
+
+    public {ExternalApi}Client(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task<TResponse> GetAsync(string id, CancellationToken cancellationToken)
+    {
+        var response = await _httpClient.GetAsync($"/api/resource/{id}", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken);
+    }
+}
+```
+
+Registration stays in `Extensions/StartupExtensions.cs` using `AddHttpClient<>`.
+
+## Internals/{Name}.cs
+
+Internal helper implementations such as Repository, UnitOfWork, Decorator, Observer, and similar patterns. Their interfaces go in `Contracts/`.
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Internals;
+
+internal class DataSanitizer : IDataSanitizer
+{
+    public string Sanitize(string input) => input.Trim().ToLowerInvariant();
+}
+```
+
+## Observability/Grafana/dashboard.json
+
+Per-service Grafana dashboard JSON. See observability skill for dashboard template standards.
+
+## Resources/SQL/
+
+Embedded SQL resource files, loaded lazily at runtime. Avoids inline SQL in C# code.
+
+SQL files must be set as **Embedded Resource** in the `.csproj`:
+
+```xml
+<ItemGroup>
+  <EmbeddedResource Include="Resources\SQL\*.sql" />
+</ItemGroup>
+```
+
+### Resources/SQL/Constants.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+
+public static class Constants
+{
+    public const string SelectForUpdate = "SelectForUpdate.sql";
+}
+```
+
+### Resources/SQL/ResourceLoader.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+
+public static class ResourceLoader
+{
+    private const string ResourcePrefix = $"{nameof(Resources)}.SQL";
+    
+    private static readonly Lazy<string> _selectForUpdate = new(() =>
+        AssemblyReference.Assembly.GetEmbeddedResourceContent(Constants.SelectForUpdate, ResourcePrefix));
+    
+    public static string SelectForUpdate => _selectForUpdate.Value;
+}
+```
+
+Usage in `Service.cs`:
+
+```csharp
+using {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+
+var sql = ResourceLoader.SelectForUpdate;
+```
+
+For other resource types (email templates, XML schemas, etc.), add subfolders under `Resources/`:
+
+```
+Resources/
+├── SQL/
+├── Templates/
+└── Schemas/
+```
+
+## Extensions/StartupExtensions.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Extensions;
+
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
 using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
 public static class StartupExtensions
 {
     public static IServiceCollection Add{ServiceName}(
         this IServiceCollection services,
-        Action<{ServiceName}Settings>? setupAction = null)
+        Action<Settings>? setupAction = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -302,11 +543,11 @@ public static class StartupExtensions
             typeof(IDistributedTracing),
             typeof(IMeterFactory));
 
-        services.AddOptions<{ServiceName}Settings>()
-            .BindConfiguration({ServiceName}Settings.ConfigurationSectionName)
+        services.AddOptions<Settings>()
+            .BindConfiguration(Settings.ConfigurationSectionName)
             .Configure<IConfiguration>((settings, config) =>
             {
-                settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
+                settings.Enabled = config.GetFeatureFlag<Settings>();
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
@@ -322,9 +563,3 @@ public static class StartupExtensions
     }
 }
 ```
-
-## Service Lifetime Guidelines
-
-- **Singleton**: HttpClient wrappers, caching, background services
-- **Scoped**: Database operations, request-specific state, DbContext
-- **Transient**: Lightweight stateless, factory-created instances

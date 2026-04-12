@@ -6,16 +6,34 @@ Extends `WorkerBackgroundService<TSettings>` for scheduled/continuous background
 
 ```
 Services/{ServiceName}/
-├── Contracts/
-│   └── I{ServiceName}.cs       # Optional - if interface needed
-├── Models/                      # DTOs, records
-├── Validators/                  # Custom validation attributes
-├── Exceptions/                  # Custom exceptions
+├── Abstractions/                    # Public contract
+│   ├── Events/
+│   ├── Interfaces/
+│   ├── Models/
+│   ├── Requests/
+│   └── Responses/
+├── Api/                             # optional — if HTTP endpoints exposed
+├── Clients/                         # External HTTP dependencies
+├── Configuration/
+│   └── Settings.cs                  # Extends WorkerBackgroundServiceSettings
+├── Contracts/                       # Internal interfaces
+│   └── I{ServiceName}.cs
+├── Exceptions/
+├── Extensions/
+│   └── StartupExtensions.cs
+├── Internals/                       # Internal helpers
+├── Mappers/
+├── Models/                          # Internal entities/DTOs
+├── Observability/
+│   └── Grafana/
+│       └── dashboard.json
+├── Resources/                       # optional — embedded resource files (SQL, templates, etc.)
+│   └── SQL/
+├── Validators/
 ├── Constants.cs
-├── Settings.cs                  # Extends WorkerBackgroundServiceSettings
-├── Service.cs                   # Extends WorkerBackgroundService<TSettings>
-├── HealthCheck.cs
-└── StartupExtensions.cs
+├── Service.cs                       # Core business logic
+├── Worker.cs                        # Extends WorkerBackgroundService<Settings>
+└── HealthCheck.cs
 ```
 
 ## Features
@@ -32,7 +50,7 @@ Services/{ServiceName}/
 | Shutdown | Graceful with configurable timeout for K8s |
 | Observability | Base provides protected meter/tracer, derived adds service-specific metrics |
 
-> **⚠️ Continuous mode warning**: When `ScheduleCronExpression` is null/empty (continuous mode), the loop has no built-in delay between iterations. Always set `DelayBetweenExecutions` to a non-zero value (e.g., `"00:00:01"`) to prevent tight-loop CPU spinning.
+> **Warning -- Continuous mode**: When `ScheduleCronExpression` is null/empty (continuous mode), the loop has no built-in delay between iterations. Always set `DelayBetweenExecutions` to a non-zero value (e.g., `"00:00:01"`) to prevent tight-loop CPU spinning.
 
 ## Required Extensions
 
@@ -520,19 +538,33 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
 }
 ```
 
-## HealthCheck.cs for Background Service
+## Settings.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
+
+public class Settings : WorkerBackgroundServiceSettings
+{
+    public new const string ConfigurationSectionName = nameof({ServiceName});
+    public new static readonly string FeatureFlag = ConfigurationSectionName;
+
+    // Add service-specific settings here
+}
+```
+
+## HealthCheck.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
-public class {ServiceName}HealthCheck : IHealthCheck
+public class HealthCheck : IHealthCheck
 {
-    private readonly {ServiceName} _service;
-    private readonly {ServiceName}Settings _settings;
+    private readonly Worker _worker;
+    private readonly Settings _settings;
 
-    public {ServiceName}HealthCheck({ServiceName} service, IOptions<{ServiceName}Settings> options)
+    public HealthCheck(Worker worker, IOptions<Settings> options)
     {
-        _service = service;
+        _worker = worker;
         _settings = options.Value;
     }
 
@@ -543,7 +575,7 @@ public class {ServiceName}HealthCheck : IHealthCheck
         // Hard timeout check - no successful completion in X time
         if (_settings.HealthHardTimeout.HasValue)
         {
-            var timeSinceLastSuccess = DateTime.UtcNow - _service.GetLastSuccessfulCompletion();
+            var timeSinceLastSuccess = DateTime.UtcNow - _worker.GetLastSuccessfulCompletion();
             if (timeSinceLastSuccess > _settings.HealthHardTimeout.Value)
             {
                 return Task.FromResult(HealthCheckResult.Unhealthy(
@@ -552,10 +584,10 @@ public class {ServiceName}HealthCheck : IHealthCheck
         }
 
         // Degraded check - last execution took significantly longer than average
-        var average = _service.GetAverageExecutionDuration();
+        var average = _worker.GetAverageExecutionDuration();
         if (average.HasValue)
         {
-            var lastDuration = _service.GetLastExecutionDuration();
+            var lastDuration = _worker.GetLastExecutionDuration();
             var threshold = average.Value * _settings.HealthDegradedThresholdMultiplier;
 
             if (lastDuration > threshold)
@@ -570,47 +602,61 @@ public class {ServiceName}HealthCheck : IHealthCheck
 }
 ```
 
-## Derived Service Example
+## Worker.cs and Service.cs
+
+> **Separation of concerns**: Worker handles scheduling, retries, concurrency, and health. Service handles business logic. This makes business logic testable without standing up a hosted service, and lets you swap the trigger (cron, queue, HTTP) without touching business logic.
+
+### Service.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
 
-public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public class Service : I{ServiceName}
 {
+    private readonly ILogger<Service> _logger;
+    private readonly IDistributedTracing _tracer;
+    private readonly Meter _meter;
     private readonly Counter<long> _itemsProcessed;
 
-    public {ServiceName}(
-        ILogger<{ServiceName}> logger,
+    public Service(
+        ILogger<Service> logger,
         IDistributedTracing distributedTracing,
-        IMeterFactory meterFactory,
-        IOptions<{ServiceName}Settings> options,
-        IEnumerable<IHealthCheck> healthChecks)
-        : base(logger, distributedTracing, meterFactory, options, healthChecks)
+        IMeterFactory meterFactory)
     {
-        var serviceName = JsonNamingPolicy.SnakeCaseLower.ConvertName(GetType().Name);
+        _logger = logger;
+        _tracer = distributedTracing;
+        _meter = meterFactory.Create(new MeterOptions(Startup.AssemblyName)
+        {
+            Version = Startup.AssemblyVersion,
+            Tags = new TagList
+            {
+                { "code.namespace", GetType().Namespace },
+                { "code.class", GetType().Name }
+            }
+        });
+
         _itemsProcessed = _meter.CreateCounter<long>(
-            $"app_{serviceName}_items_processed", "items", "Items processed");
+            Constants.Metrics.ItemsProcessed, "items", "Items processed");
     }
 
-    public override async Task DoWorkAsync(CancellationToken cancellationToken)
+    public async Task<bool> CheckForNewDataAsync(CancellationToken cancellationToken)
     {
-        using var activity = _tracer.StartActivity("DoWork", ActivityKind.Internal);
-        activity.SetTag("service.name", nameof({ServiceName}));
+        // Check if there is new data to process
+        var items = await GetPendingItemsAsync(cancellationToken);
+        return items.Count > 0;
+    }
+
+    public async Task ProcessAsync(CancellationToken cancellationToken)
+    {
+        using var activity = _tracer.StartActivity("ProcessBatch", ActivityKind.Internal);
 
         try
         {
-            _logger.LogInformation("Processing batch");
-
-            // Implementation - check cancellation frequently
-            var items = GetItems();
-
-            // Signal the base class when there's no data to process.
-            // If IdleBackoffDuration is configured, the base class will
-            // automatically delay before the next execution.
-            IdleCycle = items.Count == 0;
-            if (IdleCycle) return;
-
+            var items = await GetPendingItemsAsync(cancellationToken);
             var processed = 0;
+
             foreach (var item in items)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -630,8 +676,6 @@ public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
         catch (Exception ex)
         {
             activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity.SetTag("exception.type", ex.GetType().FullName);
-            activity.SetTag("exception.message", ex.Message);
             _logger.LogError(ex, "Batch failed");
             throw;
         }
@@ -639,16 +683,53 @@ public class {ServiceName} : WorkerBackgroundService<{ServiceName}Settings>
 }
 ```
 
-## StartupExtensions.cs
+### Worker.cs
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName};
+
+using {Organization}.{Product}.Services.{ServiceName}.Configuration;
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+
+public class Worker : WorkerBackgroundService<Settings>
+{
+    private readonly I{ServiceName} _service;
+
+    public Worker(
+        ILogger<Worker> logger,
+        IDistributedTracing distributedTracing,
+        IMeterFactory meterFactory,
+        IOptions<Settings> options,
+        IEnumerable<IHealthCheck> healthChecks,
+        I{ServiceName} service)
+        : base(logger, distributedTracing, meterFactory, options, healthChecks)
+    {
+        _service = service;
+    }
+
+    public override async Task DoWorkAsync(CancellationToken cancellationToken)
+    {
+        var hasData = await _service.CheckForNewDataAsync(cancellationToken);
+        IdleCycle = !hasData;
+        if (IdleCycle) return;
+
+        await _service.ProcessAsync(cancellationToken);
+    }
+}
+```
+
+## StartupExtensions.cs
+
+```csharp
+namespace {Organization}.{Product}.Services.{ServiceName}.Extensions;
+
+using {Organization}.{Product}.Services.{ServiceName}.Contracts;
 
 public static class StartupExtensions
 {
     public static IServiceCollection Add{ServiceName}(
         this IServiceCollection services,
-        Action<{ServiceName}Settings>? setupAction = null)
+        Action<Settings>? setupAction = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -656,11 +737,11 @@ public static class StartupExtensions
             typeof(IDistributedTracing),
             typeof(IMeterFactory));
 
-        services.AddOptions<{ServiceName}Settings>()
-            .BindConfiguration({ServiceName}Settings.ConfigurationSectionName)
+        services.AddOptions<Settings>()
+            .BindConfiguration(Settings.ConfigurationSectionName)
             .Configure<IConfiguration>((settings, config) =>
             {
-                settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
+                settings.Enabled = config.GetFeatureFlag<Settings>();
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
@@ -670,10 +751,11 @@ public static class StartupExtensions
             services.Configure(setupAction);
         }
 
-        services.AddSingleton<{ServiceName}>();
-        services.AddSingleton<IHostedLifecycleService>(sp => sp.GetRequiredService<{ServiceName}>());
+        services.AddScoped<I{ServiceName}, Service>();
+        services.AddSingleton<Worker>();
+        services.AddSingleton<IHostedLifecycleService>(sp => sp.GetRequiredService<Worker>());
         services.AddHealthChecks()
-            .AddCheck<{ServiceName}HealthCheck>("{ServiceName}", tags: ["ready"]);
+            .AddCheck<HealthCheck>("{ServiceName}", tags: ["ready"]);
 
         return services;
     }
@@ -715,7 +797,7 @@ public static class StartupExtensions
 | `DelayBetweenExecutions` | Fixed delay between executions, `00:00:00` = disabled |
 | `IdleBackoffDuration` | Delay when `IdleCycle = true`, `00:00:00` = disabled |
 | `HealthSampleSize` | Rolling sample size for average calculation |
-| `HealthDegradedThresholdMultiplier` | Last duration > avg × multiplier = degraded |
+| `HealthDegradedThresholdMultiplier` | Last duration > avg x multiplier = degraded |
 | `HealthHardTimeout` | Max time since last success before unhealthy |
 | `ShutdownTimeout` | Graceful shutdown timeout, `TimeSpan` (default `00:00:30`) |
 
