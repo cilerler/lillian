@@ -16,10 +16,12 @@ triggers:
   - postmortem
   - design doc
   - handover
+  - handoff
   - SOP
   - business case
   - brag document
   - project status
+  - retrospective
   - tech stack
   - data dictionary
   - performance improvement
@@ -39,6 +41,7 @@ references:
   - templates/brag-document.md
   - templates/performance-improvement-plan.md
   - templates/project-status-update.md
+  - templates/retrospective.md
   - templates/tech-stack-overview.md
   - templates/test-cases.md
 summary: Document templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, handovers, business cases, test cases, and more.
@@ -61,6 +64,7 @@ Provides standardized templates for all documentation types used in the reposito
 | ADR | Architecture decisions | Architect, Documenter | Senior Devs |
 | Design Doc | Before coding complex features | Engineer, Tech Lead | Dev Team, Product |
 | Project Status Update | Regular reporting to stakeholders | Project Manager | Leadership |
+| Retrospective | At project end, to capture outcomes and lessons | PM, Team Lead | Leadership, Team |
 | Runbook | For handling systems & failures | Developer, SRE | Platform, On-call |
 | SOP | For repetitive tasks, compliance | DevOps, SRE | Team Lead |
 | Postmortem | After incidents | On-call Engineer | SRE Lead, Manager |
@@ -68,6 +72,56 @@ Provides standardized templates for all documentation types used in the reposito
 | Brag Document | Before reviews or promo cycles | Individual | Manager |
 | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
 | Test Cases | For QA verification of acceptance criteria | Tester | Reviewer, QA |
+
+## File Placement & Naming
+
+Templates in this skill produce artifacts that live in a repository. The location, filename, and whether the name is dated or fixed all matter.
+
+### Scope hierarchy
+
+Documentation can live at three scopes:
+
+| Scope | Location | Typical contents |
+|-------|----------|------------------|
+| **App** | `/docs/` | All document types |
+| **Module** | `/Modules/{Module}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single module |
+| **Component** | `/Modules/{Module}/{Component}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single component |
+
+Choose the narrowest scope that still captures the right audience. Module-specific runbooks go under the module; app-wide ones go under `/docs/`. Full repo layout is defined in the wiki's `Conventions-Naming-Standards.md`.
+
+### Where each document goes
+
+| Template | Target directory | Filename | Notes |
+|----------|------------------|----------|-------|
+| architecture-decision-record | `/docs/adrs/` (or module/component `Docs/adrs/`) | `{yyyyMMddHHmm}-{slug}.md` | |
+| request-for-comments | `/docs/rfcs/` (or module/component `Docs/rfcs/`) | `{yyyyMMddHHmm}-{slug}.md` | |
+| design-doc | `/docs/designs/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| runbook | `/docs/runbooks/` (or module/component `Docs/runbooks/`) | `{slug}.md` | **No date prefix** — living document |
+| standard-operating-procedure | `/docs/sops/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| postmortem | `/docs/postmortems/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff**, not Handover. |
+| data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
+| business-glossary | `/docs/` | `business-glossary.md` | Fixed name, singleton |
+| tech-stack-overview | `/docs/` | `tech-stack-overview.md` | Fixed name, singleton |
+| business-case | `/docs/projects/P{N}/` | `BusinessCase.md` | Fixed name |
+| business-case-financial-model | `/docs/projects/P{N}/` | `BusinessCaseFinancialModel.md` | Fixed name |
+| retrospective | `/docs/projects/P{N}/` | `Retrospective.md` | Fixed name |
+| project-status-update | `/docs/projects/P{N}/StatusUpdates/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| test-cases | `/docs/test-cases/` (or module/component `Docs/test-cases/`) | `{slug}.md` | **No date prefix** — living document |
+| brag-document | — | — | Personal artifact; lives outside the repo |
+| performance-improvement-plan | — | — | HR artifact; lives outside the repo |
+
+### Identifier schemes
+
+- **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
+- **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
+
+### Gotchas
+
+- `handover.md` template renders to `Handoff.md` — different spelling (noun: the *handoff*).
+- Runbooks and test-cases are the only date-less entries in the dated group — filenames are `{slug}.md`, not `{yyyyMMddHHmm}-{slug}.md`. They are living documents updated as features change.
+- `data-dictionary`, `business-glossary`, and `tech-stack-overview` are **singletons** at `/docs/` root — not in a subfolder, never dated, one per repo.
+- Brag documents and PIPs are personal/HR artifacts. Do not commit them to the repository.
 
 ## Templates
 
@@ -264,6 +318,22 @@ Use for regular reporting to stakeholders. Documents:
 - Risks, issues, and dependencies (RAID)
 - Milestone tracker
 - Budget and resource update
+
+---
+
+### Retrospective
+**Template:** [templates/retrospective.md](templates/retrospective.md)
+
+Use at project end to capture outcomes and lessons. Documents:
+- Project information and summary
+- Original goals vs actual outcomes
+- Timeline highlights
+- What went well / didn't go well
+- Root causes and lessons learned
+- Action items for future projects
+- Metrics (budget, duration, scope delivered)
+
+**Status values:** Draft → In Review → Final → Archived
 
 ---
 
