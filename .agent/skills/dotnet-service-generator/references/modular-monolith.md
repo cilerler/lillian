@@ -16,9 +16,11 @@ src/
 │   ├── Models/
 │   ├── Requests/
 │   └── Responses/
+├── Contracts/                                 # App-wide internal interfaces for shared helpers
 ├── Exceptions/                                # App-wide base exceptions
 ├── Extensions/
 │   └── StartupExtensions.cs                   # Registers all modules
+├── Internals/                                 # App-wide shared helper implementations
 ├── Observability/                             # Cross-module dashboards
 │   └── Grafana/
 ├── Constants.cs                               # App-wide constants
@@ -31,9 +33,11 @@ src/
 │   │   │   ├── Models/
 │   │   │   ├── Requests/
 │   │   │   └── Responses/
+│   │   ├── Contracts/                         # Module-wide internal interfaces for shared helpers
 │   │   ├── Exceptions/                        # Module-level base exceptions
 │   │   ├── Extensions/
 │   │   │   └── StartupExtensions.cs           # Registers all components
+│   │   ├── Internals/                         # Module-wide shared helper implementations
 │   │   ├── Observability/                     # Module-level dashboards
 │   │   │   └── Grafana/
 │   │   ├── Constants.cs                       # Module-wide constants
@@ -45,9 +49,11 @@ src/
 │   │   │   │   ├── Models/
 │   │   │   │   ├── Requests/
 │   │   │   │   └── Responses/
+│   │   │   ├── Contracts/                     # Component-wide internal interfaces for shared helpers
 │   │   │   ├── Exceptions/                    # Component-level base exceptions
 │   │   │   ├── Extensions/
 │   │   │   │   └── StartupExtensions.cs       # Registers all services in component
+│   │   │   ├── Internals/                     # Component-wide shared helper implementations
 │   │   │   ├── Observability/                 # Component-level dashboards
 │   │   │   │   └── Grafana/
 │   │   │   ├── Constants.cs                   # Component-wide constants
@@ -89,9 +95,9 @@ src/
 
 | Level | Purpose | Contains | Example |
 |-------|---------|----------|---------|
-| Root | Application-wide shared concerns | Abstractions/, Exceptions/, Extensions/, Observability/, Constants.cs | src/ |
-| Module | Business domain boundary | Abstractions/, Exceptions/, Extensions/, Observability/, Constants.cs | RecipeManagement, MealPlanning |
-| Component | Sub-domain within a module, always required | Abstractions/, Exceptions/, Extensions/, Observability/, Constants.cs | Authoring, Discovery |
+| Root | Application-wide shared concerns | Abstractions/, Contracts/, Exceptions/, Extensions/, Internals/, Observability/, Constants.cs | src/ |
+| Module | Business domain boundary | Abstractions/, Contracts/, Exceptions/, Extensions/, Internals/, Observability/, Constants.cs | RecipeManagement, MealPlanning |
+| Component | Sub-domain within a module, always required | Abstractions/, Contracts/, Exceptions/, Extensions/, Internals/, Observability/, Constants.cs | Authoring, Discovery |
 | Service | Atomic implementation unit | All folders (see [standard-service.md](standard-service.md)) | RecipeEditor, RecipeSearch |
 
 ### Exception Hierarchy
