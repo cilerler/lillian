@@ -152,18 +152,22 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 - **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
 - **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
 
-### Supporting assets
+### Supporting attachments
 
-Any non-markdown supporting material for a document — diagrams (`.drawio`, `.excalidraw`, `.puml`, `.png`), screenshots, spreadsheets, raw data, benchmark output, recordings — lives in a sibling `assets/` folder next to the document, under a subfolder that matches the document's basename (without `.md`).
+Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.excalidraw`, `.puml`, `.png`), screenshots, spreadsheets, raw data, benchmark output, recordings — lives in a sibling `attachments/` folder next to the document, under a subfolder that matches the document's basename (without `.md`).
 
-> The name `assets/` follows established documentation-tooling convention (MkDocs, Docusaurus, Jekyll, Hugo). `artifacts/` was rejected because it collides with CI/CD vocabulary (GitHub Actions artifacts, Azure DevOps Artifacts, Maven/Gradle build artifacts, test artifacts).
+> The name `attachments/` is deliberately chosen over two tempting alternatives:
+> - **`artifacts/`** — rejected because it collides with CI/CD vocabulary (GitHub Actions artifacts, Azure DevOps Artifacts, Maven/Gradle build artifacts, test artifacts).
+> - **`assets/`** — rejected because in documentation-tooling (MkDocs, Docusaurus, Jekyll, Hugo) the term specifically means *web statics referenced by the rendered output* (images, CSS, JS, fonts). What we store here is broader: source files that produce images (`.mermaid`, `.excalidraw`, `.puml`), spreadsheets, raw data, benchmark JSON, recordings. These are supporting evidence attached to a document, not web assets of a rendered site.
+>
+> "Attachment" carries an unambiguous meaning — material attached to a specific document — and matches how people already think about supporting files in email, Jira, GitHub Issues, and Confluence.
 
 **Pattern (dated docs):**
 
 ```
 {doc-folder}/
 ├── {yyyyMMddHHmm}-{slug}.md
-└── assets/
+└── attachments/
     └── {yyyyMMddHHmm}-{slug}/
         ├── flow.puml
         ├── benchmark.json
@@ -172,28 +176,28 @@ Any non-markdown supporting material for a document — diagrams (`.drawio`, `.e
 
 **Examples:**
 
-| Document | Assets folder |
-|----------|---------------|
-| `/docs/rfcs/202604240930-new-auth.md` | `/docs/rfcs/assets/202604240930-new-auth/` |
-| `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/assets/202604240930-queue-choice/` |
-| `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/assets/202604241015-billing-flow/` |
-| `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/assets/202604241030-oncall-rotation/` |
-| `/docs/postmortems/202604241100-outage.md` | `/docs/postmortems/assets/202604241100-outage/` |
-| `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/assets/deploy-worker/` |
-| `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/assets/checkout-flow/` |
-| `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/assets/Handoff/` |
-| `/docs/projects/P3/BusinessCase.md` | `/docs/projects/P3/assets/BusinessCase/` |
-| `/docs/projects/P3/Retrospective.md` | `/docs/projects/P3/assets/Retrospective/` |
-| `/docs/projects/P3/StatusUpdates/202604241100-week18.md` | `/docs/projects/P3/StatusUpdates/assets/202604241100-week18/` |
-| `/Modules/Billing/Docs/rfcs/202604241200-refunds.md` | `/Modules/Billing/Docs/rfcs/assets/202604241200-refunds/` |
+| Document | Attachments folder |
+|----------|--------------------|
+| `/docs/rfcs/202604240930-new-auth.md` | `/docs/rfcs/attachments/202604240930-new-auth/` |
+| `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/attachments/202604240930-queue-choice/` |
+| `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/attachments/202604241015-billing-flow/` |
+| `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/attachments/202604241030-oncall-rotation/` |
+| `/docs/postmortems/202604241100-outage.md` | `/docs/postmortems/attachments/202604241100-outage/` |
+| `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/attachments/deploy-worker/` |
+| `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/attachments/checkout-flow/` |
+| `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/attachments/Handoff/` |
+| `/docs/projects/P3/BusinessCase.md` | `/docs/projects/P3/attachments/BusinessCase/` |
+| `/docs/projects/P3/Retrospective.md` | `/docs/projects/P3/attachments/Retrospective/` |
+| `/docs/projects/P3/StatusUpdates/202604241100-week18.md` | `/docs/projects/P3/StatusUpdates/attachments/202604241100-week18/` |
+| `/Modules/Billing/Docs/rfcs/202604241200-refunds.md` | `/Modules/Billing/Docs/rfcs/attachments/202604241200-refunds/` |
 
 **Rules:**
 - Subfolder name matches the document basename exactly — same timestamp, same slug (or same fixed name for `Handoff`, `BusinessCase`, etc.).
-- The rule is uniform: **every doc type uses its own `assets/{basename}/` subfolder**, including handovers in `tickets/{TICKET-ID}/` and docs in `projects/P{N}/`. No container-as-bag exception — each doc owns its own assets so the association stays explicit when a container holds multiple docs.
+- The rule is uniform: **every doc type uses its own `attachments/{basename}/` subfolder**, including handovers in `tickets/{TICKET-ID}/` and docs in `projects/P{N}/`. No container-as-bag exception — each doc owns its own attachments so the association stays explicit when a container holds multiple docs.
 - Tickets and projects are always folders — `/docs/tickets/{TICKET-ID}/` and `/docs/projects/P{N}/` exist as directories regardless of how many docs they hold.
-- Link from doc to asset with a relative path: `![flow](./assets/202604240930-new-auth/flow.drawio.svg)`.
-- Create the subfolder only when there is material to put in it. Empty `assets/` folders are clutter.
-- **Singletons do not use this convention.** `data-dictionary.md`, `business-glossary.md`, and `tech-stack-overview.md` live at `/docs/` root and have no sibling `assets/` folder — placing a generic `assets/` at the docs root pollutes the top level and isn't scoped to any doc type. If a singleton genuinely needs supporting material, embed it inline or promote the doc into its own typed folder first.
+- Link from doc to attachment with a relative path: `![flow](./attachments/202604240930-new-auth/flow.mermaid)`. Mermaid source can also be inlined directly in the markdown via a ` ```mermaid ` code fence — reserve attachment storage for complex or reused diagrams.
+- Create the subfolder only when there is material to put in it. Empty `attachments/` folders are clutter.
+- **Singletons do not use this convention.** `data-dictionary.md`, `business-glossary.md`, and `tech-stack-overview.md` live at `/docs/` root and have no sibling `attachments/` folder — placing a generic `attachments/` at the docs root pollutes the top level and isn't scoped to any doc type. If a singleton genuinely needs supporting material, embed it inline or promote the doc into its own typed folder first.
 - Commit only sharable supporting files. Personal scratch, raw recordings, or sensitive data belong elsewhere.
 
 ### Gotchas
