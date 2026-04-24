@@ -73,6 +73,42 @@ Provides standardized templates for all documentation types used in the reposito
 | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
 | Test Cases | For QA verification of acceptance criteria | Tester | Reviewer, QA |
 
+## Lifecycle Ordering: RFC, ADR, Design Doc
+
+RFCs, ADRs, and Design Docs look similar at a glance but capture different things. They are **not strictly linear** — each change picks the subset that fits — but the default order is:
+
+**RFC → ADR → Design Doc** *(propose → decide → design how)*
+
+| Artifact | Question it answers | State | Shape |
+|----------|--------------------|-------|-------|
+| **RFC** | *Should we do this?* | Open while under discussion; closes with a decision | Problem, alternatives, trade-offs, recommendation |
+| **ADR** | *We chose X because Y.* | Immutable record of one decision | Context, decision, consequences — single-focus |
+| **Design Doc** | *Here's how we will build it.* | Lives through implementation | Components, APIs, data flow, edge cases |
+
+### How they compose
+
+- One RFC can produce **multiple ADRs** — each discrete decision in the RFC's "Decision" section becomes its own ADR so the choice stays discoverable without reading the full proposal.
+- One Design Doc can **reference multiple ADRs** — the DD describes the how; the ADRs explain why each constrained choice was made.
+- ADRs can also emerge **during** Design Doc work — decisions surface as the design is fleshed out and get captured as they crystallize.
+
+### When to use which subset
+
+| Situation | Artifacts needed |
+|-----------|------------------|
+| Small change, clear decision | **ADR** only |
+| Contested or speculative proposal, no complex build | **RFC → ADR** |
+| Large feature, controversial approach | **RFC → ADR(s) → Design Doc** |
+| Large feature, uncontested approach | **Design Doc** (ADRs extracted as decisions surface) |
+| Emergent architectural choice made during implementation | **ADR** written after the fact |
+| Exploratory or google-style design culture | **RFC → Design Doc → ADR(s) extracted from DD** |
+
+### Anti-patterns
+
+- **RFC that reads like a Design Doc.** If you already know how to build it and there's nothing to debate, skip the RFC.
+- **ADR that reads like an RFC.** An ADR records a decision — it does not propose one. If alternatives are still open, you want an RFC.
+- **Design Doc with no ADRs for load-bearing choices.** Key technology or architecture picks should be extractable — future readers shouldn't have to re-read the whole DD to find them.
+- **Writing all three for a trivial change.** Overhead is real; pick the smallest artifact set that captures the decision.
+
 ## File Placement & Naming
 
 Templates in this skill produce artifacts that live in a repository. The location, filename, and whether the name is dated or fixed all matter.
@@ -115,6 +151,50 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 
 - **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
 - **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
+
+### Supporting assets
+
+Any non-markdown supporting material for a document — diagrams (`.drawio`, `.excalidraw`, `.puml`, `.png`), screenshots, spreadsheets, raw data, benchmark output, recordings — lives in a sibling `assets/` folder next to the document, under a subfolder that matches the document's basename (without `.md`).
+
+> The name `assets/` follows established documentation-tooling convention (MkDocs, Docusaurus, Jekyll, Hugo). `artifacts/` was rejected because it collides with CI/CD vocabulary (GitHub Actions artifacts, Azure DevOps Artifacts, Maven/Gradle build artifacts, test artifacts).
+
+**Pattern (dated docs):**
+
+```
+{doc-folder}/
+├── {yyyyMMddHHmm}-{slug}.md
+└── assets/
+    └── {yyyyMMddHHmm}-{slug}/
+        ├── flow.puml
+        ├── benchmark.json
+        └── screenshot.png
+```
+
+**Examples:**
+
+| Document | Assets folder |
+|----------|---------------|
+| `/docs/rfcs/202604240930-new-auth.md` | `/docs/rfcs/assets/202604240930-new-auth/` |
+| `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/assets/202604240930-queue-choice/` |
+| `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/assets/202604241015-billing-flow/` |
+| `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/assets/202604241030-oncall-rotation/` |
+| `/docs/postmortems/202604241100-outage.md` | `/docs/postmortems/assets/202604241100-outage/` |
+| `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/assets/deploy-worker/` |
+| `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/assets/checkout-flow/` |
+| `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/assets/Handoff/` |
+| `/docs/projects/P3/BusinessCase.md` | `/docs/projects/P3/assets/BusinessCase/` |
+| `/docs/projects/P3/Retrospective.md` | `/docs/projects/P3/assets/Retrospective/` |
+| `/docs/projects/P3/StatusUpdates/202604241100-week18.md` | `/docs/projects/P3/StatusUpdates/assets/202604241100-week18/` |
+| `/Modules/Billing/Docs/rfcs/202604241200-refunds.md` | `/Modules/Billing/Docs/rfcs/assets/202604241200-refunds/` |
+
+**Rules:**
+- Subfolder name matches the document basename exactly — same timestamp, same slug (or same fixed name for `Handoff`, `BusinessCase`, etc.).
+- The rule is uniform: **every doc type uses its own `assets/{basename}/` subfolder**, including handovers in `tickets/{TICKET-ID}/` and docs in `projects/P{N}/`. No container-as-bag exception — each doc owns its own assets so the association stays explicit when a container holds multiple docs.
+- Tickets and projects are always folders — `/docs/tickets/{TICKET-ID}/` and `/docs/projects/P{N}/` exist as directories regardless of how many docs they hold.
+- Link from doc to asset with a relative path: `![flow](./assets/202604240930-new-auth/flow.drawio.svg)`.
+- Create the subfolder only when there is material to put in it. Empty `assets/` folders are clutter.
+- **Singletons do not use this convention.** `data-dictionary.md`, `business-glossary.md`, and `tech-stack-overview.md` live at `/docs/` root and have no sibling `assets/` folder — placing a generic `assets/` at the docs root pollutes the top level and isn't scoped to any doc type. If a singleton genuinely needs supporting material, embed it inline or promote the doc into its own typed folder first.
+- Commit only sharable supporting files. Personal scratch, raw recordings, or sensitive data belong elsewhere.
 
 ### Gotchas
 
