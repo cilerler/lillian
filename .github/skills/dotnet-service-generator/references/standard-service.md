@@ -108,7 +108,12 @@ public static class Constants
 
 ## Configuration/{ServiceName}Settings.cs
 
-> **No domain-specific defaults in settings classes.** Domain-specific string properties (connection strings, resource names, endpoint URLs, queue names, topic names, etc.) must not have hardcoded default values — use `= null!;` and supply values via `appsettings.json` or environment variables. Operational numeric properties (timeouts, retry counts, batch sizes, intervals) may have sensible defaults.
+> **Rules for default values in Settings classes:**
+>
+> - **Never** set hardcoded defaults for properties of type `string` or `DateTime`. These are **domain values** (URLs, hostnames, credentials, queue/topic/vhost/exchange names, resource names, paths, header names, API keys, schema names, timestamps) and must live in `appsettings.json` (or environment variables / user-secrets). Declare them with `= null!;` and `[Required]`, or make them nullable (`string?` / `DateTime?`) when the missing state is a valid runtime scenario the code explicitly handles.
+> - **OK** to set defaults for **operational** properties of type `TimeSpan`, `int`, `long`, `byte`, `double`, `decimal`, `float`, `bool`, or `enum` — timeouts, retry counts, batch sizes, polling intervals, feature toggles, log levels. These are tuning knobs with sensible cross-environment defaults, not values that change per deployment.
+> - **Exception for strings/DateTime:** a default is acceptable *only* if the value is a genuine universal constant that is not environment-specific (e.g. a format string used for serialization) — in which case prefer declaring it as a `const` rather than a property default when possible.
+> - **Connection strings follow the `ConnectionString`/`ConnectionStringKey` pattern:** the Settings property holds the *key* (e.g. `"MsSqlConnection"`), not the URL itself. The actual URL lives under the top-level `ConnectionStrings` section in `appsettings.json` and is resolved at use-site via `IConfiguration.GetConnectionString(settings.ConnectionStringKey)`. This keeps the connection-string catalog consistent across services and makes environment-specific overrides straightforward. Apply the same `*ConnectionStringKey` pattern for any URL or endpoint (management URLs, cache endpoints, SMTP servers, etc.), not just databases.
 
 ```csharp
 namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
