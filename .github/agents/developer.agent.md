@@ -40,6 +40,7 @@ All approved designs:
 - Technical design with observability requirements (from Architect)
 - UI mockups (from Designer, if applicable)
 - Schema design (from DBA, if applicable)
+- **Test Cases from Tester (Phase 1) — the build contract**, if tests are required for this change
 
 ---
 
@@ -48,6 +49,7 @@ All approved designs:
 ### Code Implementation
 
 - Verify plan and acceptance criteria exist before starting
+- **If Test Cases were drafted (Tester Phase 1), treat them as the build contract** — every Test Case must be satisfiable by the implementation. If a Test Case cannot be satisfied as written, surface it back to the Tester/Planner rather than silently deviating.
 - Apply all applicable skills from `.github/skills/INDEX.md`
 - Comply fully with `.github/CONTRIBUTING.md`
 - Implement only what is required

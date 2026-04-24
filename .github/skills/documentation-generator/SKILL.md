@@ -433,13 +433,17 @@ Use to document current technologies. Documents:
 **Template:** [templates/test-cases.md](templates/test-cases.md)
 
 Use for QA verification of acceptance criteria. Documents:
-- Acceptance criteria coverage mapping
+- Acceptance criteria coverage mapping (1:1)
 - Step-by-step test procedures
 - Expected results
 - Edge cases and error paths
 - Test execution summary
 
-**Created by:** Tester (updated during review iterations)
+**Created by:** Tester
+
+**Timing:** Test Cases are **drafted before Developer starts** — they serve as the build contract, derived 1:1 from the Planner's acceptance criteria. Developer builds against them. After Developer passes Reviewer, the Tester implements the Test Cases as executable unit/integration tests. Both the Test Cases document and the executable tests are updated together during Reviewer FAIL iterations.
+
+Drafting Test Cases pre-implementation catches missing or ambiguous acceptance criteria while they are still cheap to fix and prevents the Tester from backfilling cases to match what was built (confirmation bias).
 
 ---
 
@@ -464,8 +468,9 @@ Use for QA verification of acceptance criteria. Documents:
 - Documents operational procedures
 
 ### Tester
-- Creates test cases for QA verification
-- Updates test cases during review iterations
+- **Pre-implementation:** Drafts Test Cases from Planner's acceptance criteria — serves as the build contract for Developer
+- **Post-implementation:** Implements Test Cases as executable unit/integration tests, iterates with Reviewer
+- **During FAIL cycles:** Updates both the Test Cases document and the executable tests together
 
 ### Planner
 - Identifies documentation needs in the plan

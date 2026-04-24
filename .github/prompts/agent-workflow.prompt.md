@@ -51,6 +51,12 @@ User Request
       ├─── If RFC needed ───► │ Documenter │
       │                       └─────┬──────┘
       │◄────────────────────────────┘
+      │                       ┌──────────────────────┐
+      ├─── If tests needed ──►│ Tester (Phase 1)     │
+      │                       │  Draft Test Cases    │
+      │                       │  → build contract    │
+      │                       └──────────┬───────────┘
+      │◄─────────────────────────────────┘
       ▼
 ┌───────────┐
 │ Developer │◄────┐
@@ -60,15 +66,17 @@ User Request
 │ Reviewer ├──────┘
 └─────┬────┘
       │ PASS
-      │                        ┌────────┐
-      ├─── If tests needed ───►│ Tester │◄──────┐
-      │                        └────┬───┘       │
-      │                             ▼           │
-      │                       ┌──────────┐ FAIL │
-      │                       │ Reviewer ├──────┘
-      │                       └─────┬────┘
-      │                             │ PASS
-      │◄────────────────────────────┘
+      │                       ┌──────────────────────┐
+      ├─── If tests needed ──►│ Tester (Phase 2)     │◄──────┐
+      │                       │  Implement tests     │       │
+      │                       │  from Phase 1 TCs    │       │
+      │                       └──────────┬───────────┘       │
+      │                                  ▼                   │
+      │                            ┌──────────┐ FAIL         │
+      │                            │ Reviewer ├──────────────┘
+      │                            └─────┬────┘
+      │                                  │ PASS
+      │◄─────────────────────────────────┘
       │                       ┌────────────┐
       ├─── If docs needed ───►│ Documenter │
       │    (README, ADR,      └─────┬──────┘
@@ -91,9 +99,10 @@ User Request
 | Designer | If UI involved | HTML/Tailwind mockups | - |
 | DBA | If DB changes | Schema design, migrations, index strategy | - |
 | Documenter | If RFC needed (pre-impl) | RFC from Architect's design | - |
+| Tester (Phase 1) | If tests needed (pre-impl) | Test Cases document — build contract for Developer, mapped 1:1 to acceptance criteria | - |
 | Developer | Always | Code, Docker, K8s, dashboards, runbook drafts | - |
 | Reviewer | Always (1-2x) | PASS/FAIL verdict | 3 FAILs → escalate |
-| Tester | If tests needed | Test cases, unit/integration tests | - |
+| Tester (Phase 2) | If tests needed (post-impl) | Executable unit/integration tests implementing Phase 1 Test Cases | - |
 | Documenter | If docs needed (post-impl) | README, ADRs, runbooks, SOPs, glossary, tech stack, business case | - |
 
 **Note:** Every role outputs and stops. User decides when to proceed to next agent.
@@ -224,22 +233,40 @@ User Request
 
 ### Tester
 
-**Entry:** Developer implementation passed Reviewer (when tests needed)
+Tester is invoked twice in the workflow: once pre-implementation to draft the Test Cases contract, once post-implementation to implement those cases as executable tests.
 
 **When invoked:**
 - New features requiring test coverage
 - Complex logic requiring verification
 - Changes to critical paths
 
+#### Phase 1 — Draft Test Cases (pre-implementation, contract)
+
+**Entry:** Planner's acceptance criteria finalized; Architect's technical design available. If RFC/Design Doc exist, those too.
+
 **Responsibilities:**
-- Create test cases for QA using `templates/test-cases.md`
+- Draft Test Cases using `templates/test-cases.md`
+- Map every acceptance criterion 1:1 to one or more Test Cases
+- Include edge cases, error paths, non-functional scenarios
+- Flag ambiguous or missing acceptance criteria back to Planner *before* Developer starts
+
+**Output:** Test Cases document serves as the **build contract** for Developer.
+
+**Exit:** Hand Test Cases to Developer and STOP.
+
+#### Phase 2 — Implement tests (post-implementation, verify)
+
+**Entry:** Developer implementation passed Reviewer.
+
+**Responsibilities:**
+- Implement every Test Case from Phase 1 as executable tests
 - Write unit tests (MSTest, mocks/fakes)
 - Write integration tests (Testcontainers)
-- Cover all acceptance criteria
-- Cover edge cases and error paths
-- Update test cases during review iterations
+- Add new Test Cases if implementation surfaces uncovered scenarios
+- Ensure tests are deterministic and isolated
+- Update both Test Cases document and executable tests together during Reviewer FAIL iterations
 
-**Validation:** `dotnet test` passes
+**Validation:** `dotnet test` passes; every Phase 1 Test Case has at least one automated test.
 
 **Exit:** Request Reviewer review. If FAIL, fix checklist items and return.
 
@@ -298,9 +325,9 @@ Developer implements per these requirements.
 
 ### Reviewer Reviews Once or Twice
 1. Always: Developer's implementation
-2. If Tester invoked: Tester's tests
+2. If Tester Phase 2 invoked: Tester's executable tests
 
-Same standards apply to both reviews.
+Same standards apply to both reviews. Tester's Phase 1 Test Cases do not require Reviewer — the Planner's acceptance criteria they derive from have already been approved as part of the plan; the Test Cases are simply the verification contract Developer will build against.
 
 ### Documenter Polishes Runbooks
 Developer creates runbook drafts. Documenter polishes for clarity and readability by on-call engineers unfamiliar with the service.
@@ -314,7 +341,9 @@ A change is done only when:
 1. Acceptance criteria satisfied
 2. CONTRIBUTING.md fully complied with
 3. Applicable skills applied
-4. Reviewer returned PASS for implementation
-5. Reviewer returned PASS for tests (if Tester invoked)
-6. Documentation updated (if applicable)
+4. Test Cases drafted pre-implementation and every AC mapped (if Tester invoked)
+5. Reviewer returned PASS for implementation
+6. Every Phase 1 Test Case has at least one executable test (if Tester invoked)
+7. Reviewer returned PASS for tests (if Tester Phase 2 invoked)
+8. Documentation updated (if applicable)
 7. Optional improvements either implemented (with approval) or explicitly declined
