@@ -28,6 +28,10 @@ triggers:
   - performance improvement
   - test cases
   - test plan
+  - role brief
+  - job ad
+  - hiring
+  - recruiting
 references:
   - templates/architecture-decision-record.md
   - templates/request-for-comments.md
@@ -35,7 +39,7 @@ references:
   - templates/runbook.md
   - templates/post-incident-review.md
   - templates/standard-operating-procedure.md
-  - templates/handover.md
+  - templates/takeover-handover.md
   - templates/data-dictionary.md
   - templates/business-glossary.md
   - templates/business-case.md
@@ -47,7 +51,8 @@ references:
   - templates/tech-stack-overview.md
   - templates/test-cases.md
   - templates/test-plan.md
-summary: Document templates for ADRs, RFCs, design docs, runbooks, post incident reviews, SOPs, handovers, business cases, test plans, test cases, and more.
+  - templates/role-brief.md
+summary: Document templates for ADRs, RFCs, design docs, runbooks, post incident reviews, SOPs, handovers, business cases, test plans, test cases, role briefs, and more.
 ---
 
 # Documentation Skill
@@ -60,7 +65,7 @@ Provides standardized templates for all documentation types used in the reposito
 |-------|---------------|-------------|------------|-------------|
 | 2. Justification & Approval | Business Case | To secure support, funding, or prioritization. Scales: light usage = problem + reasons + scope + risks; heavy usage = full investment justification | PM, Product Lead, Architect | Leadership, Finance |
 | 2. Justification & Approval | Business Case Financial Model | To evaluate financial impact of a project | PM, Product Lead | Leadership, Finance |
-| 3. Knowledge Transfer (in) / 9. Closure | Handover | When transferring ownership (single template, used for both giving and receiving sides) | Departing Engineer | Receiving Team |
+| 3. Knowledge Transfer (in) / 9. Closure | Takeover & Handover | Single template covering both directions of ownership transfer — Takeover when inheriting a system, Handover when transferring out | Receiving / Departing Engineer | Receiving Team / Architect |
 | 4. Decide & Design | RFC | Proposed changes before implementing | Documenter | Peers, Architects |
 | 4. Decide & Design | ADR | Architecture decisions | Architect, Documenter | Senior Devs |
 | 4. Decide & Design | Design Doc (aka Tech Spec) | Before coding complex features | Engineer, Tech Lead | Dev Team, Product |
@@ -74,8 +79,9 @@ Provides standardized templates for all documentation types used in the reposito
 | 10. Always-Living Reference | Data Dictionary | To define schema, fields, data types | Data Engineers, DBAs | Data Governance |
 | 10. Always-Living Reference | Business Glossary | To define key business terms | Product, Domain Experts | Product Owners |
 | Orthogonal A. Incident | Post Incident Review (aka Postmortem) | After incidents | On-call Engineer | SRE Lead, Manager |
-| Orthogonal B. People / HR | Brag Document | Before reviews or promo cycles | Individual | Manager |
-| Orthogonal B. People / HR | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
+| Orthogonal B. People & Recruiting | Role Brief | Tech-team intake brief handed to HR/recruiting describing the kind of person we want; HR translates into a public job posting | Engineering Manager, Tech Lead | Hiring Manager, HR Partner |
+| Orthogonal B. People & Recruiting | Brag Document | Before reviews or promo cycles | Individual | Manager |
+| Orthogonal B. People & Recruiting | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
 
 > **Project intake** is *not* a template here — small ideas live as a **GitHub issue**. If an issue grows into a project, graduate it into `/docs/projects/P{N}/BusinessCase.md` (light usage; financial sections skipped). Add `BusinessCaseFinancialModel.md` only when a financial gate engages.
 
@@ -90,7 +96,8 @@ PHASE                          ARTIFACTS
 2. Justification & Approval    Business Case (light or heavy)
                                → Business Case Financial Model
                                  (only if material)
-3. Knowledge Transfer (in)     Handover (used as Takeover by receiver)
+3. Knowledge Transfer (in)     Takeover (single template covers both
+                                 incoming and outgoing transfers)
 4. Decide & Design             RFC → ADR(s) → Design Doc
                                ADRs emerge across all three —
                                and during Implementation
@@ -101,7 +108,8 @@ PHASE                          ARTIFACTS
 6. Implementation              Code gated by Test Cases
 7. Operate                     Runbook (living) + SOP (repeatable)
 8. Report Progress             Project Status Update (recurring)
-9. Closure                     Handover (used as outgoing transfer)
+9. Closure                     Handover (same template as Phase 3,
+                                 used outgoing here)
                                Project Retrospective
 10. Always-Living Reference    Tech Stack Overview (updated when an
                                  ADR changes a tech choice)
@@ -112,8 +120,8 @@ PHASE                          ARTIFACTS
 ─── ORTHOGONAL FLOWS ─────────────────────────────────────────────
 A. Incident (any time, system-lifetime)
    Post Incident Review (aka Postmortem)
-B. People / HR (separate flow, not in repo)
-   Brag Document, Performance Improvement Plan
+B. People & Recruiting (HR-adjacent flow, not in repo)
+   Role Brief, Brag Document, Performance Improvement Plan
 ```
 
 ### Phase notes
@@ -127,7 +135,10 @@ B. People / HR (separate flow, not in repo)
   - **Data Dictionary** — updated on any schema change (new table, new field, type change, removal). No ADR required; a migration is enough.
   - **Business Glossary** — updated whenever new terminology enters the domain or an existing term's meaning shifts. No ADR or migration required.
 - **Orthogonal Flow A (Incident)** — PIRs are **system-lifetime**, not project-bound. They accumulate against the running system over its whole life; a project can close while PIRs continue.
-- **Orthogonal Flow B (HR)** — Brag Doc and PIP are personal/HR artifacts. They do **not** live in the repo and do **not** participate in the project lifecycle.
+- **Orthogonal Flow B (People & Recruiting)** — HR-adjacent docs. **None live in the repo.**
+  - **Role Brief** — tech team's intake brief handed to HR / recruiting when opening a requisition. HR owns the public job posting (comp, benefits, EEO, application process); this brief is the upstream input.
+  - **Brag Document** — personal artifact for performance reviews and promotion cycles.
+  - **Performance Improvement Plan** — HR artifact for formal performance guidance.
 
 ## Lifecycle Ordering: RFC, ADR, Design Doc
 
@@ -190,8 +201,8 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | design-doc | `/docs/designs/` | `{yyyyMMddHHmm}-{slug}.md` | |
 | runbook | `/docs/runbooks/` (or module/component `Docs/runbooks/`) | `{slug}.md` | **No date prefix** — living document |
 | standard-operating-procedure | `/docs/sops/` | `{yyyyMMddHHmm}-{slug}.md` | |
-| post-incident-review | `/docs/post-incident-reviews/` | `{yyyyMMddHHmm}-{slug}.md` | System-lifetime, incident-driven (not project-bound) |
-| handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff**, not Handover. |
+| post-incident-review | `/docs/pirs/` | `{yyyyMMddHHmm}-{slug}.md` | System-lifetime, incident-driven (not project-bound) |
+| takeover-handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff** (noun-form), not Handover (verb). Same template covers both directions — incoming Takeover and outgoing Handover. |
 | data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
 | business-glossary | `/docs/` | `business-glossary.md` | Fixed name, singleton |
 | tech-stack-overview | `/docs/` | `tech-stack-overview.md` | Fixed name, singleton |
@@ -204,6 +215,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | test-cases | `/docs/test-cases/` (or module/component `Docs/test-cases/`) | `{slug}.md` | **No date prefix** — living document |
 | brag-document | — | — | Personal artifact; lives outside the repo |
 | performance-improvement-plan | — | — | HR artifact; lives outside the repo |
+| role-brief | — | — | Lives outside the repo (HR-adjacent intake artifact, not engineering deliverable) |
 
 ### Identifier schemes
 
@@ -240,11 +252,14 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 | `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/attachments/202604240930-queue-choice/` |
 | `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/attachments/202604241015-billing-flow/` |
 | `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/attachments/202604241030-oncall-rotation/` |
-| `/docs/post-incident-reviews/202604241100-outage.md` | `/docs/post-incident-reviews/attachments/202604241100-outage/` |
+| `/docs/pirs/202604241100-outage.md` | `/docs/pirs/attachments/202604241100-outage/` |
 | `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/attachments/deploy-worker/` |
 | `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/attachments/checkout-flow/` |
+| `/docs/test-plans/202604241200-q2-release.md` *(release-scoped)* | `/docs/test-plans/attachments/202604241200-q2-release/` |
 | `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/attachments/Handoff/` |
 | `/docs/projects/P3/BusinessCase.md` | `/docs/projects/P3/attachments/BusinessCase/` |
+| `/docs/projects/P3/BusinessCaseFinancialModel.md` | `/docs/projects/P3/attachments/BusinessCaseFinancialModel/` |
+| `/docs/projects/P3/TestPlan.md` *(project-scoped)* | `/docs/projects/P3/attachments/TestPlan/` |
 | `/docs/projects/P3/Retrospective.md` | `/docs/projects/P3/attachments/Retrospective/` |
 | `/docs/projects/P3/StatusUpdates/202604241100-week18.md` | `/docs/projects/P3/StatusUpdates/attachments/202604241100-week18/` |
 | `/Modules/Billing/Docs/rfcs/202604241200-refunds.md` | `/Modules/Billing/Docs/rfcs/attachments/202604241200-refunds/` |
@@ -260,7 +275,7 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 
 ### Gotchas
 
-- `handover.md` template renders to `Handoff.md` — different spelling (noun: the *handoff*).
+- `takeover-handover.md` template renders to `Handoff.md` — different spelling (noun: the *handoff*). Same template used for both Takeover (incoming) and Handover (outgoing).
 - Runbooks and test-cases are the only date-less entries in the dated group — filenames are `{slug}.md`, not `{yyyyMMddHHmm}-{slug}.md`. They are living documents updated as features change.
 - `data-dictionary`, `business-glossary`, and `tech-stack-overview` are **singletons** at `/docs/` root — not in a subfolder, never dated, one per repo.
 - Brag documents and PIPs are personal/HR artifacts. Do not commit them to the repository.
@@ -302,10 +317,14 @@ Use to evaluate financial impact. Documents:
 
 ### Phase 3 / 9 — Knowledge Transfer (in) / Closure
 
-#### Handover
-**Template:** [templates/handover.md](templates/handover.md)
+#### Takeover & Handover
+**Template:** [templates/takeover-handover.md](templates/takeover-handover.md)
 
-Use when transferring ownership or onboarding new engineers. Same template used in both directions — receiver fills it in as a Takeover. Documents:
+Single template covering both directions of ownership transfer:
+- **Phase 3 (Takeover)** — receiving party fills it in when **inheriting** ownership of an existing system or project.
+- **Phase 9 (Handover)** — outgoing party fills it in when **transferring out** ownership at project closure or role change.
+
+Documents:
 - Executive summary and contacts
 - Getting started guide
 - System architecture
@@ -486,7 +505,7 @@ Use at project end to capture outcomes and lessons. Documents:
 
 **Status values:** Draft → In Review → Final → Archived
 
-(Handover, also used in Phase 9 for outgoing transfer, is documented above under Phase 3 / 9.)
+(Takeover & Handover template, also used in Phase 9 for outgoing transfer, is documented above under Phase 3 / 9.)
 
 ---
 
@@ -550,7 +569,33 @@ Use after incidents. Documents:
 
 ---
 
-### Orthogonal Flow B — People / HR (not in repo)
+### Orthogonal Flow B — People & Recruiting (not in repo)
+
+HR-adjacent docs. **None of these live in the repo** — they are personal or HR artifacts. Templates are kept in this skill so they are available when needed, but the produced documents are stored outside the repo.
+
+#### Role Brief
+**Template:** [templates/role-brief.md](templates/role-brief.md)
+
+Tech-team intake brief handed to HR / recruiting when opening a new requisition. Documents what the engineering team is looking for so HR can source candidates and produce the public job posting.
+
+Sections:
+- Role overview (level, reporting line, team, location, on-call)
+- Role summary (a short paragraph describing the *shape* of the role — not prescriptive day-to-day deliverables)
+- Required (must-have tech, organized by category)
+- Nice to Have / We Also Use (tech the team uses but candidate doesn't need on day one)
+- Behavioral skills
+- Credentials
+- Sourcing notes for HR
+
+**Created by:** Engineering Manager or Tech Lead, with input from the team.
+
+**Reviewed by:** Hiring Manager + HR Partner.
+
+**Lifecycle category:** Orthogonal People & Recruiting flow. **Not** committed to the repo — HR-adjacent intake artifact. HR owns the public-facing job posting (with compensation range, benefits, EEO statement, application process); this Role Brief is the upstream input to that.
+
+**Scope:** Document the role, not specific candidates. One brief per role; updated as the role definition evolves.
+
+---
 
 #### Brag Document
 **Template:** [templates/brag-document.md](templates/brag-document.md)
@@ -562,7 +607,7 @@ Use before reviews or promotion cycles. Documents:
 - Design and documentation work
 - Skills learned
 
-**Lifecycle category:** Orthogonal HR / personal flow. **Not** in the project lifecycle. **Not** committed to the repo.
+**Lifecycle category:** Orthogonal People & Recruiting flow — personal artifact. **Not** in the project lifecycle. **Not** committed to the repo.
 
 ---
 
@@ -576,7 +621,7 @@ Use when an employee's performance needs formal guidance. Documents:
 - Support and resources
 - Consequences
 
-**Lifecycle category:** Orthogonal HR flow. **Not** in the project lifecycle. **Not** committed to the repo.
+**Lifecycle category:** Orthogonal People & Recruiting flow — HR artifact. **Not** in the project lifecycle. **Not** committed to the repo.
 
 ---
 
