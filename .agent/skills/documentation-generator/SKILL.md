@@ -13,6 +13,7 @@ triggers:
   - ADR
   - RFC
   - runbook
+  - post incident review
   - postmortem
   - design doc
   - handover
@@ -32,7 +33,7 @@ references:
   - templates/request-for-comments.md
   - templates/design-doc.md
   - templates/runbook.md
-  - templates/postmortem.md
+  - templates/post-incident-review.md
   - templates/standard-operating-procedure.md
   - templates/handover.md
   - templates/data-dictionary.md
@@ -46,7 +47,7 @@ references:
   - templates/tech-stack-overview.md
   - templates/test-cases.md
   - templates/test-plan.md
-summary: Document templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, handovers, business cases, test plans, test cases, and more.
+summary: Document templates for ADRs, RFCs, design docs, runbooks, post incident reviews, SOPs, handovers, business cases, test plans, test cases, and more.
 ---
 
 # Documentation Skill
@@ -55,26 +56,78 @@ Provides standardized templates for all documentation types used in the reposito
 
 ## When to Use
 
-| Document Type | When to Use | Created By | Reviewed By |
-|---------------|-------------|------------|-------------|
-| Business Case | To secure support, funding, or prioritization | PM, Product Lead, Architect | Leadership, Finance |
-| Business Case Financial Model | To evaluate financial impact of a project | PM, Product Lead | Leadership, Finance |
-| Business Glossary | To define key business terms | Product, Domain Experts | Product Owners |
-| Data Dictionary | To define schema, fields, data types | Data Engineers, DBAs | Data Governance |
-| Tech Stack Overview | To document current technologies | Engineer, Tech Lead | New team members |
-| RFC | Proposed changes before implementing | Documenter | Peers, Architects |
-| ADR | Architecture decisions | Architect, Documenter | Senior Devs |
-| Design Doc | Before coding complex features | Engineer, Tech Lead | Dev Team, Product |
-| Project Status Update | Regular reporting to stakeholders | Project Manager | Leadership |
-| Retrospective | At project end, to capture outcomes and lessons | PM, Team Lead | Leadership, Team |
-| Runbook | For handling systems & failures | Developer, SRE | Platform, On-call |
-| SOP | For repetitive tasks, compliance | DevOps, SRE | Team Lead |
-| Postmortem | After incidents | On-call Engineer | SRE Lead, Manager |
-| Handover | When transferring ownership | Departing Engineer | Receiving Team |
-| Brag Document | Before reviews or promo cycles | Individual | Manager |
-| Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
-| Test Plan | Cross-feature, release, or project-level test strategy; required in regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) | Test Lead, Tester | QA Lead, Product Owner, Engineering Lead |
-| Test Cases | For QA verification of acceptance criteria | Tester | Reviewer, QA |
+| Phase | Document Type | When to Use | Created By | Reviewed By |
+|-------|---------------|-------------|------------|-------------|
+| 2. Justification & Approval | Business Case | To secure support, funding, or prioritization. Scales: light usage = problem + reasons + scope + risks; heavy usage = full investment justification | PM, Product Lead, Architect | Leadership, Finance |
+| 2. Justification & Approval | Business Case Financial Model | To evaluate financial impact of a project | PM, Product Lead | Leadership, Finance |
+| 3. Knowledge Transfer (in) / 9. Closure | Handover | When transferring ownership (single template, used for both giving and receiving sides) | Departing Engineer | Receiving Team |
+| 4. Decide & Design | RFC | Proposed changes before implementing | Documenter | Peers, Architects |
+| 4. Decide & Design | ADR | Architecture decisions | Architect, Documenter | Senior Devs |
+| 4. Decide & Design | Design Doc (aka Tech Spec) | Before coding complex features | Engineer, Tech Lead | Dev Team, Product |
+| 5. Build Contract | Test Plan | Cross-feature, release, or project-level test strategy; required in regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) | Test Lead, Tester | QA Lead, Product Owner, Engineering Lead |
+| 5. Build Contract | Test Cases | For QA verification of acceptance criteria | Tester | Reviewer, QA |
+| 7. Operate | Runbook | For handling systems & failures | Developer, SRE | Platform, On-call |
+| 7. Operate | SOP | For repetitive tasks, compliance | DevOps, SRE | Team Lead |
+| 8. Report Progress | Project Status Update | Regular reporting to stakeholders | Project Manager | Leadership |
+| 9. Closure | Retrospective | At project end, to capture outcomes and lessons | PM, Team Lead | Leadership, Team |
+| 10. Always-Living Reference | Tech Stack Overview | To document current technologies | Engineer, Tech Lead | New team members |
+| 10. Always-Living Reference | Data Dictionary | To define schema, fields, data types | Data Engineers, DBAs | Data Governance |
+| 10. Always-Living Reference | Business Glossary | To define key business terms | Product, Domain Experts | Product Owners |
+| Orthogonal A. Incident | Post Incident Review (aka Postmortem) | After incidents | On-call Engineer | SRE Lead, Manager |
+| Orthogonal B. People / HR | Brag Document | Before reviews or promo cycles | Individual | Manager |
+| Orthogonal B. People / HR | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
+
+> **Project intake** is *not* a template here — small ideas live as a **GitHub issue**. If an issue grows into a project, graduate it into `/docs/projects/P{N}/BusinessCase.md` (light usage; financial sections skipped). Add `BusinessCaseFinancialModel.md` only when a financial gate engages.
+
+## Lifecycle Phases
+
+Templates group into phases. The flow is the *default* path; each project picks the subset that fits.
+
+```
+PHASE                          ARTIFACTS
+─────────────────────────────────────────────────────────────────
+1. Discovery / Inception       GitHub issue (intake — not a template)
+2. Justification & Approval    Business Case (light or heavy)
+                               → Business Case Financial Model
+                                 (only if material)
+3. Knowledge Transfer (in)     Handover (used as Takeover by receiver)
+4. Decide & Design             RFC → ADR(s) → Design Doc
+                               ADRs emerge across all three —
+                               and during Implementation
+5. Build Contract              Test Plan (project-level, optional;
+                                 parallel to Design Doc)
+                               Test Cases (per-feature, derived from
+                                 acceptance criteria; pre-code)
+6. Implementation              Code gated by Test Cases
+7. Operate                     Runbook (living) + SOP (repeatable)
+8. Report Progress             Project Status Update (recurring)
+9. Closure                     Handover (used as outgoing transfer)
+                               Project Retrospective
+10. Always-Living Reference    Tech Stack Overview (updated when an
+                                 ADR changes a tech choice)
+                               Data Dictionary (updated on any schema
+                                 change — no ADR required)
+                               Business Glossary (updated whenever
+                                 terminology enters or shifts)
+─── ORTHOGONAL FLOWS ─────────────────────────────────────────────
+A. Incident (any time, system-lifetime)
+   Post Incident Review (aka Postmortem)
+B. People / HR (separate flow, not in repo)
+   Brag Document, Performance Improvement Plan
+```
+
+### Phase notes
+
+- **Phase 1 (Discovery / Inception)** lives in the issue tracker, *not* the repo. Only graduates to a doc if it becomes a project.
+- **Phase 2 (Justification & Approval)** — the Business Case template scales: light usage covers project-brief intake (problem + reasons + scope + risks); heavy usage adds the financial sections; a separate Business Case Financial Model is produced only when the analysis is material.
+- **Phase 4 (Decide & Design)** — RFC, ADR, and Design Doc are not strictly linear; see *Lifecycle Ordering* below for which subset to pick. **ADRs can crystallize during RFC, during Design Doc work, or after-the-fact during Implementation** when an emergent decision needs capture.
+- **Phase 5 (Build Contract)** — Test Cases derive from the Planner's *acceptance criteria*, not from the Design Doc. They can be drafted **before or after** the DD: pre-DD when acceptance criteria are clear and the design is uncontroversial; post-DD when the design surfaces edge cases. Test Plan, when used, runs **parallel to the Design Doc** because it depends on architecture choices to define environments and integration strategy.
+- **Phase 10 (Always-Living Reference)** — these three docs are *never closed*, but their update triggers differ:
+  - **Tech Stack Overview** — updated when an ADR changes a tech choice (new framework, swapped database, new observability stack, etc.).
+  - **Data Dictionary** — updated on any schema change (new table, new field, type change, removal). No ADR required; a migration is enough.
+  - **Business Glossary** — updated whenever new terminology enters the domain or an existing term's meaning shifts. No ADR or migration required.
+- **Orthogonal Flow A (Incident)** — PIRs are **system-lifetime**, not project-bound. They accumulate against the running system over its whole life; a project can close while PIRs continue.
+- **Orthogonal Flow B (HR)** — Brag Doc and PIP are personal/HR artifacts. They do **not** live in the repo and do **not** participate in the project lifecycle.
 
 ## Lifecycle Ordering: RFC, ADR, Design Doc
 
@@ -137,7 +190,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | design-doc | `/docs/designs/` | `{yyyyMMddHHmm}-{slug}.md` | |
 | runbook | `/docs/runbooks/` (or module/component `Docs/runbooks/`) | `{slug}.md` | **No date prefix** — living document |
 | standard-operating-procedure | `/docs/sops/` | `{yyyyMMddHHmm}-{slug}.md` | |
-| postmortem | `/docs/postmortems/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| post-incident-review | `/docs/post-incident-reviews/` | `{yyyyMMddHHmm}-{slug}.md` | System-lifetime, incident-driven (not project-bound) |
 | handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff**, not Handover. |
 | data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
 | business-glossary | `/docs/` | `business-glossary.md` | Fixed name, singleton |
@@ -187,7 +240,7 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 | `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/attachments/202604240930-queue-choice/` |
 | `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/attachments/202604241015-billing-flow/` |
 | `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/attachments/202604241030-oncall-rotation/` |
-| `/docs/postmortems/202604241100-outage.md` | `/docs/postmortems/attachments/202604241100-outage/` |
+| `/docs/post-incident-reviews/202604241100-outage.md` | `/docs/post-incident-reviews/attachments/202604241100-outage/` |
 | `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/attachments/deploy-worker/` |
 | `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/attachments/checkout-flow/` |
 | `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/attachments/Handoff/` |
@@ -214,20 +267,58 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 
 ## Templates
 
-### Architecture Decision Record (ADR)
-**Template:** [templates/architecture-decision-record.md](templates/architecture-decision-record.md)
+Templates below are ordered by lifecycle phase, matching the Lifecycle Phases section above.
 
-Use when making or changing architecture. Documents:
-- Context and assumptions
-- Considered options with pros/cons
-- Decision and consequences
-- Risks and implementation details
+### Phase 2 — Justification & Approval
 
-**Status values:** Proposed → Accepted | Rejected | Superseded | Deprecated
+#### Business Case
+**Template:** [templates/business-case.md](templates/business-case.md)
+
+Use to secure support, funding, or prioritization. **Scales to project size:**
+- **Light usage** *(Project Brief equivalent)*: Executive Summary, Reasons, Business Options, Timescale, Major Risks. Skip the financial sections. Use when approval gates on capacity/strategy, not budget.
+- **Heavy usage**: Fill all sections including Costs, Dis-benefits, Investment Appraisal. Use for funding/capital allocation decisions.
+- **With dedicated Financial Model**: Keep financial sections high-level here and produce `BusinessCaseFinancialModel.md` alongside.
+
+Sections:
+- Executive summary
+- Reasons and business options
+- Expected benefits and dis-benefits *(dis-benefits optional in light usage)*
+- Costs and timescale *(costs optional in light usage)*
+- Major risks
+- Investment appraisal *(optional in light usage; promote to Financial Model when material)*
 
 ---
 
-### Request for Comments (RFC)
+#### Business Case Financial Model
+**Template:** [templates/business-case-financial-model.md](templates/business-case-financial-model.md)
+
+Use to evaluate financial impact. Documents:
+- Revenue vs costs (OPEX, CAPEX, one-time)
+- Hard returns vs soft returns
+- 3-year cumulative costs
+- ROI and payback period
+
+---
+
+### Phase 3 / 9 — Knowledge Transfer (in) / Closure
+
+#### Handover
+**Template:** [templates/handover.md](templates/handover.md)
+
+Use when transferring ownership or onboarding new engineers. Same template used in both directions — receiver fills it in as a Takeover. Documents:
+- Executive summary and contacts
+- Getting started guide
+- System architecture
+- CI/CD and deployment
+- Operations and observability
+- Security and data management
+- Quality and testing
+
+---
+
+### Phase 4 — Decide & Design
+
+#### Request for Comments (RFC)
 **Template:** [templates/request-for-comments.md](templates/request-for-comments.md)
 
 Use before implementing big changes. Documents:
@@ -240,7 +331,20 @@ Use before implementing big changes. Documents:
 
 ---
 
-### Tech Spec / Design Doc
+#### Architecture Decision Record (ADR)
+**Template:** [templates/architecture-decision-record.md](templates/architecture-decision-record.md)
+
+Use when making or changing architecture. Documents:
+- Context and assumptions
+- Considered options with pros/cons
+- Decision and consequences
+- Risks and implementation details
+
+**Status values:** Proposed → Accepted | Rejected | Superseded | Deprecated
+
+---
+
+#### Design Doc (aka Tech Spec)
 **Template:** [templates/design-doc.md](templates/design-doc.md)
 
 Use before coding complex features. Documents:
@@ -254,7 +358,58 @@ Use before coding complex features. Documents:
 
 ---
 
-### Runbook
+### Phase 5 — Build Contract
+
+#### Test Plan
+**Template:** [templates/test-plan.md](templates/test-plan.md)
+
+Use for cross-feature, release, or project-level test strategy. Documents:
+- Scope (in / out)
+- Test objectives and approach (levels and types)
+- Test environments and data strategy
+- Entry / exit criteria
+- Resources, roles, schedule
+- Risks and mitigations
+- Index of Test Cases that fulfill the plan
+
+**Created by:** Test Lead (or senior Tester)
+
+**When to use:** opt-in, *not* per-feature.
+
+- Multi-feature releases needing a coordinated test approach (shared environments, integration strategy, performance/load plans).
+- Project-level work — sits in `/docs/projects/P{N}/TestPlan.md` next to `BusinessCase.md` and `Retrospective.md`.
+- Regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) where a Test Plan is a *required* deliverable.
+- Non-functional test strategy (performance, security, accessibility, chaos) that doesn't fit cleanly under any single feature's Test Cases.
+
+**Skip when:** feature-by-feature work where Planner's acceptance criteria + per-feature Test Cases + CI gates already capture the verification approach. Most agile change sets do not need a TP.
+
+**Relationship to Test Cases:** A Test Plan *contains references to or implies* the set of Test Cases that fulfill it. One TP, many TCs. Do not duplicate scenario-level content between them — keep TC-level detail in the TC document; keep strategy / environment / schedule content in the TP.
+
+---
+
+#### Test Cases
+**Template:** [templates/test-cases.md](templates/test-cases.md)
+
+Use for QA verification of acceptance criteria. Documents:
+- Acceptance criteria coverage mapping (1:1)
+- Step-by-step test procedures
+- Expected results
+- Edge cases and error paths
+- Test execution summary
+
+**Created by:** Tester
+
+**Timing:** Test Cases are **drafted before Developer starts** — they serve as the build contract, derived 1:1 from the Planner's acceptance criteria. Developer builds against them. After Developer passes Reviewer, the Tester implements the Test Cases as executable unit/integration tests. Both the Test Cases document and the executable tests are updated together during Reviewer FAIL iterations.
+
+If a Test Plan exists for the release/project, ensure these Test Cases align with the TP's exit criteria, environment expectations, and overall approach.
+
+Drafting Test Cases pre-implementation catches missing or ambiguous acceptance criteria while they are still cheap to fix and prevents the Tester from backfilling cases to match what was built (confirmation bias).
+
+---
+
+### Phase 7 — Operate
+
+#### Runbook
 **Template:** [templates/runbook.md](templates/runbook.md)
 
 Use for handling systems and failures. Documents:
@@ -289,21 +444,7 @@ Use for handling systems and failures. Documents:
 
 ---
 
-### Post Incident Review (Postmortem)
-**Template:** [templates/postmortem.md](templates/postmortem.md)
-
-Use after incidents. Documents:
-- Summary and timeline
-- Impact and root cause
-- What went well/wrong
-- Corrective and preventative measures
-- Action items with owners and due dates
-
-**Status values:** Draft → In Review → Approved → Completed → Closed
-
----
-
-### Standard Operating Procedure (SOP)
+#### Standard Operating Procedure (SOP)
 **Template:** [templates/standard-operating-procedure.md](templates/standard-operating-procedure.md)
 
 Use for repetitive tasks requiring compliance and consistency. Documents:
@@ -315,90 +456,9 @@ Use for repetitive tasks requiring compliance and consistency. Documents:
 
 ---
 
-### Technical Handover
-**Template:** [templates/handover.md](templates/handover.md)
+### Phase 8 — Report Progress
 
-Use when transferring ownership or onboarding new engineers. Documents:
-- Executive summary and contacts
-- Getting started guide
-- System architecture
-- CI/CD and deployment
-- Operations and observability
-- Security and data management
-- Quality and testing
-
----
-
-### Data Dictionary
-**Template:** [templates/data-dictionary.md](templates/data-dictionary.md)
-
-Use to document schema, fields, data types, and governance. Includes:
-- Schema and field names
-- Data types and constraints
-- PK/FK relationships
-- PII/Security classification
-
----
-
-### Business Glossary
-**Template:** [templates/business-glossary.md](templates/business-glossary.md)
-
-Use to define key business and technical terms. Includes:
-- Term definitions
-- Business rules and calculations
-- Examples
-- Related terms and owners
-
----
-
-### Business Case
-**Template:** [templates/business-case.md](templates/business-case.md)
-
-Use to secure support, funding, or prioritization. Documents:
-- Executive summary
-- Reasons and business options
-- Expected benefits and dis-benefits
-- Costs and timescale
-- Major risks and investment appraisal
-
----
-
-### Business Case Financial Model
-**Template:** [templates/business-case-financial-model.md](templates/business-case-financial-model.md)
-
-Use to evaluate financial impact. Documents:
-- Revenue vs costs (OPEX, CAPEX, one-time)
-- Hard returns vs soft returns
-- 3-year cumulative costs
-- ROI and payback period
-
----
-
-### Brag Document
-**Template:** [templates/brag-document.md](templates/brag-document.md)
-
-Use before reviews or promotion cycles. Documents:
-- Goals and projects
-- Contributions, scope, and impact
-- Collaboration and mentorship
-- Design and documentation work
-- Skills learned
-
----
-
-### Performance Improvement Plan (PIP)
-**Template:** [templates/performance-improvement-plan.md](templates/performance-improvement-plan.md)
-
-Use when an employee's performance needs formal guidance. Documents:
-- Specific performance issues
-- Expected standards
-- Action plan with timeline
-- Support and resources
-- Consequences
-
----
-
-### Project Status Update
+#### Project Status Update
 **Template:** [templates/project-status-update.md](templates/project-status-update.md)
 
 Use for regular reporting to stakeholders. Documents:
@@ -410,7 +470,9 @@ Use for regular reporting to stakeholders. Documents:
 
 ---
 
-### Retrospective
+### Phase 9 — Closure
+
+#### Retrospective
 **Template:** [templates/retrospective.md](templates/retrospective.md)
 
 Use at project end to capture outcomes and lessons. Documents:
@@ -424,9 +486,13 @@ Use at project end to capture outcomes and lessons. Documents:
 
 **Status values:** Draft → In Review → Final → Archived
 
+(Handover, also used in Phase 9 for outgoing transfer, is documented above under Phase 3 / 9.)
+
 ---
 
-### Tech Stack Overview
+### Phase 10 — Always-Living Reference
+
+#### Tech Stack Overview
 **Template:** [templates/tech-stack-overview.md](templates/tech-stack-overview.md)
 
 Use to document current technologies. Documents:
@@ -436,52 +502,81 @@ Use to document current technologies. Documents:
 - Testing and observability
 - Storage and integrations
 
----
-
-### Test Plan
-**Template:** [templates/test-plan.md](templates/test-plan.md)
-
-Use for cross-feature, release, or project-level test strategy. Documents:
-- Scope (in / out)
-- Test objectives and approach (levels and types)
-- Test environments and data strategy
-- Entry / exit criteria
-- Resources, roles, schedule
-- Risks and mitigations
-- Index of Test Cases that fulfill the plan
-
-**Created by:** Test Lead (or senior Tester)
-
-**When to use:** opt-in, *not* per-feature.
-
-- Multi-feature releases needing a coordinated test approach (shared environments, integration strategy, performance/load plans).
-- Project-level work — sits in `/docs/projects/P{N}/TestPlan.md` next to `BusinessCase.md` and `Retrospective.md`.
-- Regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) where a Test Plan is a *required* deliverable.
-- Non-functional test strategy (performance, security, accessibility, chaos) that doesn't fit cleanly under any single feature's Test Cases.
-
-**Skip when:** feature-by-feature work where Planner's acceptance criteria + per-feature Test Cases + CI gates already capture the verification approach. Most agile change sets do not need a TP.
-
-**Relationship to Test Cases:** A Test Plan *contains references to or implies* the set of Test Cases that fulfill it. One TP, many TCs. Do not duplicate scenario-level content between them — keep TC-level detail in the TC document; keep strategy / environment / schedule content in the TP.
+**Lifecycle category:** Always-Living Reference. Singleton at `/docs/tech-stack-overview.md`. Update whenever an ADR changes a tech choice (new framework, swapped database, new observability stack, etc.).
 
 ---
 
-### Test Cases
-**Template:** [templates/test-cases.md](templates/test-cases.md)
+#### Data Dictionary
+**Template:** [templates/data-dictionary.md](templates/data-dictionary.md)
 
-Use for QA verification of acceptance criteria. Documents:
-- Acceptance criteria coverage mapping (1:1)
-- Step-by-step test procedures
-- Expected results
-- Edge cases and error paths
-- Test execution summary
+Use to document schema, fields, data types, and governance. Includes:
+- Schema and field names
+- Data types and constraints
+- PK/FK relationships
+- PII/Security classification
 
-**Created by:** Tester
+**Lifecycle category:** Always-Living Reference. Singleton at `/docs/data-dictionary.md`. Update on any schema change (new table, new field, type change, removal). No ADR required.
 
-**Timing:** Test Cases are **drafted before Developer starts** — they serve as the build contract, derived 1:1 from the Planner's acceptance criteria. Developer builds against them. After Developer passes Reviewer, the Tester implements the Test Cases as executable unit/integration tests. Both the Test Cases document and the executable tests are updated together during Reviewer FAIL iterations.
+---
 
-If a Test Plan exists for the release/project, ensure these Test Cases align with the TP's exit criteria, environment expectations, and overall approach.
+#### Business Glossary
+**Template:** [templates/business-glossary.md](templates/business-glossary.md)
 
-Drafting Test Cases pre-implementation catches missing or ambiguous acceptance criteria while they are still cheap to fix and prevents the Tester from backfilling cases to match what was built (confirmation bias).
+Use to define key business and technical terms. Includes:
+- Term definitions
+- Business rules and calculations
+- Examples
+- Related terms and owners
+
+**Lifecycle category:** Always-Living Reference. Singleton at `/docs/business-glossary.md`. Update whenever new terminology enters the domain or an existing term's meaning shifts.
+
+---
+
+### Orthogonal Flow A — Incident
+
+#### Post Incident Review (aka Postmortem)
+**Template:** [templates/post-incident-review.md](templates/post-incident-review.md)
+
+Use after incidents. Documents:
+- Summary and timeline
+- Impact and root cause
+- What went well/wrong
+- Corrective and preventative measures
+- Action items with owners and due dates
+
+**Status values:** Draft → In Review → Approved → Completed → Closed
+
+**Lifecycle category:** System-lifetime, incident-driven. Not tied to project closure — accumulates against the running system over its whole life.
+
+---
+
+### Orthogonal Flow B — People / HR (not in repo)
+
+#### Brag Document
+**Template:** [templates/brag-document.md](templates/brag-document.md)
+
+Use before reviews or promotion cycles. Documents:
+- Goals and projects
+- Contributions, scope, and impact
+- Collaboration and mentorship
+- Design and documentation work
+- Skills learned
+
+**Lifecycle category:** Orthogonal HR / personal flow. **Not** in the project lifecycle. **Not** committed to the repo.
+
+---
+
+#### Performance Improvement Plan (PIP)
+**Template:** [templates/performance-improvement-plan.md](templates/performance-improvement-plan.md)
+
+Use when an employee's performance needs formal guidance. Documents:
+- Specific performance issues
+- Expected standards
+- Action plan with timeline
+- Support and resources
+- Consequences
+
+**Lifecycle category:** Orthogonal HR flow. **Not** in the project lifecycle. **Not** committed to the repo.
 
 ---
 

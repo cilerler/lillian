@@ -4,18 +4,20 @@
 
 <!-- Choose one: Draft | Awaiting Root Cause | In Review | Pending Approval | Approved | Completed | Follow-up Required | Closed | Canceled | Obsolete | Reopened -->
 
+> Post Incident Review (aka Postmortem).
+
 | Status | Description |
 |--------|-------------|
-| Draft | The postmortem is being written. Initial facts are collected. |
+| Draft | The Post Incident Review is being written. Initial facts are collected. |
 | Awaiting Root Cause | The incident is known but root cause is still being investigated. |
 | In Review | The draft is under internal or peer review. |
 | Pending Approval | Awaiting sign-off from leads or responsible engineers. |
 | Approved | Approved and ready to publish or share. |
-| Completed | The postmortem is published. Action items are assigned but not all are closed. |
+| Completed | The Post Incident Review is published. Action items are assigned but not all are closed. |
 | Follow-up Required | Additional remediation steps remain open. |
 | Closed | All actions are resolved. The incident lifecycle is fully completed. |
-| Canceled | The postmortem was intentionally abandoned. No further work will be done. |
-| Obsolete | Superseded by a newer or merged postmortem. |
+| Canceled | The Post Incident Review was intentionally abandoned. No further work will be done. |
+| Obsolete | Superseded by a newer or merged Post Incident Review. |
 | Reopened | Incident was previously closed or canceled but has reoccurred or evolved. |
 
 ## Incident Date
