@@ -1,29 +1,21 @@
 # Tech Stack Overview
 
-**Last Updated:** [YYYY-MM-DD]
+## Metadata
 
-## Source Control & CI/CD
+**Owner:** [Name]
+**Last Updated:** [YYYYMMDD]
 
-* **Git:** *(version control)*
-* **GitHub:** *(source control, CI/CD via Actions)*
-* **Azure DevOps:** *(CI/CD pipelines)*
+## Languages
+
+* **C#:** *(primary application language)*
+* **T-SQL:** *(database queries and stored procedures)*
+* **PowerShell:** *(automation and ops scripting)*
 
 ## Runtime
 
 * **.NET:** *(primary execution environment)*
 * **Docker:** *(containerization)*
 * **Kubernetes:** *(orchestration platform)*
-
-## Infrastructure
-
-* **PowerShell:** *(automation & ops scripting)*
-* **Docker Compose:** *(local development orchestration)*
-* **Kustomize:** *(K8s manifest customization)*
-
-## Package Management
-
-* **NuGet:** *(for .NET libraries and dependencies)*
-* **Helm:** *(package manager for K8s)*
 
 ## Frameworks & Libraries
 
@@ -32,15 +24,17 @@
 * **Entity Framework Core:** *(ORM)*
 * **LINQ:** *(declarative querying)*
 
-## Code Documentation & Design
+## Storage
 
-* **Markdown:** *(lightweight documentation)*
-* **PlantUML:** *(architecture and sequence diagrams)*
+* **MSSQL:** *(relational database)*
 
-## Code Quality & Analysis
+## Caching
 
-* **.editorconfig:** *(consistent coding style enforcement)*
-* **Roslyn Analyzers:** *(compile-time checks)*
+* **Redis:** *(in-memory key-value store)*
+
+## Messaging
+
+* **RabbitMQ:** *(broker for queues, topics, and pub-sub patterns)*
 
 ## Testing
 
@@ -55,17 +49,31 @@
   * **Tempo:** *(distributed trace storage)*
 * **Grafana:** *(observability dashboards)*
 
-## Messaging
+## Code Quality & Analysis
 
-* **RabbitMQ:** *(broker for queues, topics, and pub-sub patterns)*
+* **.editorconfig:** *(consistent coding style enforcement)*
+* **Roslyn Analyzers:** *(compile-time checks)*
 
-## Caching
+## Code Documentation & Design
 
-* **Redis:** *(in-memory key-value store)*
+* **Markdown:** *(lightweight documentation)*
+* **PlantUML:** *(architecture and sequence diagrams)*
 
-## Storage
+## Source Control & CI/CD
 
-* **MSSQL:** *(relational database)*
+* **Git:** *(version control)*
+* **GitHub:** *(source control, CI/CD via Actions)*
+* **Azure DevOps:** *(CI/CD pipelines)*
+
+## Package Management
+
+* **NuGet:** *(for .NET libraries and dependencies)*
+* **Helm:** *(package manager for K8s)*
+
+## Infrastructure
+
+* **Docker Compose:** *(local development orchestration)*
+* **Kustomize:** *(K8s manifest customization)*
 
 ## Integration
 

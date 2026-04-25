@@ -1,4 +1,10 @@
-# Business Case Financial Model (Total Cost of Ownership & ROI)
+# Business Case Financial Model: [Project Name]
+
+## Metadata
+
+**Project Name:** [Project Name]
+**Author:** [Name]
+**Date:** [YYYYMMDD]
 
 ## Definitions
 
@@ -10,6 +16,17 @@
 | **OPEX** | Operational expenditures. Ongoing monthly or annual costs tied to day-to-day business operations, such as subscriptions, salaries, or utilities. |
 | **CAPEX** | Capital expenditures. Upfront costs for acquiring, upgrading, or maintaining long-term assets like equipment, software licenses, or infrastructure. Typically amortized over time. |
 | **One-Time Cost** | A non-recurring cost incurred only once for a specific purpose, such as implementation fees, setup charges, or training expenses. |
+| **NPV** | Net Present Value. Sum of cash flows discounted to today's value. NPV > 0 means the investment beats the discount rate. |
+
+## Assumptions
+
+| Assumption | Value | Source / Rationale |
+|------------|-------|--------------------|
+| Discount rate | [%] | [Cost of capital, hurdle rate, or treasury benchmark] |
+| Time horizon | [3 years] | [Why this horizon] |
+| Cost escalation rate | [% per year] | [Inflation, vendor escalators] |
+| Revenue growth rate | [% per year] | [Pipeline, market projection] |
+| Tax rate | [%] | [Corporate tax bracket] |
 
 ## Financial Model
 
@@ -30,10 +47,28 @@
 | Total Costs (3-Year) | $ |
 | Net Return (3-Year) | $ |
 | ROI | % |
+| NPV (3-Year, [discount rate] discount) | $ |
 | Payback Period | months |
+
+## Sensitivity Analysis
+
+*Test the model against best-case, base-case, and worst-case assumptions. The decision is robust if all three scenarios still meet the investment threshold; otherwise call out which assumption drives the swing.*
+
+| Scenario | Total Revenue | Total Costs | Net Return | ROI | NPV |
+|----------|---------------|-------------|------------|-----|-----|
+| Best case | $ | $ | $ | % | $ |
+| Likely (base) | $ | $ | $ | % | $ |
+| Worst case | $ | $ | $ | % | $ |
+
+**Key sensitivities:** [which assumption(s) most affect the outcome — e.g., "revenue growth rate swings NPV by ±$X per 1% change"]
 
 ## Notes
 
 - Hard returns are directly measurable and attributable to this investment
 - Soft returns should be documented but not included in core ROI calculations
 - CAPEX items are typically amortized over 3 years for annual cost calculations
+
+## References
+
+- [Business Case](business-case.md)
+- [Related ADRs / RFCs / Design Docs]

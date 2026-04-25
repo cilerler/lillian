@@ -1,27 +1,25 @@
 # Project Retrospective: [Project Name]
 
+## Metadata
+
+**Project ID:** P[N]
+**Project Name:** [Project Name]
+**Business Case:** [Link to BusinessCase.md]
+**Duration:** [Start Date] → [End Date]
+**Team:** [Roles and members]
+**Author:** [Name]
+**Retrospective Date:** [YYYYMMDD]
+
 ## Status
 
-<!-- Choose one: Draft | In Review | Final | Archived -->
+<!-- Choose one: Draft | In Review | Approved | Archived -->
 
 | Status | Description |
 |--------|-------------|
 | Draft | The retrospective is being written. Input is still being gathered. |
 | In Review | The draft is under peer or leadership review. |
-| Final | Approved and shared with stakeholders. |
+| Approved | Approved and shared with stakeholders. |
 | Archived | Retrospective is closed and preserved for reference. |
-
-## Project Information
-
-| | |
-|:---|:---|
-| **Project ID:** | P[N] |
-| **Project Name:** | [Project Name] |
-| **Business Case:** | [Link to BusinessCase.md] |
-| **Duration:** | [Start Date] → [End Date] |
-| **Team:** | [Roles and members] |
-| **Author:** | [Name] |
-| **Retrospective Date:** | [YYYY-MM-DD] |
 
 ## Summary
 
@@ -41,9 +39,9 @@
 
 | Date | Milestone |
 |------|-----------|
-| [YYYY-MM-DD] | [Milestone or pivot] |
-| [YYYY-MM-DD] | [Milestone or pivot] |
-| [YYYY-MM-DD] | [Milestone or pivot] |
+| [YYYYMMDD] | [Milestone or pivot] |
+| [YYYYMMDD] | [Milestone or pivot] |
+| [YYYYMMDD] | [Milestone or pivot] |
 
 ## What Went Well
 
@@ -80,8 +78,8 @@
 
 | Action | Owner | Target Date | Status |
 |--------|-------|-------------|--------|
-| [Process, tooling, or practice change] | [Team/Person] | [YYYY-MM-DD] | [Open/Done] |
-| [Process, tooling, or practice change] | [Team/Person] | [YYYY-MM-DD] | [Open/Done] |
+| [Process, tooling, or practice change] | [Team/Person] | [YYYYMMDD] | [Open/Done] |
+| [Process, tooling, or practice change] | [Team/Person] | [YYYYMMDD] | [Open/Done] |
 
 ## Metrics
 
@@ -96,7 +94,7 @@
 - [Contributor — what they drove]
 - [Contributor — what they drove]
 
-## Links
+## References
 
 - [Business Case](BusinessCase.md)
 - [Latest Status Update](StatusUpdates/)

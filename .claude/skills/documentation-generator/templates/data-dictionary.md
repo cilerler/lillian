@@ -1,4 +1,4 @@
-# Data Dictionary Catalog
+# Data Dictionary
 
 ## Overview
 
@@ -8,20 +8,22 @@ This document defines the schema, fields, data types, and data governance elemen
 
 ### [Schema].[TableName]
 
-| Field Name | Data Type | Length/Precision | Nullable | PK | FK | FK Reference | Default Value | Description | Sample Value | PII/Security | Notes |
-|------------|-----------|------------------|----------|----|----|--------------|---------------|-------------|--------------|--------------|-------|
-| [FieldName] | [Type] | [Length] | [Yes/No] | [Yes/No] | [Yes/No] | [Reference] | [Default] | [Description] | [Sample] | [Classification] | [Notes] |
+| Field Name | Data Type | Length/Precision | Nullable | PK | FK | FK Reference | Default Value | Description | Source System | Sample Value | PII/Security | Notes |
+|------------|-----------|------------------|----------|----|----|--------------|---------------|-------------|---------------|--------------|--------------|-------|
+| [FieldName] | [Type] | [Length] | [Yes/No] | [Yes/No] | [Yes/No] | [Reference] | [Default] | [Description] | [Source] | [Sample] | [Classification] | [Notes] |
+
+> **Source System rule:** one row per (field, source). If the same field name is populated by two upstream systems — e.g., `Email` arrives from both `AuthService` and a CRM import — they get **two separate rows**, one per source, even within the same target table. This preserves lineage and prevents silent overwrites between sources.
 
 ## Example Entry
 
-| Field Name | Data Type | Length/Precision | Nullable | PK | FK | FK Reference | Default Value | Description | Sample Value | PII/Security | Notes |
-|------------|-----------|------------------|----------|----|----|--------------|---------------|-------------|--------------|--------------|-------|
-| UserId | BIGINT | | No | Yes | No | | IDENTITY(1,1) | Unique identifier for the user | 1001 | None | System-generated |
-| Email | NVARCHAR | 320 | No | | No | | | User's email address | user@example.com | PII-Confidential | Unique index |
-| PasswordHash | NVARCHAR | 256 | No | | No | | | Hashed password | 0x2A... | Sensitive | Never store plain text |
-| FirstName | NVARCHAR | 100 | Yes | | No | | | User's first name | John | PII-Confidential | |
-| IsActive | BIT | | No | | No | | 1 | Account active flag | 1 | None | 1=Active, 0=Inactive |
-| CreatedAt | DATETIME2 | 7 | No | | No | | SYSUTCDATETIME() | Record creation timestamp | 2025-01-15 14:30:00 | None | UTC |
+| Field Name | Data Type | Length/Precision | Nullable | PK | FK | FK Reference | Default Value | Description | Source System | Sample Value | PII/Security | Notes |
+|------------|-----------|------------------|----------|----|----|--------------|---------------|-------------|---------------|--------------|--------------|-------|
+| UserId | BIGINT | | No | Yes | No | | IDENTITY(1,1) | Unique identifier for the user | AuthService | 1001 | None | System-generated |
+| Email | NVARCHAR | 320 | No | | No | | | User's email address | AuthService | user@example.com | PII-Confidential | Unique index |
+| PasswordHash | NVARCHAR | 256 | No | | No | | | Hashed password | AuthService | 0x2A... | Sensitive | Never store plain text |
+| FirstName | NVARCHAR | 100 | Yes | | No | | | User's first name | ProfileService | John | PII-Confidential | Sourced from profile API, not auth |
+| IsActive | BIT | | No | | No | | 1 | Account active flag | AuthService | 1 | None | 1=Active, 0=Inactive |
+| CreatedAt | DATETIME2 | 7 | No | | No | | SYSUTCDATETIME() | Record creation timestamp | AuthService | 2025-01-15 14:30:00 | None | UTC |
 
 ## Column Definitions
 
@@ -65,4 +67,4 @@ This document defines the schema, fields, data types, and data governance elemen
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | [Date] | [Author] | Initial version |
+| 1.0 | [YYYYMMDD] | [Name] | Initial version |

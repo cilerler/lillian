@@ -1,19 +1,17 @@
-# {{ROLE_TITLE}}
+# Role Brief: [ROLE TITLE]
 
 > **Internal tech-team brief.** This document is what the engineering team hands to HR / recruiting to describe the kind of person we want to hire. HR translates it into the public job posting (with compensation range, benefits, EEO statement, application process — those are HR's responsibility, not ours).
 
-## Role Overview
+## Metadata
 
-| Field | Value |
-|-------|-------|
-| **Role** | {{ROLE_TITLE}} *(e.g., Senior Full-Stack .NET Developer)* |
-| **Level** | {{LEVEL}} *(Junior / Mid / Senior / Staff / Principal)* |
-| **Reports To** | {{MANAGER_TITLE}} *(e.g., Engineering Manager)* |
-| **Team** | {{TEAM_NAME}}, ~{{TEAM_SIZE}} engineers |
-| **Location / Mode** | {{LOCATION}} ({{REMOTE_HYBRID_ONSITE}}) |
-| **Employment Type** | {{EMPLOYMENT_TYPE}} *(Full-Time / Contract)* |
-| **On-Call Rotation** | {{YES_NO_DETAILS}} *(e.g., "1 week in 6 with primary/secondary handoff")* |
-| **Travel** | {{NONE_RARE_OCCASIONAL_FREQUENT}} |
+**Role:** [ROLE TITLE] *(e.g., Senior Full-Stack .NET Developer)*
+**Level:** [LEVEL] *(Junior / Mid / Senior / Staff / Principal)*
+**Reports To:** [MANAGER TITLE] *(e.g., Engineering Manager)*
+**Team:** [TEAM NAME], ~[TEAM SIZE] engineers
+**Location / Mode:** [LOCATION] ([REMOTE | HYBRID | ONSITE])
+**Employment Type:** [EMPLOYMENT TYPE] *(Full-Time / Contract)*
+**On-Call Rotation:** [YES/NO + DETAILS] *(e.g., "1 week in 6 with primary/secondary handoff")*
+**Travel:** [NONE | RARE | OCCASIONAL | FREQUENT]
 
 ## Role Summary
 
@@ -103,11 +101,11 @@ Stuff the team uses, but the candidate doesn't need it on day one. Exposure help
 
 Hints that help recruiters target the right candidate pool. Fill in only what applies.
 
-- {{Domain-experience preferences (e.g., FinTech, Healthcare, Logistics) — and whether they are nice-to-have or required}}
-- {{Timezone overlap requirements for remote roles (e.g., "must overlap 4+ hours with US Eastern")}}
-- {{Filters that should NOT screen candidates out (e.g., "AWS-primary candidates are still welcome — Azure / GCP are learnable")}}
-- {{Internal-referral / employee-network preferences, if any}}
-- {{Any prior roles / company types the team specifically wants to see (e.g., "experience at a regulated SaaS shop")}}
+- [Domain-experience preferences (e.g., FinTech, Healthcare, Logistics) — and whether they are nice-to-have or required]
+- [Timezone overlap requirements for remote roles (e.g., "must overlap 4+ hours with US Eastern")]
+- [Filters that should NOT screen candidates out (e.g., "AWS-primary candidates are still welcome — Azure / GCP are learnable")]
+- [Internal-referral / employee-network preferences, if any]
+- [Any prior roles / company types the team specifically wants to see (e.g., "experience at a regulated SaaS shop")]
 
 ## What this document is NOT
 

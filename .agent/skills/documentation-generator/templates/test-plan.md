@@ -2,13 +2,25 @@
 
 ## Metadata
 
-**Scope:** App-wide | Module | Project P{N} | Release v{X.Y}
+**Scope:** App-wide | Module | Project P[N] | Release v[X.Y]
 **Project / Release:** [identifier — e.g., P3, v2.5, Q3-launch]
-**Created:** [YYYY-MM-DD]
-**Last Updated:** [YYYY-MM-DD]
+**Created:** [YYYYMMDD]
+**Last Updated:** [YYYYMMDD]
 **Owner:** [Test Lead name]
-**Status:** Draft | Approved | Active | Archived
+**Status:** [current value]
 **References:** [Links to RFCs, Design Docs, ADRs, related Test Cases]
+
+## Status
+
+<!-- Choose one: Draft | In Review | Approved | Archived | Canceled -->
+
+| Status | Description |
+|--------|-------------|
+| Draft | The Test Plan is being written. |
+| In Review | The Test Plan is under review by leads and stakeholders. |
+| Approved | The Test Plan is approved and execution can proceed. |
+| Archived | The release shipped; the Test Plan is preserved for reference. |
+| Canceled | The release was canceled or descoped before execution completed. |
 
 ---
 
@@ -119,12 +131,12 @@ Testing is complete when:
 
 | Role | Person(s) | Responsibility |
 |------|-----------|----------------|
-| Test Lead | [name] | TP ownership, sign-off, coordination |
-| Tester(s) | [names] | TC authoring, execution, reporting |
-| Developer(s) | [names] | Unit tests, defect triage, fixes |
-| Reviewer | [name] | Quality gates, code review |
-| Product Owner | [name] | UAT sign-off, scope decisions |
-| SRE / Platform | [name] | Test environments, observability |
+| Test Lead | [Name] | TP ownership, sign-off, coordination |
+| Tester(s) | [Names] | TC authoring, execution, reporting |
+| Developer(s) | [Names] | Unit tests, defect triage, fixes |
+| Reviewer | [Name] | Quality gates, code review |
+| Product Owner | [Name] | UAT sign-off, scope decisions |
+| SRE / Platform | [Name] | Test environments, observability |
 
 ---
 
@@ -132,13 +144,13 @@ Testing is complete when:
 
 | Milestone | Target Date | Owner |
 |-----------|-------------|-------|
-| Test Plan approved | [date] | Test Lead |
-| Test environments ready | [date] | Platform |
-| Test Cases drafted | [date] | Tester |
-| Test execution start | [date] | Tester |
-| UAT start | [date] | Product Owner |
-| UAT complete | [date] | Product Owner |
-| Release sign-off | [date] | Test Lead |
+| Test Plan approved | [YYYYMMDD] | Test Lead |
+| Test environments ready | [YYYYMMDD] | Platform |
+| Test Cases drafted | [YYYYMMDD] | Tester |
+| Test execution start | [YYYYMMDD] | Tester |
+| UAT start | [YYYYMMDD] | Product Owner |
+| UAT complete | [YYYYMMDD] | Product Owner |
+| Release sign-off | [YYYYMMDD] | Test Lead |
 
 ---
 
@@ -183,6 +195,6 @@ Testing is complete when:
 
 | Name | Role | Date | Signature |
 |------|------|------|-----------|
-| [name] | Test Lead | | |
-| [name] | Product Owner | | |
-| [name] | Engineering Lead | | |
+| [Name] | Test Lead | | |
+| [Name] | Product Owner | | |
+| [Name] | Engineering Lead | | |

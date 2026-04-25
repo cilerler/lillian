@@ -221,6 +221,14 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 
 - **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
 - **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
+- **Documents** use a timestamp-slug ID: `{ABBR}-{yyyyMMddHHmm}-{slug}` where `ABBR` is the document-type abbreviation (`ADR`, `RFC`, `PIR`, etc.), the timestamp follows .NET DateTime conventions (`yyyy`=year, `MM`=month, `dd`=day, `HH`=24-hour, `mm`=minute), and `slug` is the kebab-case title. The filename omits the abbreviation prefix (folder context supplies it) — file is `{yyyyMMddHHmm}-{slug}.md`, in-document references use the full `{ABBR}-{yyyyMMddHHmm}-{slug}` form.
+
+### Placeholder conventions inside templates
+
+- **Dates:** `[YYYYMMDD]` — compact, no dashes (e.g., `[20260425]`).
+- **Times:** `[HH:MM]` (24-hour).
+- **Generic placeholders:** square brackets — `[Name]`, `[Project Name]`, `[Title]`.
+- **Format-string placeholders** (where the *shape* of the value is the placeholder): bare literal — `yyyyMMddHHmm`, `slug`, `[N]`, `[X.Y]`. No curly braces.
 
 ### Supporting attachments
 
@@ -346,7 +354,7 @@ Use before implementing big changes. Documents:
 - Open questions
 - Timeline
 
-**Status values:** Draft → In Review → Accepted | Rejected | Implemented | Withdrawn
+**Status values:** Draft → In Review → Approved | Implemented | Rejected | Canceled
 
 ---
 
@@ -359,7 +367,7 @@ Use when making or changing architecture. Documents:
 - Decision and consequences
 - Risks and implementation details
 
-**Status values:** Proposed → Accepted | Rejected | Superseded | Deprecated
+**Status values:** Draft → In Review → Approved | Rejected | Superseded | Archived
 
 ---
 
@@ -373,7 +381,7 @@ Use before coding complex features. Documents:
 - Alternatives considered
 - Metrics and timeline
 
-**Status values:** Draft → Final → Implemented → Obsolete
+**Status values:** Draft → In Review → Approved | Implemented | Superseded | Archived
 
 ---
 
@@ -503,7 +511,7 @@ Use at project end to capture outcomes and lessons. Documents:
 - Action items for future projects
 - Metrics (budget, duration, scope delivered)
 
-**Status values:** Draft → In Review → Final → Archived
+**Status values:** Draft → In Review → Approved | Archived
 
 (Takeover & Handover template, also used in Phase 9 for outgoing transfer, is documented above under Phase 3 / 9.)
 
@@ -563,7 +571,7 @@ Use after incidents. Documents:
 - Corrective and preventative measures
 - Action items with owners and due dates
 
-**Status values:** Draft → In Review → Approved → Completed → Closed
+**Status values:** Draft → Awaiting Root Cause → In Review → Pending Approval → Approved → Completed → Follow-up Required → Closed | Canceled | Obsolete | Reopened
 
 **Lifecycle category:** System-lifetime, incident-driven. Not tied to project closure — accumulates against the running system over its whole life.
 

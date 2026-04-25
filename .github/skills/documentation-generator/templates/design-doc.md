@@ -1,20 +1,24 @@
-# Tech Spec Design Doc: [Title]
+# Design Doc: [Title]
 
 ## Metadata
 
-**Date:** [YYYY-MM-DD]
-**Status:** [Draft | Final | Implemented | Obsolete]
+**Date:** [YYYYMMDD]
+**Status:** [current value]
 **Authors:** [Names]
 **Reviewers:** [Names]
 
-### Status Definitions
+## Status
 
-| Status | Meaning |
-|--------|---------|
-| DRAFT | Still under development; feedback and changes expected. |
-| FINAL | Design agreed upon; implementation can begin or is in progress. |
-| IMPLEMENTED | Design has been implemented in production. |
-| OBSOLETE | Design is no longer applicable; superseded or discarded. |
+<!-- Choose one: Draft | In Review | Approved | Implemented | Superseded | Archived -->
+
+| Status | Description |
+|--------|-------------|
+| Draft | Still under development; feedback and changes expected. |
+| In Review | Design has been submitted and is under active review. |
+| Approved | Design agreed upon; implementation can begin or is in progress. |
+| Implemented | Design has been implemented in production. |
+| Superseded | Design replaced by a newer Design Doc. |
+| Archived | Design is no longer applicable. |
 
 ## Context and Scope
 
@@ -69,6 +73,16 @@
 
 [How will this be monitored?]
 
+## Testing Strategy
+
+[How will this be tested? Coverage approach across unit / integration / E2E. Performance and load test approach. Any chaos or fault-injection plan. Test data strategy if non-obvious.]
+
+- **Unit:** [scope, framework]
+- **Integration:** [scope, framework]
+- **E2E:** [critical user journeys]
+- **Performance:** [targets, scenarios]
+- **Other (security, accessibility, chaos):** [as relevant]
+
 ## Alternatives Considered
 
 ### Alternative 1: [Name]
@@ -87,14 +101,29 @@
 |--------|--------|--------------|
 | [Metric 1] | [Target value] | [Measurement method] |
 
+## Rollout Plan
+
+[Phased release approach. Feature flags. Migration steps. Backward-compatibility handling. Deprecation path for old code paths or APIs.]
+
+- **Phase 1 ([scope]):** [what ships, behind which flag, to whom]
+- **Phase 2 ([scope]):** [next ramp]
+- **Phase 3 ([scope]):** [GA / cleanup]
+- **Migration:** [data migration steps; old → new compatibility window]
+- **Deprecation:** [what gets removed and when]
+
 ## Timeline
 
 | Phase | Target Date | Description |
 |-------|-------------|-------------|
-| Design Finalization | [Date] | |
-| Implementation | [Date] | |
-| Testing | [Date] | |
-| Rollout | [Date] | |
+| Design Finalization | [YYYYMMDD] | |
+| Implementation | [YYYYMMDD] | |
+| Testing | [YYYYMMDD] | |
+| Rollout | [YYYYMMDD] | |
+
+## Open Questions
+
+- [Question that must be resolved before implementation]
+- [Decision deferred to later phase]
 
 ## References
 

@@ -1,5 +1,12 @@
 # Post Incident Review: [Title]
 
+## Metadata
+
+**Incident Date:** [YYYYMMDD HH:MM UTC]
+**Severity:** [SEV-1 | SEV-2 | SEV-3 | SEV-4]
+**Author:** [Name]
+**Date:** [YYYYMMDD]
+
 ## Status
 
 <!-- Choose one: Draft | Awaiting Root Cause | In Review | Pending Approval | Approved | Completed | Follow-up Required | Closed | Canceled | Obsolete | Reopened -->
@@ -19,10 +26,6 @@
 | Canceled | The Post Incident Review was intentionally abandoned. No further work will be done. |
 | Obsolete | Superseded by a newer or merged Post Incident Review. |
 | Reopened | Incident was previously closed or canceled but has reoccurred or evolved. |
-
-## Incident Date
-
-[YYYY-MM-DD HH:MM UTC]
 
 ## Summary
 
@@ -78,6 +81,14 @@
 - [Problem 2]
 - [Problem 3]
 
+## Where We Got Lucky
+
+*Near-misses or fortunate circumstances that prevented worse outcomes. Document these to surface fragile systems before the next incident — the goal is to recognize how much stability depended on luck rather than engineering, so the same luck isn't required next time.*
+
+- [Fortunate circumstance: e.g., the failing service was already behind a feature flag that happened to be off for 90% of traffic]
+- [Fortunate circumstance: e.g., the on-call engineer happened to be online when the alert fired at 03:00]
+- [Fortunate circumstance: e.g., the corrupt write hit a partition that hadn't been queried in 6 hours, giving us a recovery window]
+
 ## Corrective Measures
 
 *What did we do to fix the current problem?*
@@ -97,11 +108,11 @@
 
 | Action | Owner | Due Date | Status |
 |--------|-------|----------|--------|
-| [Action 1] | [Team/Person] | [YYYY-MM-DD] | [Open/Done] |
-| [Action 2] | [Team/Person] | [YYYY-MM-DD] | [Open/Done] |
-| [Action 3] | [Team/Person] | [YYYY-MM-DD] | [Open/Done] |
+| [Action 1] | [Team/Person] | [YYYYMMDD] | [Open/Done] |
+| [Action 2] | [Team/Person] | [YYYYMMDD] | [Open/Done] |
+| [Action 3] | [Team/Person] | [YYYYMMDD] | [Open/Done] |
 
-## Links
+## References
 
 - [Incident chat log]
 - [Status page update (archived)]

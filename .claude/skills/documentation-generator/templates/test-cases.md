@@ -4,8 +4,8 @@
 
 **Feature:** [Feature name]
 **RFC:** [Link to RFC if applicable]
-**Created:** [YYYY-MM-DD]
-**Last Updated:** [YYYY-MM-DD]
+**Created:** [YYYYMMDD]
+**Last Updated:** [YYYYMMDD]
 **Author:** [Name]
 
 ## Acceptance Criteria Coverage
@@ -122,11 +122,17 @@
 
 | Run Date | Environment | Passed | Failed | Blocked | Notes |
 |----------|-------------|--------|--------|---------|-------|
-| [Date] | [Env] | X | X | X | [Notes] |
+| [YYYYMMDD] | [Env] | X | X | X | [Notes] |
+
+## References
+
+- [Link to related Test Plan]
+- [Link to RFC / Design Doc]
+- [Link to feature specification]
 
 ## Revision History
 
 | Date | Author | Changes |
 |------|--------|---------|
-| [Date] | [Name] | Initial creation |
-| [Date] | [Name] | [Description of changes] |
+| [YYYYMMDD] | [Name] | Initial creation |
+| [YYYYMMDD] | [Name] | [Description of changes] |

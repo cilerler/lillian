@@ -2,23 +2,27 @@
 
 ## Metadata
 
-**RFC ID:** [YYYYMMDDHHMM]
-**Date:** [YYYY-MM-DD]
+**RFC ID:** RFC-yyyyMMddHHmm-slug
+**Date:** [YYYYMMDD]
 **Version:** 1.0
 **Authors:** [Name (@handle), Team]
 
 ## Status
 
-<!-- Choose one: Draft | In Review | Accepted | Rejected | Implemented | Withdrawn -->
+<!-- Choose one: Draft | In Review | Approved | Implemented | Rejected | Canceled -->
 
 | Status | Description |
 |--------|-------------|
 | Draft | Proposal is being written and not yet submitted for review. |
 | In Review | Proposal has been submitted and is under active review by stakeholders. |
-| Accepted | Proposal has been reviewed and approved for implementation. |
-| Rejected | Proposal has been reviewed and declined, with reasons documented. |
+| Approved | Proposal has been reviewed and approved for implementation. |
 | Implemented | Proposal has been successfully implemented and is live in production. |
-| Withdrawn | Proposal has been retracted by its author or team before full evaluation. |
+| Rejected | Proposal has been reviewed and declined, with reasons documented. |
+| Canceled | Proposal has been retracted by its author or team before full evaluation. |
+
+## Summary
+
+[1-2 sentence TL;DR. The reader should know what's being proposed and why before they decide whether to read further.]
 
 ## Context
 
@@ -97,9 +101,9 @@ When a new order arrives:
 
 | Milestone | Target Date |
 |-----------|-------------|
-| POC Complete | [Date] |
-| Staging Rollout | [Date] |
-| Production Rollout | [Date] |
+| POC Complete | [YYYYMMDD] |
+| Staging Rollout | [YYYYMMDD] |
+| Production Rollout | [YYYYMMDD] |
 
 ## Stakeholders
 

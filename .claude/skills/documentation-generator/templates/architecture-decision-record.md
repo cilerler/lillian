@@ -1,14 +1,24 @@
-# Architectural Decision Record: ADR-XXX: [Title]
+# Architectural Decision Record: ADR-yyyyMMddHHmm-slug: [Title]
+
+## Metadata
+
+**ADR ID:** ADR-yyyyMMddHHmm-slug
+**Date:** [YYYYMMDD]
+**Authors:** [Names]
+**Reviewers:** [Names]
 
 ## Status
 
-<!-- Choose one: Proposed | Accepted | Rejected | Superseded by ADR-XXX | Deprecated -->
+<!-- Choose one: Draft | In Review | Approved | Rejected | Superseded by ADR-yyyyMMddHHmm-slug | Archived -->
 
-- **Proposed**: The decision is documented but not yet agreed upon. Open for discussion.
-- **Accepted**: The decision has been agreed upon by stakeholders and is the official direction.
-- **Rejected**: A proposed decision that was formally rejected. Keep to document what was considered.
-- **Superseded by ADR-XXX**: An older decision replaced by a new ADR. Creates a clear chain of decisions.
-- **Deprecated**: A decision no longer relevant or in effect, but not directly replaced.
+| Status | Description |
+|--------|-------------|
+| Draft | The decision is being written and not yet agreed upon. Open for discussion. |
+| In Review | The proposal is under active review by stakeholders. |
+| Approved | The decision has been agreed upon by stakeholders and is the official direction. |
+| Rejected | A proposed decision that was formally rejected. Kept to document what was considered. |
+| Superseded by ADR-yyyyMMddHHmm-slug | An older decision replaced by a new ADR. Creates a clear chain of decisions. |
+| Archived | A decision no longer relevant or in effect, but not directly replaced. |
 
 ## Context
 
@@ -19,6 +29,15 @@
 - [Assumption 1]
 - [Assumption 2]
 - [Assumption 3]
+
+## Decision Drivers
+
+*The factors this decision is optimizing for — the criteria the chosen option must satisfy. Distinct from Assumptions (premises taken as given): Drivers are the success criteria.*
+
+- [Driver: e.g., compliance requirement — SOC 2 audit by Q3]
+- [Driver: e.g., team familiarity — existing C# expertise]
+- [Driver: e.g., operational cost ceiling — <$X/month]
+- [Driver: e.g., time-to-market — launch within 8 weeks]
 
 ## Considered Options
 
@@ -71,13 +90,13 @@
 
 - [Previous ADR or decision, if any]
 
-## Related Decisions
+## References
 
-- [ADR-XXX: Related decision]
-- [ADR-YYY: Related decision]
+- [ADR-yyyyMMddHHmm-slug: Related decision]
+- [ADR-yyyyMMddHHmm-slug: Another related decision]
 
-## Changelog
+## Revision History
 
 | Version | Date | Status | Change Description | Author(s) |
 |---------|------|--------|-------------------|-----------|
-| 1.0 | YYYY-MM-DD | Proposed | Initial proposal | [Author] |
+| 1.0 | [YYYYMMDD] | Draft | Initial proposal | [Name] |

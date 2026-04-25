@@ -1,13 +1,11 @@
-# Project Status Update
+# Project Status Update: [Project Name]
 
-## Project Information
+## Metadata
 
-| | |
-|:---|:---|
-| **Project Name:** | [Project Name] |
-| **Project Manager:** | [Your Name / Project Manager's Name] |
-| **Reporting Period:** | [Start Date] to [End Date] |
-| **Date of Report:** | [Date] |
+**Project Name:** [Project Name]
+**Project Manager:** [Your Name / Project Manager's Name]
+**Reporting Period:** [Start Date] to [End Date]
+**Date of Report:** [YYYYMMDD]
 
 ## Overall Status Summary
 
@@ -55,10 +53,10 @@
 
 | Milestone | Target Date | Status | % Complete | Notes |
 |:---|:---|:---|:---|:---|
-| **Phase 1** | [Date] | Completed | 100% | |
-| **Phase 2** | [Date] | On Track | 60% | |
-| **Phase 3** | [Date] | At Risk | 15% | [Notes] |
-| **Phase 4** | [Date] | Blocked | 0% | [Blocker] |
+| **Phase 1** | [YYYYMMDD] | Completed | 100% | |
+| **Phase 2** | [YYYYMMDD] | On Track | 60% | |
+| **Phase 3** | [YYYYMMDD] | At Risk | 15% | [Notes] |
+| **Phase 4** | [YYYYMMDD] | Blocked | 0% | [Blocker] |
 
 ## Budget & Resource Update
 
@@ -73,4 +71,4 @@
 
 * [Note 1]
 * [Note 2]
-* The next stakeholder review meeting is scheduled for [Date] at [Time].
+* The next stakeholder review meeting is scheduled for [YYYYMMDD] at [HH:MM].

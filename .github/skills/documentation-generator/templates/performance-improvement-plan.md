@@ -1,11 +1,13 @@
-# Performance Improvement Plan
+# Performance Improvement Plan: [Employee Name]
+
+## Metadata
 
 **Employee Name:** [Name]
 **Department:** [Department]
 **Position:** [Title]
 **Manager:** [Manager Name]
-**Date:** [YYYY-MM-DD]
-**Review Date:** [YYYY-MM-DD]
+**Date:** [YYYYMMDD]
+**Review Date:** [YYYYMMDD]
 
 ---
 
@@ -56,9 +58,9 @@
 
 | Milestone | Target Date | Success Criteria |
 |-----------|-------------|------------------|
-| Check-in 1 | [Date] | [What success looks like] |
-| Check-in 2 | [Date] | [What success looks like] |
-| Final Review | [Date] | [What success looks like] |
+| Check-in 1 | [YYYYMMDD] | [What success looks like] |
+| Check-in 2 | [YYYYMMDD] | [What success looks like] |
+| Final Review | [YYYYMMDD] | [What success looks like] |
 
 ## Consequences
 
@@ -68,7 +70,7 @@ If the objectives outlined in this PIP are not met by the final review date, the
 - [Consequence 2]
 - Up to and including termination of employment
 
-## Acknowledgment
+## Sign-off
 
 | Role | Name | Signature | Date |
 |------|------|-----------|------|

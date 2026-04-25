@@ -1,12 +1,12 @@
-# Technical Handover & Takeover
+# Takeover & Handover: [Project Name]
 
-## Document Control
+## Metadata
 
-- **Project:** [Project Name]
-- **Date:** [YYYY-MM-DD]
-- **Version:** 1.0
-- **From (Team/Individual):** [Departing Team/Individual Name]
-- **To (Team/Individual):** [Onboarding Team/Individual Name]
+**Project:** [Project Name]
+**Date:** [YYYYMMDD]
+**Version:** 1.0
+**From (Team/Individual):** [Departing Team/Individual Name]
+**To (Team/Individual):** [Onboarding Team/Individual Name]
 
 ---
 
@@ -234,7 +234,29 @@
 
 ---
 
-## 8. Acknowledgment & Sign-off
+## 8. Outstanding Issues & Known Gaps
+
+*Things the receiving party should know are unresolved. Be specific — vague handovers leave receivers chasing ghosts.*
+
+### 8.1 Known Bugs / Tech Debt
+
+| Item | Severity | Workaround | Linked Issue |
+|------|----------|------------|--------------|
+| [Bug or debt item] | High / Med / Low | [Workaround if any] | [Link to issue] |
+
+### 8.2 Unfinished Work
+
+- [Feature or refactor in progress, with state of completion]
+- [Pending architectural or product decision]
+
+### 8.3 Open Questions for the Receiving Team
+
+- [Question or area needing clarification before next significant change]
+- [Assumption the previous team made that should be re-validated]
+
+---
+
+## 9. Sign-off
 
 | Role | Name | Signature | Date |
 |------|------|-----------|------|

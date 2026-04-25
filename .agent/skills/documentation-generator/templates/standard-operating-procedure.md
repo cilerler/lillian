@@ -1,8 +1,35 @@
 # Standard Operating Procedure: [Title]
 
+## Metadata
+
+**SOP ID:** SOP-yyyyMMddHHmm-slug
+**Version:** 1.0
+**Owner:** [Name]
+**Approver:** [Name]
+**Effective Date:** [YYYYMMDD]
+**Last Reviewed:** [YYYYMMDD]
+**Next Review:** [YYYYMMDD]
+
 ## Purpose
 
 [Brief description of what this SOP covers and why it exists.]
+
+## Scope
+
+[What this SOP covers and what it explicitly does NOT cover.]
+
+**In Scope:**
+- [Item]
+
+**Out of Scope:**
+- [Item]
+
+## Definitions
+
+| Term | Definition |
+|------|------------|
+| [Term] | [Definition] |
+| [Term] | [Definition] |
 
 ## Frequency
 
@@ -83,12 +110,14 @@ If the procedure fails or needs to be undone:
 
 [Description of how this procedure is logged/audited, if applicable]
 
-## Last Reviewed
+## References
 
-[YYYY-MM-DD]
+- [Link to related SOP]
+- [Link to related runbook]
+- [Link to policy / compliance source]
 
 ## Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | [Date] | [Author] | Initial version |
+| 1.0 | [YYYYMMDD] | [Name] | Initial version |

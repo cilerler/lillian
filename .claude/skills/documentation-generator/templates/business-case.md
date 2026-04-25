@@ -1,4 +1,10 @@
-# Business Case
+# Business Case: [Project Name]
+
+## Metadata
+
+**Project Name:** [Project Name]
+**Author:** [Name]
+**Date:** [YYYYMMDD]
 
 [Reference](https://www.knowledgetrain.co.uk/business-analysis/business-analyst-course/how-to-write-a-business-case)
 
@@ -48,3 +54,8 @@ Describe the main project risks, their likely impact should they occur, and any 
 Weigh up on the one hand the costs (both project costs and ongoing operational and maintenance costs) and the dis-benefits versus the benefits. There are lots of techniques which can be used e.g. return on investment, net present value, cash-flow statement, internal rate of return and payback period.
 
 You should be trying to quantify the value of a project as an investment.
+
+## References
+
+- [Business Case Financial Model](business-case-financial-model.md)
+- [Related ADRs / RFCs / Design Docs]

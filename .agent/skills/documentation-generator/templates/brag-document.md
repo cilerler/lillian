@@ -1,28 +1,19 @@
-# Brag Document
+# Brag Document: [Your Name]
 
 [Template reference](https://jvns.ca/blog/brag-documents/)
+
+## Metadata
+
+**Timeline:** [Start Date] - [End Date]
+**Current Position:** [Your Title]
+**Current Manager:** [Manager Name]
+**Current Team:** [Team Name]
 
 ## Short Form
 
 > My `contribution` in `project-name` enabled `result` with `metric`; accomplishing `goal`.
 
 ## Long Form
-
-### Timeline
-
-[Start Date] - [End Date]
-
-### Current Position
-
-[Your Title]
-
-### Current Manager
-
-[Manager Name]
-
-### Current Team
-
-[Team Name]
 
 ### Goals for This Year
 
