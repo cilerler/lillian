@@ -26,6 +26,7 @@ triggers:
   - data dictionary
   - performance improvement
   - test cases
+  - test plan
 references:
   - templates/architecture-decision-record.md
   - templates/request-for-comments.md
@@ -44,7 +45,8 @@ references:
   - templates/retrospective.md
   - templates/tech-stack-overview.md
   - templates/test-cases.md
-summary: Document templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, handovers, business cases, test cases, and more.
+  - templates/test-plan.md
+summary: Document templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, handovers, business cases, test plans, test cases, and more.
 ---
 
 # Documentation Skill
@@ -71,6 +73,7 @@ Provides standardized templates for all documentation types used in the reposito
 | Handover | When transferring ownership | Departing Engineer | Receiving Team |
 | Brag Document | Before reviews or promo cycles | Individual | Manager |
 | Performance Improvement Plan | When performance needs formal guidance | Manager, HR | HR, Department Head |
+| Test Plan | Cross-feature, release, or project-level test strategy; required in regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) | Test Lead, Tester | QA Lead, Product Owner, Engineering Lead |
 | Test Cases | For QA verification of acceptance criteria | Tester | Reviewer, QA |
 
 ## Lifecycle Ordering: RFC, ADR, Design Doc
@@ -143,6 +146,8 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | business-case-financial-model | `/docs/projects/P{N}/` | `BusinessCaseFinancialModel.md` | Fixed name |
 | retrospective | `/docs/projects/P{N}/` | `Retrospective.md` | Fixed name |
 | project-status-update | `/docs/projects/P{N}/StatusUpdates/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| test-plan *(project-scoped)* | `/docs/projects/P{N}/` | `TestPlan.md` | Fixed name. Sits alongside `BusinessCase.md`, `Retrospective.md` |
+| test-plan *(app/release-scoped)* | `/docs/test-plans/` | `{yyyyMMddHHmm}-{slug}.md` | Use when scope is a release or initiative not tied to a `P{N}` project |
 | test-cases | `/docs/test-cases/` (or module/component `Docs/test-cases/`) | `{slug}.md` | **No date prefix** — living document |
 | brag-document | — | — | Personal artifact; lives outside the repo |
 | performance-improvement-plan | — | — | HR artifact; lives outside the repo |
@@ -433,6 +438,33 @@ Use to document current technologies. Documents:
 
 ---
 
+### Test Plan
+**Template:** [templates/test-plan.md](templates/test-plan.md)
+
+Use for cross-feature, release, or project-level test strategy. Documents:
+- Scope (in / out)
+- Test objectives and approach (levels and types)
+- Test environments and data strategy
+- Entry / exit criteria
+- Resources, roles, schedule
+- Risks and mitigations
+- Index of Test Cases that fulfill the plan
+
+**Created by:** Test Lead (or senior Tester)
+
+**When to use:** opt-in, *not* per-feature.
+
+- Multi-feature releases needing a coordinated test approach (shared environments, integration strategy, performance/load plans).
+- Project-level work — sits in `/docs/projects/P{N}/TestPlan.md` next to `BusinessCase.md` and `Retrospective.md`.
+- Regulated contexts (FDA, IEC 62304, ISO 13485, ISO 26262) where a Test Plan is a *required* deliverable.
+- Non-functional test strategy (performance, security, accessibility, chaos) that doesn't fit cleanly under any single feature's Test Cases.
+
+**Skip when:** feature-by-feature work where Planner's acceptance criteria + per-feature Test Cases + CI gates already capture the verification approach. Most agile change sets do not need a TP.
+
+**Relationship to Test Cases:** A Test Plan *contains references to or implies* the set of Test Cases that fulfill it. One TP, many TCs. Do not duplicate scenario-level content between them — keep TC-level detail in the TC document; keep strategy / environment / schedule content in the TP.
+
+---
+
 ### Test Cases
 **Template:** [templates/test-cases.md](templates/test-cases.md)
 
@@ -446,6 +478,8 @@ Use for QA verification of acceptance criteria. Documents:
 **Created by:** Tester
 
 **Timing:** Test Cases are **drafted before Developer starts** — they serve as the build contract, derived 1:1 from the Planner's acceptance criteria. Developer builds against them. After Developer passes Reviewer, the Tester implements the Test Cases as executable unit/integration tests. Both the Test Cases document and the executable tests are updated together during Reviewer FAIL iterations.
+
+If a Test Plan exists for the release/project, ensure these Test Cases align with the TP's exit criteria, environment expectations, and overall approach.
 
 Drafting Test Cases pre-implementation catches missing or ambiguous acceptance criteria while they are still cheap to fix and prevents the Tester from backfilling cases to match what was built (confirmation bias).
 
@@ -475,6 +509,13 @@ Drafting Test Cases pre-implementation catches missing or ambiguous acceptance c
 - **Pre-implementation:** Drafts Test Cases from Planner's acceptance criteria — serves as the build contract for Developer
 - **Post-implementation:** Implements Test Cases as executable unit/integration tests, iterates with Reviewer
 - **During FAIL cycles:** Updates both the Test Cases document and the executable tests together
+- **If a Test Plan exists for the release/project:** Ensures Test Cases align with the TP's scope, exit criteria, and test approach; updates the TP's Test Cases Index to link the new TC document
+
+### Test Lead (when a Test Plan is invoked)
+- Authors and owns the Test Plan at release / project / app scope
+- Coordinates with Planner, Architect, and Tester(s) to define scope, environments, and exit criteria
+- Maintains the Test Cases Index inside the TP
+- Drives sign-off at exit-criteria milestones
 
 ### Planner
 - Identifies documentation needs in the plan
