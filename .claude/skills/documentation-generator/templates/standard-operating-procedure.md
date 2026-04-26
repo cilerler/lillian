@@ -3,12 +3,13 @@
 ## Metadata
 
 **SOP ID:** SOP-yyyyMMddHHmm-slug
-**Version:** 1.0
+**Last Reviewed:** [YYYYMMDD]
+**Effective Date:** [YYYYMMDD]
+**Next Review:** [YYYYMMDD]
 **Owner:** [Name]
 **Approver:** [Name]
-**Effective Date:** [YYYYMMDD]
-**Last Reviewed:** [YYYYMMDD]
-**Next Review:** [YYYYMMDD]
+
+> **Regulated-context override:** if this SOP is governed by ISO 9001 / FDA QSR / GxP / similar audit regimes, add `**Version:** 1.0` after the SOP ID — auditors need an explicit revision identifier independent of Last Reviewed.
 
 ## Purpose
 

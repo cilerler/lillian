@@ -2,10 +2,11 @@
 
 ## Metadata
 
+**PIR ID:** PIR-yyyyMMddHHmm-slug
+**Date:** [YYYYMMDD]
 **Incident Date:** [YYYYMMDD HH:MM UTC]
 **Severity:** [SEV-1 | SEV-2 | SEV-3 | SEV-4]
 **Author:** [Name]
-**Date:** [YYYYMMDD]
 
 ## Status
 

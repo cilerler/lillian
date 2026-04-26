@@ -1,5 +1,10 @@
 # Business Glossary
 
+## Metadata
+
+**Last Updated:** [YYYYMMDD]
+**Owner:** [Name]
+
 ## Overview
 
 This document defines key business and technical terms used across teams. It serves as the single source of truth for shared terminology.

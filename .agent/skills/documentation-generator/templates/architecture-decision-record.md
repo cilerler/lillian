@@ -1,4 +1,4 @@
-# Architectural Decision Record: ADR-yyyyMMddHHmm-slug: [Title]
+# Architectural Decision Record: [Title]
 
 ## Metadata
 

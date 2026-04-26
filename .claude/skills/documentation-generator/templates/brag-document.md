@@ -4,10 +4,11 @@
 
 ## Metadata
 
+**Date:** [YYYYMMDD]
 **Timeline:** [Start Date] - [End Date]
 **Current Position:** [Your Title]
-**Current Manager:** [Manager Name]
 **Current Team:** [Team Name]
+**Current Manager:** [Manager Name]
 
 ## Short Form
 

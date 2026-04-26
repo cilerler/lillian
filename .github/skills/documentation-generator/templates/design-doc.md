@@ -2,6 +2,8 @@
 
 ## Metadata
 
+**Design Doc ID:** DD-yyyyMMddHHmm-slug
+**Version:** 1.0
 **Date:** [YYYYMMDD]
 **Status:** [current value]
 **Authors:** [Names]

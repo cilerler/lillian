@@ -3,8 +3,8 @@
 ## Metadata
 
 **Project Name:** [Project Name]
-**Author:** [Name]
 **Date:** [YYYYMMDD]
+**Author:** [Name]
 
 [Reference](https://www.knowledgetrain.co.uk/business-analysis/business-analyst-course/how-to-write-a-business-case)
 

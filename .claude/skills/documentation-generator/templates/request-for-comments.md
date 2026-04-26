@@ -3,8 +3,8 @@
 ## Metadata
 
 **RFC ID:** RFC-yyyyMMddHHmm-slug
-**Date:** [YYYYMMDD]
 **Version:** 1.0
+**Date:** [YYYYMMDD]
 **Authors:** [Name (@handle), Team]
 
 ## Status

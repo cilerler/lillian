@@ -3,11 +3,11 @@
 ## Metadata
 
 **Employee Name:** [Name]
+**Date:** [YYYYMMDD]
+**Review Date:** [YYYYMMDD]
 **Department:** [Department]
 **Position:** [Title]
 **Manager:** [Manager Name]
-**Date:** [YYYYMMDD]
-**Review Date:** [YYYYMMDD]
 
 ---
 

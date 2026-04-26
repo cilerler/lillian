@@ -3,9 +3,8 @@
 ## Metadata
 
 **Feature:** [Feature name]
-**RFC:** [Link to RFC if applicable]
-**Created:** [YYYYMMDD]
 **Last Updated:** [YYYYMMDD]
+**Created:** [YYYYMMDD]
 **Author:** [Name]
 
 ## Acceptance Criteria Coverage

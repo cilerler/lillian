@@ -5,6 +5,7 @@
 ## Metadata
 
 **Role:** [ROLE TITLE] *(e.g., Senior Full-Stack .NET Developer)*
+**Date:** [YYYYMMDD]
 **Level:** [LEVEL] *(Junior / Mid / Senior / Staff / Principal)*
 **Reports To:** [MANAGER TITLE] *(e.g., Engineering Manager)*
 **Team:** [TEAM NAME], ~[TEAM SIZE] engineers
@@ -12,6 +13,7 @@
 **Employment Type:** [EMPLOYMENT TYPE] *(Full-Time / Contract)*
 **On-Call Rotation:** [YES/NO + DETAILS] *(e.g., "1 week in 6 with primary/secondary handoff")*
 **Travel:** [NONE | RARE | OCCASIONAL | FREQUENT]
+**Author:** [Name]
 
 ## Role Summary
 

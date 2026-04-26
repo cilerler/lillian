@@ -2,8 +2,8 @@
 
 ## Metadata
 
-**Owner:** [Name]
 **Last Updated:** [YYYYMMDD]
+**Owner:** [Name]
 
 ## Languages
 

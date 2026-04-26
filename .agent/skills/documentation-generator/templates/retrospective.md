@@ -4,11 +4,10 @@
 
 **Project ID:** P[N]
 **Project Name:** [Project Name]
-**Business Case:** [Link to BusinessCase.md]
+**Retrospective Date:** [YYYYMMDD]
 **Duration:** [Start Date] → [End Date]
 **Team:** [Roles and members]
 **Author:** [Name]
-**Retrospective Date:** [YYYYMMDD]
 
 ## Status
 

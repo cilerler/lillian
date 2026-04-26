@@ -1,5 +1,10 @@
 # Data Dictionary
 
+## Metadata
+
+**Last Updated:** [YYYYMMDD]
+**Owner:** [Name]
+
 ## Overview
 
 This document defines the schema, fields, data types, and data governance elements for [Database/System Name].

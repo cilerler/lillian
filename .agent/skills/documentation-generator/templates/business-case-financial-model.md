@@ -3,8 +3,8 @@
 ## Metadata
 
 **Project Name:** [Project Name]
-**Author:** [Name]
 **Date:** [YYYYMMDD]
+**Author:** [Name]
 
 ## Definitions
 

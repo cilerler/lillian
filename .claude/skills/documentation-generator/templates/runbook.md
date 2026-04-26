@@ -2,10 +2,10 @@
 
 ## Metadata
 
-**Owner:** [Name]
+**Last Updated:** [YYYYMMDD]
 **Severity:** [SEV-1 | SEV-2 | SEV-3]
 **Response Time:** [Time-to-acknowledge expectation, e.g., "within 15 min for SEV-1"]
-**Last Updated:** [YYYYMMDD]
+**Owner:** [Name]
 
 ## Symptom
 

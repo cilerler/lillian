@@ -222,6 +222,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 - **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
 - **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
 - **Documents** use a timestamp-slug ID: `{ABBR}-{yyyyMMddHHmm}-{slug}` where `ABBR` is the document-type abbreviation (`ADR`, `RFC`, `PIR`, etc.), the timestamp follows .NET DateTime conventions (`yyyy`=year, `MM`=month, `dd`=day, `HH`=24-hour, `mm`=minute), and `slug` is the kebab-case title. The filename omits the abbreviation prefix (folder context supplies it) — file is `{yyyyMMddHHmm}-{slug}.md`, in-document references use the full `{ABBR}-{yyyyMMddHHmm}-{slug}` form.
+- **ID placement inside a document:** the ID lives in the `## Metadata` block (e.g., `**ADR ID:** ADR-202603121430-adopt-event-sourcing-for-billing`), **not** in the `# H1 title`. The H1 is the human-readable title only — `# Architectural Decision Record: Adopt event sourcing for the billing module` — keeping the ID out of the title prevents repetition and keeps the heading scannable.
 
 ### Placeholder conventions inside templates
 
@@ -229,6 +230,31 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 - **Times:** `[HH:MM]` (24-hour).
 - **Generic placeholders:** square brackets — `[Name]`, `[Project Name]`, `[Title]`.
 - **Format-string placeholders** (where the *shape* of the value is the placeholder): bare literal — `yyyyMMddHHmm`, `slug`, `[N]`, `[X.Y]`. No curly braces.
+
+### Metadata field conventions
+
+Rules that govern the `## Metadata` block at the top of every template. The templates themselves are the source of truth for which fields each doc carries — the rules below prevent drift.
+
+**Field order** (by scanning priority, not alphabetical):
+
+1. Identity — Doc ID, or for project-scoped docs `Project ID` + `Project Name`, or for HR/personal docs the subject identity (`Role`, `Employee Name`)
+2. Version (when carried — see rule below)
+3. Last Updated / Modified (when present)
+4. Date / Created (when first written; SOP uses `Effective Date` here)
+5. Status (only when present as a metadata field, not a separate `## Status` section)
+6. Domain-specific descriptive fields — Severity, Scope, Reporting Period, Duration, etc.
+7. Person fields — Authors, Owner, Reviewers, Approver, Manager, From/To
+
+**Naming rules:**
+
+- **Author / Owner**: `Authors` / `Author` for who **wrote** a per-instance doc; `Owner` for who **maintains** a living doc. Domain labels (`Manager` for PIP, `From`/`To` for Handover, `Project Manager` for PSU) where intrinsic to the doc type.
+- **Version vs Last Updated** — mutually exclusive:
+  - `Last Updated` for any doc continuously edited — Git history captures revision granularity. Used by living docs, Test Plan, SOP.
+  - `Version` for per-instance sign-off docs without `Last Updated`. Used by RFC, Design Doc, Takeover & Handover.
+  - Regulated SOPs (ISO 9001 / FDA QSR / GxP) need both — auditors require an explicit Version stamp independent of Last Reviewed.
+- **Date semantics**: `Date` = creation; `Last Updated` = most recent edit; `Effective Date` + `Last Reviewed` + `Next Review` for SOP; `Incident Date` (event) vs `Date` (when written) for PIR.
+
+**Metadata is data, not links.** Pointers to other docs go **only** in `## References` — never as `**RFC:**` / `**Business Case:**` / `**References:**` field inside Metadata. One canonical location per fact.
 
 ### Supporting attachments
 
@@ -302,24 +328,12 @@ Use to secure support, funding, or prioritization. **Scales to project size:**
 - **Heavy usage**: Fill all sections including Costs, Dis-benefits, Investment Appraisal. Use for funding/capital allocation decisions.
 - **With dedicated Financial Model**: Keep financial sections high-level here and produce `BusinessCaseFinancialModel.md` alongside.
 
-Sections:
-- Executive summary
-- Reasons and business options
-- Expected benefits and dis-benefits *(dis-benefits optional in light usage)*
-- Costs and timescale *(costs optional in light usage)*
-- Major risks
-- Investment appraisal *(optional in light usage; promote to Financial Model when material)*
-
 ---
 
 #### Business Case Financial Model
 **Template:** [templates/business-case-financial-model.md](templates/business-case-financial-model.md)
 
-Use to evaluate financial impact. Documents:
-- Revenue vs costs (OPEX, CAPEX, one-time)
-- Hard returns vs soft returns
-- 3-year cumulative costs
-- ROI and payback period
+Use to evaluate financial impact.
 
 ---
 
@@ -332,15 +346,6 @@ Single template covering both directions of ownership transfer:
 - **Phase 3 (Takeover)** — receiving party fills it in when **inheriting** ownership of an existing system or project.
 - **Phase 9 (Handover)** — outgoing party fills it in when **transferring out** ownership at project closure or role change.
 
-Documents:
-- Executive summary and contacts
-- Getting started guide
-- System architecture
-- CI/CD and deployment
-- Operations and observability
-- Security and data management
-- Quality and testing
-
 ---
 
 ### Phase 4 — Decide & Design
@@ -348,40 +353,21 @@ Documents:
 #### Request for Comments (RFC)
 **Template:** [templates/request-for-comments.md](templates/request-for-comments.md)
 
-Use before implementing big changes. Documents:
-- Context and proposal
-- Alternatives considered
-- Open questions
-- Timeline
-
-**Status values:** Draft → In Review → Approved | Implemented | Rejected | Canceled
+Use before implementing big changes.
 
 ---
 
 #### Architecture Decision Record (ADR)
 **Template:** [templates/architecture-decision-record.md](templates/architecture-decision-record.md)
 
-Use when making or changing architecture. Documents:
-- Context and assumptions
-- Considered options with pros/cons
-- Decision and consequences
-- Risks and implementation details
-
-**Status values:** Draft → In Review → Approved | Rejected | Superseded | Archived
+Use when making or changing architecture.
 
 ---
 
 #### Design Doc (aka Tech Spec)
 **Template:** [templates/design-doc.md](templates/design-doc.md)
 
-Use before coding complex features. Documents:
-- Context, scope, goals, non-goals
-- Overview and detailed design
-- Cross-cutting concerns (security, privacy)
-- Alternatives considered
-- Metrics and timeline
-
-**Status values:** Draft → In Review → Approved | Implemented | Superseded | Archived
+Use before coding complex features.
 
 ---
 
@@ -390,14 +376,7 @@ Use before coding complex features. Documents:
 #### Test Plan
 **Template:** [templates/test-plan.md](templates/test-plan.md)
 
-Use for cross-feature, release, or project-level test strategy. Documents:
-- Scope (in / out)
-- Test objectives and approach (levels and types)
-- Test environments and data strategy
-- Entry / exit criteria
-- Resources, roles, schedule
-- Risks and mitigations
-- Index of Test Cases that fulfill the plan
+Use for cross-feature, release, or project-level test strategy.
 
 **Created by:** Test Lead (or senior Tester)
 
@@ -417,12 +396,7 @@ Use for cross-feature, release, or project-level test strategy. Documents:
 #### Test Cases
 **Template:** [templates/test-cases.md](templates/test-cases.md)
 
-Use for QA verification of acceptance criteria. Documents:
-- Acceptance criteria coverage mapping (1:1)
-- Step-by-step test procedures
-- Expected results
-- Edge cases and error paths
-- Test execution summary
+Use for QA verification of acceptance criteria.
 
 **Created by:** Tester
 
@@ -439,11 +413,7 @@ Drafting Test Cases pre-implementation catches missing or ambiguous acceptance c
 #### Runbook
 **Template:** [templates/runbook.md](templates/runbook.md)
 
-Use for handling systems and failures. Documents:
-- Purpose and prerequisites
-- Step-by-step procedures
-- Rollback plan
-- Contact information
+Use for handling systems and failures.
 
 **Audience:** On-call engineers who may be unfamiliar with the service
 
@@ -474,12 +444,7 @@ Use for handling systems and failures. Documents:
 #### Standard Operating Procedure (SOP)
 **Template:** [templates/standard-operating-procedure.md](templates/standard-operating-procedure.md)
 
-Use for repetitive tasks requiring compliance and consistency. Documents:
-- Purpose and frequency
-- Roles responsible
-- Prerequisites
-- Step-by-step procedure
-- Rollback procedure
+Use for repetitive tasks requiring compliance and consistency.
 
 ---
 
@@ -488,12 +453,7 @@ Use for repetitive tasks requiring compliance and consistency. Documents:
 #### Project Status Update
 **Template:** [templates/project-status-update.md](templates/project-status-update.md)
 
-Use for regular reporting to stakeholders. Documents:
-- Overall status (RAG)
-- Key accomplishments and planned activities
-- Risks, issues, and dependencies (RAID)
-- Milestone tracker
-- Budget and resource update
+Use for regular reporting to stakeholders.
 
 ---
 
@@ -502,16 +462,7 @@ Use for regular reporting to stakeholders. Documents:
 #### Retrospective
 **Template:** [templates/retrospective.md](templates/retrospective.md)
 
-Use at project end to capture outcomes and lessons. Documents:
-- Project information and summary
-- Original goals vs actual outcomes
-- Timeline highlights
-- What went well / didn't go well
-- Root causes and lessons learned
-- Action items for future projects
-- Metrics (budget, duration, scope delivered)
-
-**Status values:** Draft → In Review → Approved | Archived
+Use at project end to capture outcomes and lessons.
 
 (Takeover & Handover template, also used in Phase 9 for outgoing transfer, is documented above under Phase 3 / 9.)
 
@@ -522,40 +473,21 @@ Use at project end to capture outcomes and lessons. Documents:
 #### Tech Stack Overview
 **Template:** [templates/tech-stack-overview.md](templates/tech-stack-overview.md)
 
-Use to document current technologies. Documents:
-- Source control and CI/CD
-- Runtime and infrastructure
-- Frameworks and libraries
-- Testing and observability
-- Storage and integrations
-
-**Lifecycle category:** Always-Living Reference. Singleton at `/docs/tech-stack-overview.md`. Update whenever an ADR changes a tech choice (new framework, swapped database, new observability stack, etc.).
+Use to document current technologies.
 
 ---
 
 #### Data Dictionary
 **Template:** [templates/data-dictionary.md](templates/data-dictionary.md)
 
-Use to document schema, fields, data types, and governance. Includes:
-- Schema and field names
-- Data types and constraints
-- PK/FK relationships
-- PII/Security classification
-
-**Lifecycle category:** Always-Living Reference. Singleton at `/docs/data-dictionary.md`. Update on any schema change (new table, new field, type change, removal). No ADR required.
+Use to document schema, fields, data types, and governance.
 
 ---
 
 #### Business Glossary
 **Template:** [templates/business-glossary.md](templates/business-glossary.md)
 
-Use to define key business and technical terms. Includes:
-- Term definitions
-- Business rules and calculations
-- Examples
-- Related terms and owners
-
-**Lifecycle category:** Always-Living Reference. Singleton at `/docs/business-glossary.md`. Update whenever new terminology enters the domain or an existing term's meaning shifts.
+Use to define key business and technical terms.
 
 ---
 
@@ -564,16 +496,7 @@ Use to define key business and technical terms. Includes:
 #### Post Incident Review (aka Postmortem)
 **Template:** [templates/post-incident-review.md](templates/post-incident-review.md)
 
-Use after incidents. Documents:
-- Summary and timeline
-- Impact and root cause
-- What went well/wrong
-- Corrective and preventative measures
-- Action items with owners and due dates
-
-**Status values:** Draft → Awaiting Root Cause → In Review → Pending Approval → Approved → Completed → Follow-up Required → Closed | Canceled | Obsolete | Reopened
-
-**Lifecycle category:** System-lifetime, incident-driven. Not tied to project closure — accumulates against the running system over its whole life.
+Use after incidents.
 
 ---
 
@@ -586,20 +509,9 @@ HR-adjacent docs. **None of these live in the repo** — they are personal or HR
 
 Tech-team intake brief handed to HR / recruiting when opening a new requisition. Documents what the engineering team is looking for so HR can source candidates and produce the public job posting.
 
-Sections:
-- Role overview (level, reporting line, team, location, on-call)
-- Role summary (a short paragraph describing the *shape* of the role — not prescriptive day-to-day deliverables)
-- Required (must-have tech, organized by category)
-- Nice to Have / We Also Use (tech the team uses but candidate doesn't need on day one)
-- Behavioral skills
-- Credentials
-- Sourcing notes for HR
-
 **Created by:** Engineering Manager or Tech Lead, with input from the team.
 
 **Reviewed by:** Hiring Manager + HR Partner.
-
-**Lifecycle category:** Orthogonal People & Recruiting flow. **Not** committed to the repo — HR-adjacent intake artifact. HR owns the public-facing job posting (with compensation range, benefits, EEO statement, application process); this Role Brief is the upstream input to that.
 
 **Scope:** Document the role, not specific candidates. One brief per role; updated as the role definition evolves.
 
@@ -608,28 +520,14 @@ Sections:
 #### Brag Document
 **Template:** [templates/brag-document.md](templates/brag-document.md)
 
-Use before reviews or promotion cycles. Documents:
-- Goals and projects
-- Contributions, scope, and impact
-- Collaboration and mentorship
-- Design and documentation work
-- Skills learned
-
-**Lifecycle category:** Orthogonal People & Recruiting flow — personal artifact. **Not** in the project lifecycle. **Not** committed to the repo.
+Use before reviews or promotion cycles.
 
 ---
 
 #### Performance Improvement Plan (PIP)
 **Template:** [templates/performance-improvement-plan.md](templates/performance-improvement-plan.md)
 
-Use when an employee's performance needs formal guidance. Documents:
-- Specific performance issues
-- Expected standards
-- Action plan with timeline
-- Support and resources
-- Consequences
-
-**Lifecycle category:** Orthogonal People & Recruiting flow — HR artifact. **Not** in the project lifecycle. **Not** committed to the repo.
+Use when an employee's performance needs formal guidance.
 
 ---
 

@@ -3,8 +3,8 @@
 ## Metadata
 
 **Project:** [Project Name]
-**Date:** [YYYYMMDD]
 **Version:** 1.0
+**Date:** [YYYYMMDD]
 **From (Team/Individual):** [Departing Team/Individual Name]
 **To (Team/Individual):** [Onboarding Team/Individual Name]
 

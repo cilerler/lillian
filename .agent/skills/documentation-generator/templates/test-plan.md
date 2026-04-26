@@ -2,13 +2,13 @@
 
 ## Metadata
 
+**Test Plan ID:** TP-yyyyMMddHHmm-slug   *(release-scoped only — leave blank when filed under `/docs/projects/P[N]/TestPlan.md`)*
+**Last Updated:** [YYYYMMDD]
+**Created:** [YYYYMMDD]
+**Status:** [current value]
 **Scope:** App-wide | Module | Project P[N] | Release v[X.Y]
 **Project / Release:** [identifier — e.g., P3, v2.5, Q3-launch]
-**Created:** [YYYYMMDD]
-**Last Updated:** [YYYYMMDD]
 **Owner:** [Test Lead name]
-**Status:** [current value]
-**References:** [Links to RFCs, Design Docs, ADRs, related Test Cases]
 
 ## Status
 
