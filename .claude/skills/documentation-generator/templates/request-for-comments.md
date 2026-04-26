@@ -3,7 +3,6 @@
 ## Metadata
 
 **RFC ID:** RFC-yyyyMMddHHmm-slug
-**Version:** 1.0
 **Date:** [YYYYMMDD]
 **Authors:** [Name (@handle), Team]
 

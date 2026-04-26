@@ -255,10 +255,10 @@ Rules that govern the `## Metadata` block at the top of every template. The temp
 **Naming rules:**
 
 - **Author / Owner**: `Authors` / `Author` for who **wrote** a per-instance doc; `Owner` for who **maintains** a living doc. Domain labels (`Manager` for PIP, `From`/`To` for Handover, `Project Manager` for PSU) where intrinsic to the doc type.
-- **Version vs Last Updated** — mutually exclusive:
-  - `Last Updated` for any doc continuously edited — Git history captures revision granularity. Used by living docs, Test Plan, SOP.
-  - `Version` for per-instance sign-off docs without `Last Updated`. Used by RFC, Design Doc, Takeover & Handover.
-  - Regulated SOPs (ISO 9001 / FDA QSR / GxP) need both — auditors require an explicit Version stamp independent of Last Reviewed.
+- **Version is rare**. For most docs, Git history + the `Status` field already capture revision and lifecycle — a manually-bumped Version adds bookkeeping without value. Templates default to **no `Version:`**. Two exceptions:
+  - **Regulated SOPs** (ISO 9001 / FDA QSR / GxP) — auditors require an explicit Version stamp independent of Last Reviewed; the SOP template flags this as a regulated-context override.
+  - **Takeover & Handover** — sign-off ceremony where both parties literally agree on a specific revision; Version is part of the legal feel of the doc.
+- **Last Updated** is used by docs that are continuously edited: living docs (Runbook, Test Cases, Tech Stack, Glossary, Data Dictionary, Architecture Overview), and continuously-revised per-instance docs (Test Plan, SOP — which uses `Last Reviewed`).
 - **Date semantics**: `Date` = creation; `Last Updated` = most recent edit; `Effective Date` + `Last Reviewed` + `Next Review` for SOP; `Incident Date` (event) vs `Date` (when written) for PIR.
 
 **Metadata is data, not links.** Pointers to other docs go **only** in `## References` — never as `**RFC:**` / `**Business Case:**` / `**References:**` field inside Metadata. One canonical location per fact.
