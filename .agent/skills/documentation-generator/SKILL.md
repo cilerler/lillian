@@ -231,6 +231,28 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 - **Documents** use a timestamp-slug ID: `{ABBR}-{yyyyMMddHHmm}-{slug}` where `ABBR` is the document-type abbreviation (`ADR`, `RFC`, `PIR`, etc.), the timestamp follows .NET DateTime conventions (`yyyy`=year, `MM`=month, `dd`=day, `HH`=24-hour, `mm`=minute), and `slug` is the kebab-case title. The filename omits the abbreviation prefix (folder context supplies it) — file is `{yyyyMMddHHmm}-{slug}.md`, in-document references use the full `{ABBR}-{yyyyMMddHHmm}-{slug}` form.
 - **ID placement inside a document:** the ID lives in the `## Metadata` block (e.g., `**ADR ID:** ADR-202603121430-adopt-event-sourcing-for-billing`), **not** in the `# H1 title`. The H1 is the human-readable title only — `# Architectural Decision Record: Adopt event sourcing for the billing module` — keeping the ID out of the title prevents repetition and keeps the heading scannable.
 
+### Codenames vs functional names in prose
+
+Repos commonly use **codenames** as developer shorthand (e.g., a repo is `myreponame` internally; the product is "Customer Insights Platform" externally). Codenames are repo-level conventions for **developers** — product users, support staff, auditors, and onboarding readers don't know what they refer to.
+
+**Rule:** in doc *prose*, prefer the **functional / product name**. Reserve the codename for places where it is a technical identifier that cannot be renamed.
+
+| Context | Use | Example |
+|---|---|---|
+| File paths, folder names | **codename** | `Modules/MyRepoName/Domain/...` |
+| Git remotes, branch names, repo URLs | **codename** | `github.com/org/myreponame` |
+| Package / namespace / class names | **codename** | `Company.MyRepoName.Domain` |
+| Configuration keys, env vars | **codename** | `MYREPONAME_API_KEY` |
+| Image / artifact / container names | **codename** | `myreponame-host:1.0.0` |
+| Headings and intro paragraphs | **functional name** | "# Architecture Overview: Customer Insights Platform" |
+| User- or stakeholder-facing prose | **functional name** | "The Customer Insights Platform ingests…" |
+| Business Case, Project Status Update, Retrospective | **functional name** | summaries read by leadership / finance |
+| Architecture Overview, Runbook, SOP | **functional name** in prose; **codename** in commands and paths |
+
+**Why:** docs survive past their original audience. The engineer who wrote it knows what the codename refers to; the product manager onboarding two years later does not. Functional names age better and onboard faster, while codenames in technical identifiers stay stable through renames.
+
+**Exception:** when a codename has become the de facto product name (used externally with customers, marketing, or sales), treat it as the functional name and use it everywhere.
+
 ### Placeholder conventions inside templates
 
 - **Dates:** `[YYYYMMDD]` — compact, no dashes (e.g., `[20260425]`).
