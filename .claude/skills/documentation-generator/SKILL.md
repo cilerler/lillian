@@ -24,6 +24,7 @@ triggers:
   - project status
   - retrospective
   - tech stack
+  - architecture overview
   - data dictionary
   - performance improvement
   - test cases
@@ -49,6 +50,7 @@ references:
   - templates/project-status-update.md
   - templates/retrospective.md
   - templates/tech-stack-overview.md
+  - templates/architecture-overview.md
   - templates/test-cases.md
   - templates/test-plan.md
   - templates/role-brief.md
@@ -76,6 +78,7 @@ Provides standardized templates for all documentation types used in the reposito
 | 8. Report Progress | Project Status Update | Regular reporting to stakeholders | Project Manager | Leadership |
 | 9. Closure | Retrospective | At project end, to capture outcomes and lessons | PM, Team Lead | Leadership, Team |
 | 10. Always-Living Reference | Tech Stack Overview | To document current technologies | Engineer, Tech Lead | New team members |
+| 10. Always-Living Reference | Architecture Overview | To explain how the existing system / module / component works (Diátaxis "Explanation") | Architect, Tech Lead | Dev Team, New team members |
 | 10. Always-Living Reference | Data Dictionary | To define schema, fields, data types | Data Engineers, DBAs | Data Governance |
 | 10. Always-Living Reference | Business Glossary | To define key business terms | Product, Domain Experts | Product Owners |
 | Orthogonal A. Incident | Post Incident Review (aka Postmortem) | After incidents | On-call Engineer | SRE Lead, Manager |
@@ -113,6 +116,8 @@ PHASE                          ARTIFACTS
                                Project Retrospective
 10. Always-Living Reference    Tech Stack Overview (updated when an
                                  ADR changes a tech choice)
+                               Architecture Overview (updated when
+                                 system behavior or structure shifts)
                                Data Dictionary (updated on any schema
                                  change — no ADR required)
                                Business Glossary (updated whenever
@@ -130,8 +135,9 @@ B. People & Recruiting (HR-adjacent flow, not in repo)
 - **Phase 2 (Justification & Approval)** — the Business Case template scales: light usage covers project-brief intake (problem + reasons + scope + risks); heavy usage adds the financial sections; a separate Business Case Financial Model is produced only when the analysis is material.
 - **Phase 4 (Decide & Design)** — RFC, ADR, and Design Doc are not strictly linear; see *Lifecycle Ordering* below for which subset to pick. **ADRs can crystallize during RFC, during Design Doc work, or after-the-fact during Implementation** when an emergent decision needs capture.
 - **Phase 5 (Build Contract)** — Test Cases derive from the Planner's *acceptance criteria*, not from the Design Doc. They can be drafted **before or after** the DD: pre-DD when acceptance criteria are clear and the design is uncontroversial; post-DD when the design surfaces edge cases. Test Plan, when used, runs **parallel to the Design Doc** because it depends on architecture choices to define environments and integration strategy.
-- **Phase 10 (Always-Living Reference)** — these three docs are *never closed*, but their update triggers differ:
+- **Phase 10 (Always-Living Reference)** — these docs are *never closed*, but their update triggers differ:
   - **Tech Stack Overview** — updated when an ADR changes a tech choice (new framework, swapped database, new observability stack, etc.).
+  - **Architecture Overview** — updated when system behavior or structure shifts (new component, swapped data flow, removed integration). The Diátaxis *Explanation* doc — describes how the existing system works for someone with zero prior context. Defers *why* to ADRs, *what tools* to Tech Stack, *fields* to Data Dictionary.
   - **Data Dictionary** — updated on any schema change (new table, new field, type change, removal). No ADR required; a migration is enough.
   - **Business Glossary** — updated whenever new terminology enters the domain or an existing term's meaning shifts. No ADR or migration required.
 - **Orthogonal Flow A (Incident)** — PIRs are **system-lifetime**, not project-bound. They accumulate against the running system over its whole life; a project can close while PIRs continue.
@@ -206,6 +212,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
 | business-glossary | `/docs/` | `business-glossary.md` | Fixed name, singleton |
 | tech-stack-overview | `/docs/` | `tech-stack-overview.md` | Fixed name, singleton |
+| architecture-overview | `/docs/architectures/` (or module/component `Docs/architectures/`) | `{slug}.md` | **No date prefix** — living document. Multiple allowed per scope, each covering a system / module / component / area. Slug describes what it covers (e.g., `system.md`, `auth-flow.md`, `billing-pricing-engine.md`). |
 | business-case | `/docs/projects/P{N}/` | `BusinessCase.md` | Fixed name |
 | business-case-financial-model | `/docs/projects/P{N}/` | `BusinessCaseFinancialModel.md` | Fixed name |
 | retrospective | `/docs/projects/P{N}/` | `Retrospective.md` | Fixed name |
@@ -312,6 +319,7 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 - `takeover-handover.md` template renders to `Handoff.md` — different spelling (noun: the *handoff*). Same template used for both Takeover (incoming) and Handover (outgoing).
 - Runbooks and test-cases are the only date-less entries in the dated group — filenames are `{slug}.md`, not `{yyyyMMddHHmm}-{slug}.md`. They are living documents updated as features change.
 - `data-dictionary`, `business-glossary`, and `tech-stack-overview` are **singletons** at `/docs/` root — not in a subfolder, never dated, one per repo.
+- `architecture-overview` is a **living slug-only doc** like Runbook — multiple allowed per scope, each describing a system / module / component / area. Filename is `{slug}.md` in `/docs/architectures/` (or module/component `Docs/architectures/`). Pick the narrowest scope that captures the right audience.
 - Brag documents and PIPs are personal/HR artifacts. Do not commit them to the repository.
 
 ## Templates
@@ -474,6 +482,25 @@ Use at project end to capture outcomes and lessons.
 **Template:** [templates/tech-stack-overview.md](templates/tech-stack-overview.md)
 
 Use to document current technologies.
+
+---
+
+#### Architecture Overview
+**Template:** [templates/architecture-overview.md](templates/architecture-overview.md)
+
+Use to explain how an existing system, module, component, or area works — the Diátaxis *Explanation* quadrant. Describes behavior and structure as they are today; defers the *why* to ADRs, *what tools* to Tech Stack Overview, and *fields* to Data Dictionary.
+
+**Scope is flexible.** A repo can have many architecture overviews, each covering a different scope:
+- `system.md` — the whole app
+- `auth-flow.md` — a coherent sub-system within a module
+- `billing-pricing-engine.md` — a specific area of complexity
+- `Modules/Billing/Docs/architectures/refunds-pipeline.md` — module-scoped area
+
+Pick the narrowest scope that captures a useful audience. Don't try to put everything in one doc.
+
+**When to use:** any time someone with zero prior context needs to understand a system or sub-system without reading the code. Common triggers: onboarding new engineers, post-acquisition integration, regulator/auditor walkthroughs, vendor due diligence, replacing tribal knowledge with written reference.
+
+**Distinct from Design Doc:** Design Doc is forward-looking (*how we will build it*). Architecture Overview is retrospective (*how it works today*). The same system may have a Design Doc when first built and an Architecture Overview that lives on as the system evolves.
 
 ---
 
