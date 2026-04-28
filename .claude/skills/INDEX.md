@@ -80,6 +80,23 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## solution-structure
+- Path: `.github/skills/solution-structure/SKILL.md`
+- Applies to: Developer, Architect, Documenter, DBA, Reviewer
+- Mandatory when:
+  - Deciding where a file/folder goes inside the .NET solution
+  - Placing a doc, dashboard, Kubernetes manifest, embedded SQL, or service scaffold
+- Triggers:
+  - "folder structure"
+  - "directory layout"
+  - "solution structure"
+  - "repo layout"
+  - "where does this go"
+  - "file placement"
+  - "opinionated folder"
+
+---
+
 ## documentation-generator
 - Path: `.github/skills/documentation-generator/SKILL.md`
 - Applies to: Documenter, Architect (ADRs, RFCs)

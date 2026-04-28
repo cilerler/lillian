@@ -17,6 +17,8 @@ summary: Scaffolds production-ready MSSQL tables or generates migration scripts 
 
 # Table Scaffolder
 
+> **File placement when embedding SQL in a .NET service:** [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution* — embedded SQL files (`{Name}.sql`, `Constants.cs`, `ResourceLoader.cs`) live under `/src/.../{Service}/Resources/SQL/`. This skill produces the SQL itself; that skill defines where it goes in the repo.
+
 ## Purpose
 Scaffolds production-ready Microsoft SQL Server `CREATE TABLE` scripts or generates migration scripts to standardize existing tables.
 

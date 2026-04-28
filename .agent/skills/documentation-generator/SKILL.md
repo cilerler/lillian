@@ -196,7 +196,7 @@ Documentation can live at three scopes:
 | **Module** | `/Modules/{Module}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single module |
 | **Component** | `/Modules/{Module}/{Component}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single component |
 
-Choose the narrowest scope that still captures the right audience. Module-specific runbooks go under the module; app-wide ones go under `/docs/`. Full repo layout is defined in the wiki's `Conventions-Naming-Standards.md`.
+Choose the narrowest scope that still captures the right audience. Module-specific runbooks go under the module; app-wide ones go under `/docs/`. Full repo layout is defined in the [`solution-structure`](../solution-structure/SKILL.md) skill — that skill is the source of truth for folder placement, dated-vs-living filenames, the `attachments/{basename}/` convention, and ticket / project folder shapes.
 
 ### Where each document goes
 

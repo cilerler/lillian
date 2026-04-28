@@ -90,7 +90,7 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 
 See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for complete Grafana JSON templates.
 
-**Output locations** (dashboards live at the level they monitor):
+**Output locations** (dashboards live at the level they monitor) — full paths defined in [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution*:
 - Service: `{ServicePath}/Observability/Grafana/dashboard.json`
 - Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
 - Module: `{ModulePath}/Observability/Grafana/dashboard.json`

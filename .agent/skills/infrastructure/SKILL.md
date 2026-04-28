@@ -72,6 +72,9 @@ See [templates/kubernetes.md](templates/kubernetes.md) for complete templates.
 
 ### Kustomize Structure
 
+Source of truth: [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution* — `/tools/Kubernetes/` subtree (full `base/` + `overlays/{integration,testing,staging,production}/{base,default,alternative}/` shape).
+
+Quick reference:
 ```
 tools/kubernetes/
 ├── base/
