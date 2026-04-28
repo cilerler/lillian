@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "cilerler",
+  "owner": {
+    "name": "Cengiz Ilerler",
+    "url": "https://github.com/cilerler"
+  },
+  "metadata": {
+    "description": "AI agent templates: specialized agent personas, reusable skills, slash commands, and language/infra rules. Source of truth for Claude Code, Copilot, Gemini, and Antigravity.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "ai-toolkit",
+      "source": "./plugins/ai-toolkit",
+      "description": "Specialized agent personas (architect, developer, reviewer, tester, planner, dba, designer, documenter), reusable skills (infrastructure, observability, dotnet-service-generator, mssql scaffolding, documentation, diagrams), slash commands, and language rules.",
+      "version": "1.0.0",
+      "category": "engineering",
+      "tags": [
+        "agents",
+        "workflow",
+        "dotnet",
+        "mssql",
+        "observability",
+        "infrastructure",
+        "documentation"
+      ]
+    }
+  ]
+}
