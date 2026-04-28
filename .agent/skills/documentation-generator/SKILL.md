@@ -331,10 +331,35 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 - Subfolder name matches the document basename exactly — same timestamp, same slug (or same fixed name for `Handoff`, `BusinessCase`, etc.).
 - The rule is uniform: **every doc type uses its own `attachments/{basename}/` subfolder**, including handovers in `tickets/{TICKET-ID}/` and docs in `projects/P{N}/`. No container-as-bag exception — each doc owns its own attachments so the association stays explicit when a container holds multiple docs.
 - Tickets and projects are always folders — `/docs/tickets/{TICKET-ID}/` and `/docs/projects/P{N}/` exist as directories regardless of how many docs they hold.
-- Link from doc to attachment with a relative path: `![flow](./attachments/202604240930-new-auth/flow.mermaid)`. Mermaid source can also be inlined directly in the markdown via a ` ```mermaid ` code fence — reserve attachment storage for complex or reused diagrams.
+- Link from doc to attachment with a relative path: `![flow](./attachments/202604240930-new-auth/flow.mermaid)`. See *Embedding diagrams in markdown* below for format-specific patterns.
 - Create the subfolder only when there is material to put in it. Empty `attachments/` folders are clutter.
 - **Singletons do not use this convention.** `data-dictionary.md`, `business-glossary.md`, and `tech-stack-overview.md` live at `/docs/` root and have no sibling `attachments/` folder — placing a generic `attachments/` at the docs root pollutes the top level and isn't scoped to any doc type. If a singleton genuinely needs supporting material, embed it inline or promote the doc into its own typed folder first.
 - Commit only sharable supporting files. Personal scratch, raw recordings, or sensitive data belong elsewhere.
+
+### Embedding diagrams in markdown
+
+Different diagram formats render differently on GitHub:
+
+- **Mermaid** — GitHub renders ` ```mermaid ` code fences natively. Inline directly in the markdown; reserve attachment storage for complex or reused diagrams.
+- **PlantUML** — GitHub does **not** render `.puml` natively. A pre-commit git hook generates a sibling `.svg` from the `.puml` source. The doc embeds the SVG inside a collapsible `<details>` block that also points readers at the editable source.
+
+**PlantUML embedding pattern:**
+
+````markdown
+<details>
+<summary>The Auth Flow Diagram</summary>
+
+> [!TIP]
+> The diagram source is at [`./attachments/202604240930-new-auth/auth-flow.puml`](./attachments/202604240930-new-auth/auth-flow.puml). Render with PlantUML.
+
+![The Auth Flow Diagram](./attachments/202604240930-new-auth/auth-flow.svg)
+</details>
+````
+
+Why this shape:
+- `<details>` keeps long diagrams collapsed by default so the doc body stays scannable.
+- The `> [!TIP]` callout points contributors to the editable source — the `.svg` is generated, not hand-edited.
+- Both the `.puml` source and the generated `.svg` live side-by-side in `attachments/{basename}/`. Both are committed — the SVG is what GitHub renders, the PUML is what humans edit.
 
 ### Gotchas
 
