@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "ai-toolkit",
   "version": "1.0.0",
   "description": "Specialized agent personas, reusable skills, slash commands, and language/infra rules. Generated content is sourced from the repo root .claude/ folders (which the sync-ai-platforms.ps1 script populates from .github/).",
@@ -18,8 +17,5 @@
     "observability",
     "infrastructure",
     "documentation"
-  ],
-  "agents": "../../.claude/agents",
-  "commands": "../../.claude/commands",
-  "skills": "../../.claude/skills"
+  ]
 }

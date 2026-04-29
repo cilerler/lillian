@@ -443,6 +443,22 @@ if (Test-Path $srcDir) {
     }
 }
 
+# --- 5. Populate Claude Code plugin folder (plugins/ai-toolkit/) ---
+#
+# Plugin manifests don't accept paths outside the plugin directory (the install
+# step copies the plugin to a cache dir and parent-traversal paths break).
+# So mirror the transformed .claude/ content into the plugin folder.
+
+$pluginRoot = Join-Path $BasePath "plugins\ai-toolkit"
+if (Test-Path $pluginRoot) {
+    $stats.PluginFiles = 0
+    foreach ($component in @("agents", "commands", "skills")) {
+        $src = Join-Path $BasePath ".claude\$component"
+        $dst = Join-Path $pluginRoot $component
+        $stats.PluginFiles += Copy-DirectoryClean $src $dst
+    }
+}
+
 # --- Summary ---
 
 Write-Host ""
@@ -454,7 +470,11 @@ Write-Host "  Agents:                    $($stats.Agents) files" -ForegroundColo
 if ($stats.GithubFiles -gt 0) {
     Write-Host "  .github/ (from submodule): $($stats.GithubFiles) files" -ForegroundColor White
 }
+if ($stats.ContainsKey("PluginFiles") -and $stats.PluginFiles -gt 0) {
+    Write-Host "  Plugin (ai-toolkit):       $($stats.PluginFiles) files" -ForegroundColor White
+}
 Write-Host ""
 Write-Host "Targets updated:" -ForegroundColor DarkGray
 Write-Host "  .claude/skills/  .claude/rules/  .claude/commands/  .claude/agents/" -ForegroundColor DarkGray
 Write-Host "  .agent/skills/   .agent/rules/   .agent/prompts/" -ForegroundColor DarkGray
+Write-Host "  plugins/ai-toolkit/{agents,commands,skills}/" -ForegroundColor DarkGray
