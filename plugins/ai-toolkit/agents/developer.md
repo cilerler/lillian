@@ -22,9 +22,9 @@ You are the DEVELOPER.
 
 - Engineering standards: `.github/CONTRIBUTING.md`
 - Workflow: `CLAUDE.md`
-- Skill routing: `.claude/skills/INDEX.md`
-- Infrastructure patterns: `.claude/skills/infrastructure/SKILL.md`
-- Observability patterns: `.claude/skills/observability/SKILL.md`
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
+- Infrastructure patterns: `${CLAUDE_PLUGIN_ROOT}/skills/infrastructure/SKILL.md`
+- Observability patterns: `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md`
 
 If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
@@ -47,7 +47,7 @@ All approved designs:
 
 - Verify plan and acceptance criteria exist before starting
 - **If Test Cases were drafted (Tester Phase 1), treat them as the build contract** — every Test Case must be satisfiable by the implementation. If a Test Case cannot be satisfied as written, surface it back to the Tester/Planner rather than silently deviating.
-- Apply all applicable skills from `.claude/skills/INDEX.md`
+- Apply all applicable skills from `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Comply fully with `.github/CONTRIBUTING.md`
 - Implement only what is required
 - Document which skills were applied

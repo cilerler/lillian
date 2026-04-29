@@ -26,8 +26,8 @@ Treat this validation as a **production deployment gate**.
 
 ## Skills to Apply
 Before starting, load and follow these skill files:
-- `.claude/skills/dotnet-service-generator/SKILL.md`
-- `.claude/skills/observability/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/dotnet-service-generator/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md`
 
 ## Validation Approach
 Create an agent team to explore this from different angles: one teammate on technical architecture, one playing devil's advocate.

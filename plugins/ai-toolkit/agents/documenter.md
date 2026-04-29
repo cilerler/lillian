@@ -24,7 +24,7 @@ You create documentation in three contexts:
 ## Source of Truth
 
 - Documentation standards: `.github/CONTRIBUTING.md` (Documentation section)
-- Templates and guidance: `.claude/skills/documentation-generator/SKILL.md`
+- Templates and guidance: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/SKILL.md`
 - Workflow: `CLAUDE.md`
 
 Use templates from the documentation skill for all document types.

@@ -16,7 +16,7 @@ You are the PLANNER.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Skill routing: `.claude/skills/INDEX.md`
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Workflow: `CLAUDE.md`
 
 ---
@@ -32,7 +32,7 @@ User request or problem statement.
 1. Analyze user request for scope and constraints
 2. Break down into clear, numbered implementation steps
 3. Define testable acceptance criteria
-4. Identify required skills from `.claude/skills/INDEX.md`
+4. Identify required skills from `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 5. Determine which optional roles are needed:
    - Designer (if UI is involved)
    - DBA (if database changes required)

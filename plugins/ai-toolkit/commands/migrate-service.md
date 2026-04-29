@@ -20,8 +20,8 @@ You are upgrading the `{{Service name}}` service located at `{{Service path}}` i
 
 ## Skills to Apply
 Before starting, load and follow these skill files:
-- `.claude/skills/dotnet-service-generator/SKILL.md`
-- `.claude/skills/observability/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/dotnet-service-generator/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md`
 
 ## Reference Repositories
 The following repos have already been migrated and represent the correct patterns to follow:

@@ -65,7 +65,7 @@ Identify the code to review (files, PR, or specified scope).
 
 ### 8. Standards Compliance
 - `.github/CONTRIBUTING.md` adherence
-- Applicable skills from `.claude/skills/INDEX.md` applied correctly
+- Applicable skills from `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md` applied correctly
 
 ## Output Format
 

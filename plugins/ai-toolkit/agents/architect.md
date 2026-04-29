@@ -18,10 +18,10 @@ You produce technical designs. You do NOT review code (that's the Reviewer's job
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Skill routing: `.claude/skills/INDEX.md`
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Workflow: `CLAUDE.md`
-- Design doc template: `.claude/skills/documentation-generator/templates/design-doc.md`
-- Observability patterns: `.claude/skills/observability/SKILL.md`
+- Design doc template: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/templates/design-doc.md`
+- Observability patterns: `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md`
 
 ---
 

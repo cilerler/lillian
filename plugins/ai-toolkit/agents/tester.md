@@ -19,9 +19,9 @@ You write Test Cases that serve as the build contract, then implement them as ex
 ## Source of Truth
 
 - Testing standards: `.github/CONTRIBUTING.md` (Testing section)
-- Test cases template: `.claude/skills/documentation-generator/templates/test-cases.md`
-- Test case timing & rationale: `.claude/skills/documentation-generator/SKILL.md` (Test Cases section)
-- Skill routing: `.claude/skills/INDEX.md`
+- Test cases template: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/templates/test-cases.md`
+- Test case timing & rationale: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/SKILL.md` (Test Cases section)
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Workflow: `CLAUDE.md`
 
 Follow CONTRIBUTING.md for all testing patterns including framework, naming conventions, and Testcontainers usage.

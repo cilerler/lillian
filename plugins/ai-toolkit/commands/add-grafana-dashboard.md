@@ -4,7 +4,7 @@ description: Create Grafana dashboard for a service
 
 # Dashboard Generator
 
-Load and follow `.claude/skills/observability/SKILL.md` and its template at `.claude/skills/observability/templates/grafana-dashboard.md`.
+Load and follow `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md` and its template at `${CLAUDE_PLUGIN_ROOT}/skills/observability/templates/grafana-dashboard.md`.
 
 ## Requirements
 

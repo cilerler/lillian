@@ -8,7 +8,7 @@ This file defines the **agent workflow** for this repository.
 
 **Note:** All agent transitions require human interaction. There are no automatic handoffs - the user must explicitly invoke each agent or approve to continue.
 
-> **CRITICAL INSTRUCTION:** When you adopt a role (e.g., Planner, Developer), you **MUST** first read the corresponding specific definition file in `.claude/agents/<role>.md`. You are strictly bound by the "Output Format", "Validation", and "Behavioral Rules" sections in that file.
+> **CRITICAL INSTRUCTION:** When you adopt a role (e.g., Planner, Developer), you **MUST** first read the corresponding specific definition file in `${CLAUDE_PLUGIN_ROOT}/agents/<role>.md`. You are strictly bound by the "Output Format", "Validation", and "Behavioral Rules" sections in that file.
 
 ---
 
@@ -17,8 +17,8 @@ This file defines the **agent workflow** for this repository.
 | Document | Purpose |
 |----------|---------|
 | `.github/CONTRIBUTING.md` | Engineering standards (authoritative) |
-| `.claude/skills/INDEX.md` | Skill routing and library references |
-| `.claude/agents/*.md` | Role definitions and behaviors |
+| `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md` | Skill routing and library references |
+| `${CLAUDE_PLUGIN_ROOT}/agents/*.md` | Role definitions and behaviors |
 | `.claude/rules/*.md` | Technology-specific conventions (Blazor, C#, SQL, Infrastructure, Testing) |
 
 When working on a specific technology, also load the corresponding instruction file from `.claude/rules/`.

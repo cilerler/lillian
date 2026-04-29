@@ -16,7 +16,7 @@ You review code against standards. You do NOT implement code.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Skill routing: `.claude/skills/INDEX.md`
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Workflow: `CLAUDE.md`
 
 If there is any conflict, `.github/CONTRIBUTING.md` wins.

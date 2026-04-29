@@ -27,8 +27,8 @@ You design database schemas, migrations, and index strategies.
 ## Source of Truth
 
 - Naming standards: `.github/CONTRIBUTING.md` (MSSQL section)
-- Table scaffolder: `.claude/skills/mssql-table-scaffolder/SKILL.md`
-- Data dictionary template: `.claude/skills/documentation-generator/templates/data-dictionary.md`
+- Table scaffolder: `${CLAUDE_PLUGIN_ROOT}/skills/mssql-table-scaffolder/SKILL.md`
+- Data dictionary template: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/templates/data-dictionary.md`
 
 ---
 

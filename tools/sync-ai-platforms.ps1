@@ -202,6 +202,19 @@ function Rewrite-PathsForGemini {
     return $Body
 }
 
+function Rewrite-PathsForPlugin {
+    param([string]$Body)
+
+    # Plugin content is mirrored from .claude/, but plugin files reference
+    # paths inside the installed plugin via ${CLAUDE_PLUGIN_ROOT} (resolved at
+    # runtime by Claude Code). Rewrite .claude/ prefixes to that variable so
+    # the references resolve when the plugin is installed from a cache dir.
+    $Body = $Body.Replace('.claude/skills/',   '${CLAUDE_PLUGIN_ROOT}/skills/')
+    $Body = $Body.Replace('.claude/agents/',   '${CLAUDE_PLUGIN_ROOT}/agents/')
+    $Body = $Body.Replace('.claude/commands/', '${CLAUDE_PLUGIN_ROOT}/commands/')
+    return $Body
+}
+
 # --- Tool Mapping (Copilot -> Claude) ---
 
 $ToolMap = @{
@@ -450,12 +463,31 @@ if (Test-Path $srcDir) {
 # So mirror the transformed .claude/ content into the plugin folder.
 
 $pluginRoot = Join-Path $BasePath "plugins\ai-toolkit"
-if (Test-Path $pluginRoot) {
-    $stats.PluginFiles = 0
-    foreach ($component in @("agents", "commands", "skills")) {
-        $src = Join-Path $BasePath ".claude\$component"
-        $dst = Join-Path $pluginRoot $component
-        $stats.PluginFiles += Copy-DirectoryClean $src $dst
+if (-not (Test-Path $pluginRoot)) {
+    New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
+    Write-Host "  plugins/ai-toolkit/ created (was missing)" -ForegroundColor Yellow
+}
+
+$stats.PluginFiles = 0
+foreach ($component in @("agents", "commands", "skills")) {
+    $src = Join-Path $BasePath ".claude\$component"
+    $dst = Join-Path $pluginRoot $component
+    $stats.PluginFiles += Copy-DirectoryClean $src $dst
+}
+
+# Rewrite .claude/ path references to ${CLAUDE_PLUGIN_ROOT}/ inside copied content
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$stats.PluginRewrites = 0
+foreach ($component in @("agents", "commands", "skills")) {
+    $componentDst = Join-Path $pluginRoot $component
+    if (-not (Test-Path $componentDst)) { continue }
+    Get-ChildItem $componentDst -Recurse -File -Filter "*.md" | ForEach-Object {
+        $content = [System.IO.File]::ReadAllText($_.FullName, $utf8NoBom)
+        $rewritten = Rewrite-PathsForPlugin $content
+        if ($rewritten -ne $content) {
+            [System.IO.File]::WriteAllText($_.FullName, $rewritten, $utf8NoBom)
+            $stats.PluginRewrites++
+        }
     }
 }
 
@@ -470,8 +502,14 @@ Write-Host "  Agents:                    $($stats.Agents) files" -ForegroundColo
 if ($stats.GithubFiles -gt 0) {
     Write-Host "  .github/ (from submodule): $($stats.GithubFiles) files" -ForegroundColor White
 }
-if ($stats.ContainsKey("PluginFiles") -and $stats.PluginFiles -gt 0) {
-    Write-Host "  Plugin (ai-toolkit):       $($stats.PluginFiles) files" -ForegroundColor White
+if (-not $stats.ContainsKey("PluginFiles")) { $stats.PluginFiles = 0 }
+if ($stats.PluginFiles -eq 0) {
+    Write-Host "  Plugin (ai-toolkit):       0 files  (WARNING: nothing copied)" -ForegroundColor Yellow
+} else {
+    $rewriteSuffix = if ($stats.ContainsKey("PluginRewrites") -and $stats.PluginRewrites -gt 0) {
+        "  ($($stats.PluginRewrites) path-rewritten)"
+    } else { "" }
+    Write-Host "  Plugin (ai-toolkit):       $($stats.PluginFiles) files$rewriteSuffix" -ForegroundColor White
 }
 Write-Host ""
 Write-Host "Targets updated:" -ForegroundColor DarkGray
