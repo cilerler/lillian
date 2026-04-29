@@ -30,7 +30,7 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 
 | Skill | Reads from this skill |
 |-------|-----------------------|
-| `dotnet-service-generator` | `/src/{Namespace}/Modules/{Module}/{Component}/{Service}/...` paths and per-service folder shape |
+| `dotnet-service-generator` | `/src/{Namespace}.Modules.{Module}/{Component}/{Service}/...` paths and per-service folder shape |
 | `documentation-generator` | `/docs/...` placement, attachments convention, dated-vs-living filename rules, ticket/project folder shapes |
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
 | `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
@@ -320,100 +320,104 @@ Company.Solution.sln                        // Visual Studio solution file
     /Contracts                                 // App-wide internal interfaces for shared helpers
     /Exceptions                                // App-wide base exceptions
     /Extensions
-      - StartupExtensions.cs                   // Registers all modules
+      - StartupExtensions.cs                   // Registers modules — feature flags decide which are active per deployment
     /Internals                                 // App-wide shared helper implementations
     /Observability
       /Grafana                                 // Platform overview dashboard
         - dashboard.json
 
-    /Modules
-      /Module1
-        /Abstractions                          // Module's public contract (cross-module)
-          /Events
-          /Interfaces
-          /Models
-          /Requests
-          /Responses
-        /Contracts                             // Module-wide internal interfaces for shared helpers
-        /Docs                                  // Module-scoped documentation (optional)
-          /adrs                                // Module-specific architectural decisions
-          /rfcs                                // Module-specific proposals
-          /runbooks                            // Module-level operational procedures
-        /Exceptions                            // Module-level base exceptions
-        /Extensions
-          - StartupExtensions.cs               // Registers all components in this module
-        /Internals                             // Module-wide shared helper implementations
-        /Observability
-          /Grafana                             // Module-level domain health dashboard
+  /Company.Project.Modules.{Module1}.Abstractions    // Separate csproj — module's public contract (cross-module)
+    - Company.Project.Modules.{Module1}.Abstractions.csproj
+    /Events
+    /Interfaces
+    /Models                                          // Enums, value objects, shared DTOs
+    /Requests
+    /Responses
+
+  /Company.Project.Modules.{Module1}                 // Module project — owns components and services as folders
+    - Company.Project.Modules.{Module1}.csproj       // References its .Abstractions sibling; references other modules' .Abstractions when consuming their contracts
+    - Constants.cs                                   // Module-wide constants
+    /Contracts                                       // Module-wide internal interfaces for shared helpers
+    /Docs                                            // Module-scoped documentation (optional)
+      /adrs                                          // Module-specific architectural decisions
+      /rfcs                                          // Module-specific proposals
+      /runbooks                                      // Module-level operational procedures
+    /Exceptions                                      // Module-level base exceptions
+    /Extensions
+      - StartupExtensions.cs                         // Registers all components in this module
+    /Internals                                       // Module-wide shared helper implementations
+    /Observability
+      /Grafana                                       // Module-level domain health dashboard
+        - dashboard.json
+
+    /{Component1}                                    // Folder inside module project — always required (even single-component modules)
+      /Abstractions                                  // Component's public contract (cross-component within module — folder, NOT separate csproj)
+        /Events
+        /Interfaces
+        /Models
+        /Requests
+        /Responses
+      /Contracts                                     // Component-wide internal interfaces for shared helpers
+      /Docs                                          // Component-scoped documentation (optional)
+        /adrs                                        // Component-specific architectural decisions
+        /rfcs                                        // Component-specific proposals
+        /runbooks                                    // Component-level operational procedures
+      /Exceptions                                    // Component-level base exceptions
+      /Extensions
+        - StartupExtensions.cs                       // Registers all services in this component
+      /Internals                                     // Component-wide shared helper implementations
+      /Observability
+        /Grafana                                     // Component-level aggregated dashboard
+          - dashboard.json
+      - Constants.cs                                 // Component-wide constants
+
+      /{Service1}                                    // Folder — full service structure
+        /Abstractions                                // Public contract (cross-service within component — folder)
+          /Events                                    // Domain events
+          /Interfaces                                // Public interfaces (when externally consumed)
+          /Models                                    // Enums, value objects, shared DTOs
+          /Requests                                  // Request DTOs
+          /Responses                                 // Response DTOs
+        /Api                                         // HTTP endpoints (optional)
+          - {ServiceName}Api.cs                      // Route group definition
+          - {Verb}Endpoint.cs                        // One file per endpoint
+        /Clients                                     // External HTTP API wrappers
+        /Configuration                               // Settings and config binding
+          - {ServiceName}Settings.cs
+        /Contracts                                   // Internal interfaces (DI/testing)
+          - I{ServiceName}.cs                        // Default: internal
+        /Docs                                        // Service-scoped documentation (optional)
+          - README.md                                // Service overview
+          - runbook.md                               // Service-specific operational procedures
+          - test-plan.md                             // Service-specific test strategy
+        /Exceptions                                  // Service-specific exceptions
+        /Extensions                                  // DI registration, model extensions
+          - StartupExtensions.cs
+        /Internals                                   // Internal helper implementations
+        /Mappers                                     // Object mapping between types
+        /Models                                      // Internal entities/domain objects
+        /Observability                               // Dashboards and diagnostics
+          /Grafana                                   // Per-service dashboard
             - dashboard.json
-        - Constants.cs                         // Module-wide constants
+        /Resources                                   // Embedded resource files — optional (SQL, templates, etc.)
+          /SQL
+            - {Name}.sql
+            - ResourceLoader.cs                      // Lazy loader for embedded resources
+            - Constants.cs                           // Resource file name constants
+        /Validators                                  // Custom validation attributes
+        - Constants.cs                               // Service constants + Metrics nested class
+        - {ServiceName}Service.cs                    // Core business logic
+        - {ServiceName}Worker.cs                     // Background service lifecycle (optional)
+        - {ServiceName}HealthCheck.cs                // Health monitoring (optional)
 
-        /Component1                            // Always required (even single-component modules)
-          /Abstractions                        // Component's public contract (cross-component)
-            /Events
-            /Interfaces
-            /Models
-            /Requests
-            /Responses
-          /Contracts                             // Component-wide internal interfaces for shared helpers
-          /Docs                                // Component-scoped documentation (optional)
-            /adrs                              // Component-specific architectural decisions
-            /rfcs                              // Component-specific proposals
-            /runbooks                          // Component-level operational procedures
-          /Exceptions                          // Component-level base exceptions
-          /Extensions
-            - StartupExtensions.cs             // Registers all services in this component
-          /Internals                           // Component-wide shared helper implementations
-          /Observability
-            /Grafana                           // Component-level aggregated dashboard
-              - dashboard.json
-          - Constants.cs                       // Component-wide constants
-
-          /Service1                            // Full service structure
-            /Abstractions                      // Public contract (cross-service)
-              /Events                          // Domain events
-              /Interfaces                      // Public interfaces (when externally consumed)
-              /Models                          // Enums, value objects, shared DTOs
-              /Requests                        // Request DTOs
-              /Responses                       // Response DTOs
-            /Api                               // HTTP endpoints (optional)
-              - {ServiceName}Api.cs             // Route group definition
-              - {Verb}Endpoint.cs              // One file per endpoint
-            /Clients                           // External HTTP API wrappers
-            /Configuration                     // Settings and config binding
-              - {ServiceName}Settings.cs
-            /Contracts                         // Internal interfaces (DI/testing)
-              - I{ServiceName}.cs              // Default: internal
-            /Docs                              // Service-scoped documentation (optional)
-              - README.md                      // Service overview
-              - runbook.md                     // Service-specific operational procedures
-              - test-plan.md                   // Service-specific test strategy
-            /Exceptions                        // Service-specific exceptions
-            /Extensions                        // DI registration, model extensions
-              - StartupExtensions.cs
-            /Internals                         // Internal helper implementations
-            /Mappers                           // Object mapping between types
-            /Models                            // Internal entities/domain objects
-            /Observability                     // Dashboards and diagnostics
-              /Grafana                         // Per-service dashboard
-                - dashboard.json
-            /Resources                         // Embedded resource files — optional (SQL, templates, etc.)
-              /SQL
-                - {Name}.sql
-                - ResourceLoader.cs            // Lazy loader for embedded resources
-                - Constants.cs                 // Resource file name constants
-            /Validators                        // Custom validation attributes
-            - Constants.cs                     // Service constants + Metrics nested class
-            - {ServiceName}Service.cs          // Core business logic
-            - {ServiceName}Worker.cs           // Background service lifecycle (optional)
-            - {ServiceName}HealthCheck.cs      // Health monitoring (optional)
-
-          /Service2
-            /...
-
-        /Component2
-          /...
-
-      /Module2
+      /{Service2}
         /...
+
+    /{Component2}
+      /...
+
+  /Company.Project.Modules.{Module2}.Abstractions
+    /...
+  /Company.Project.Modules.{Module2}
+    /...
 ```
