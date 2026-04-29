@@ -19,7 +19,7 @@ You are restructuring an existing service to match the folder structure and nami
 Before starting, load and follow:
 - `.agent/skills/dotnet-service-generator/SKILL.md`
 - `.agent/skills/dotnet-service-generator/references/standard-service.md` — canonical folder structure
-- `.agent/skills/dotnet-service-generator/references/modular-monolith.md` — module/component hierarchy (if module name provided)
+- `.agent/skills/dotnet-service-generator/references/modular-polylith.md` — module/component hierarchy (if module name provided)
 
 ## Phase 1: Analyze Current Structure
 

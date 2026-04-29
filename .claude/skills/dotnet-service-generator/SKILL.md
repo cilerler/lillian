@@ -15,7 +15,7 @@ references:
   - references/api-patterns.md
   - references/dependencies.md
   - references/health-check.md
-  - references/modular-monolith.md
+  - references/modular-polylith.md
 summary: Interactive scaffolder for .NET service modules with observability and DI conventions.
 ---
 
@@ -23,7 +23,7 @@ summary: Interactive scaffolder for .NET service modules with observability and 
 
 Interactive scaffolder for .NET services with full observability support.
 
-> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-monolith service path (`/src/{Namespace}/Modules/{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
+> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-polylith service path (`/src/{Namespace}.Modules.{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
 
 ## Workflow
 
@@ -40,7 +40,7 @@ Ask these questions (one or two at a time):
 1. **Service name** - PascalCase (e.g., `PaymentProcessor`, `UserNotification`)
 2. **Namespace** - `{Organization}.{Product}` (e.g., `Microsoft.Windows`)
 3. **Purpose** - Brief description (used to identify dependencies)
-4. **Output location** - Where to generate files (standalone: `Services/{ServiceName}/`, modular monolith: `Modules/{ModuleName}/{ComponentName}/{ServiceName}/`)
+4. **Output location** - Where to generate files (standalone: `Services/{ServiceName}/`, modular polylith: `Company.Project.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`)
 5. **Interface visibility** - Is `I{ServiceName}` consumed by other modules? (default: **no** → placed in `Contracts/`)
 
 ## Step 2: Identify Dependencies
@@ -136,7 +136,7 @@ See reference files:
 - **API patterns**: [references/api-patterns.md](references/api-patterns.md)
 - **Optional dependencies**: [references/dependencies.md](references/dependencies.md)
 - **Health checks**: [references/health-check.md](references/health-check.md)
-- **Modular monolith**: [references/modular-monolith.md](references/modular-monolith.md)
+- **Modular polylith**: [references/modular-polylith.md](references/modular-polylith.md)
 
 ## Observability Guidance
 
