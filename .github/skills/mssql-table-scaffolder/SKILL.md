@@ -142,6 +142,20 @@ The template includes ALL features. **Remove** code blocks for features NOT requ
 | **Full-Text** | `CREATE FULLTEXT CATALOG`, `CREATE FULLTEXT INDEX` |
 | **Lookup** | `LookupValueCode` column, `LookupValue`/`LookupGroup`/`LookupGroupMapping` tables |
 | **Processing Order** | `ProcessingOrder` column |
+| **Dedupe Hash** | `DedupeHash` column, `IX_{TableName}_DedupeHash` index, `{TableName}_DedupeHash` trigger, extended property |
+
+#### Feature-Specific Inputs
+Some features need additional information beyond an enable/disable flag. If the user requests one of these without supplying the input, ask before generating the script.
+
+| Feature | Required Input | How It Is Used |
+|---------|---------------|----------------|
+| **Dedupe Hash** | List of columns that define a duplicate (≥1) | Replace `DedupeColumn1`, `DedupeColumn2`, ... in both the `UPDATE(...)` guard and the `CONCAT_WS(CHAR(31), ISNULL(...), ...)` argument list inside the `{TableName}_DedupeHash` trigger. Add or remove `ISNULL(i.<col>, '')` terms to match the requested column count. |
+
+**Dedupe Hash notes:**
+- Column type is fixed at `VARBINARY(32)` (SHA-256 output). Do not parameterize the algorithm.
+- Default value is `0x` so existing rows and inserts without trigger participation remain valid.
+- The default index is non-unique. Promote `IX_{TableName}_DedupeHash` to `UNIQUE` only when the user explicitly wants duplicates rejected at the database level (rather than detected by application code).
+- `CHAR(31)` (Unit Separator) is the column delimiter inside `CONCAT_WS` — do not substitute a printable character, since printable delimiters can collide with user data.
 
 ### Step 3: Inject Custom Columns
 Add user-requested columns using these type inference rules:

@@ -80,6 +80,11 @@ CREATE TABLE [MySchema].[MyTable]
     ValidTo DATETIME2(7) GENERATED ALWAYS AS ROW END HIDDEN,
     PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),
 
+    -- SHA-256 hash of designated dedup columns; auto-populated by `MyTable_DedupeHash` trigger for duplicate detection.
+    DedupeHash VARBINARY(32) NOT NULL
+        CONSTRAINT DF_MyTable_DedupeHash
+            DEFAULT (0x),
+
     [Description] VARCHAR(50) NOT NULL
 )
 WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [MySchema].[MyTableHistory], DATA_CONSISTENCY_CHECK = ON));
@@ -118,6 +123,11 @@ CREATE NONCLUSTERED INDEX IX_MyTable_LookupValueCode
     ON [MySchema].[MyTable](LookupValueCode);
 GO
 
+-- Non-unique by default; promote to UNIQUE to enforce duplicate prevention at the database level.
+CREATE NONCLUSTERED INDEX IX_MyTable_DedupeHash
+    ON [MySchema].[MyTable](DedupeHash);
+GO
+
 CREATE TRIGGER [MySchema].[MyTable_AfterUpdate] ON [MySchema].[MyTable]
 	AFTER UPDATE
 AS
@@ -134,6 +144,33 @@ BEGIN
             JOIN INSERTED AS i
                 ON entity.MyTableId = i.MyTableId;
     END
+END
+GO
+
+-- Computes a SHA-256 hash from designated dedup columns to enable duplicate detection.
+-- Replace DedupeColumn1, DedupeColumn2 (and add additional ISNULL terms in CONCAT_WS) with the actual columns that define a duplicate.
+-- CHAR(31) (Unit Separator) is used as a delimiter to prevent collisions across column boundaries.
+CREATE TRIGGER [MySchema].[MyTable_DedupeHash] ON [MySchema].[MyTable]
+    AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF ((SELECT TRIGGER_NESTLEVEL()) > 1) RETURN;
+
+    IF NOT (UPDATE(DedupeColumn1) OR UPDATE(DedupeColumn2))
+        RETURN;
+
+    UPDATE  entity
+    SET     entity.DedupeHash = CAST(HASHBYTES('SHA2_256',
+                CONCAT_WS(CHAR(31),
+                    ISNULL(i.DedupeColumn1, ''),
+                    ISNULL(i.DedupeColumn2, '')
+                )
+            ) AS VARBINARY(32))
+    FROM    [MySchema].[MyTable] AS entity
+        JOIN INSERTED AS i
+            ON entity.MyTableId = i.MyTableId;
 END
 GO
 
@@ -386,6 +423,13 @@ EXEC sys.sp_addextendedproperty @name = N'MS_Description',
                                 @level0type = N'SCHEMA', @level0name = N'MySchema',
                                 @level1type = N'TABLE',  @level1name = N'MyTable',
                                 @level2type = N'COLUMN', @level2name = N'ValidTo';
+GO
+
+EXEC sys.sp_addextendedproperty @name = N'MS_Description',
+                                @value = N'SHA-256 hash of designated dedup columns; auto-populated by the AFTER INSERT/UPDATE trigger to enable duplicate detection.',
+                                @level0type = N'SCHEMA', @level0name = N'MySchema',
+                                @level1type = N'TABLE',  @level1name = N'MyTable',
+                                @level2type = N'COLUMN', @level2name = N'DedupeHash';
 GO
 
 
