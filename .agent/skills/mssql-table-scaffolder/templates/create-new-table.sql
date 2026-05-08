@@ -128,7 +128,7 @@ CREATE NONCLUSTERED INDEX IX_MyTable_DedupeHash
     ON [MySchema].[MyTable](DedupeHash);
 GO
 
-CREATE TRIGGER [MySchema].[MyTable_AfterUpdate] ON [MySchema].[MyTable]
+CREATE TRIGGER [MySchema].[MyTable_StampModifiedAt] ON [MySchema].[MyTable]
 	AFTER UPDATE
 AS
 BEGIN
@@ -140,6 +140,18 @@ BEGIN
     BEGIN
         UPDATE  entity
         SET     entity.ModifiedAt = SYSUTCDATETIME()
+        FROM    [MySchema].[MyTable] AS entity
+            JOIN INSERTED AS i
+                ON entity.MyTableId = i.MyTableId;
+    END
+    ELSE
+    BEGIN
+        UPDATE  entity
+        SET     entity.ModifiedAt = CASE
+                                    WHEN entity.ModifiedAt > i.ModifiedAt
+                                    THEN entity.ModifiedAt
+                                    ELSE i.ModifiedAt
+                                END
         FROM    [MySchema].[MyTable] AS entity
             JOIN INSERTED AS i
                 ON entity.MyTableId = i.MyTableId;
@@ -176,9 +188,9 @@ GO
 
 -- Soft delete; marks records as deleted by updating a 'SoftDelete' flag instead of physically removing data.
 -- Note: This prevents the row from ever being physically deleted by a standard DELETE statement.
--- Consequently, the 'MyTable_AfterDelete' trigger below will NEVER fire unless this trigger is disabled or bypassed.
+-- Consequently, the 'MyTable_LogHardDelete' trigger below will NEVER fire unless this trigger is disabled or bypassed.
 
-CREATE TRIGGER [MySchema].[MyTable_InsteadOfDelete] ON [MySchema].[MyTable]
+CREATE TRIGGER [MySchema].[MyTable_SoftDelete] ON [MySchema].[MyTable]
    INSTEAD OF DELETE
 AS
 BEGIN
@@ -222,7 +234,7 @@ ALTER TABLE [DeleteLog].[Record] WITH CHECK ADD CONSTRAINT [CF_Record_FullyQuali
 GO
 
 -- External delete logging; physically deletes records and logs deletions into an external audit/logging table.
-CREATE TRIGGER [MySchema].[MyTable_AfterDelete] ON [MySchema].[MyTable]
+CREATE TRIGGER [MySchema].[MyTable_LogHardDelete] ON [MySchema].[MyTable]
    AFTER DELETE
 AS
 BEGIN
