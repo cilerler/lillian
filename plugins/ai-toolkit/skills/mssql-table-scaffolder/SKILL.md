@@ -47,7 +47,13 @@ You are a Senior Database Architect for Microsoft SQL Server.
 Generate commands in this execution order:
 
 1. **Disable constraints/triggers** (if needed for safe migration)
-2. **sp_rename** — Rename table/columns/constraints to match conventions
+2. **sp_rename** — Rename table/columns/constraints/triggers to match conventions. Map legacy timing-based trigger names to the behavior-based convention:
+
+   | Legacy name | New name |
+   |-------------|----------|
+   | `{TableName}_AfterUpdate` | `{TableName}_StampModifiedAt` |
+   | `{TableName}_InsteadOfDelete` | `{TableName}_SoftDelete` |
+   | `{TableName}_AfterDelete` | `{TableName}_LogHardDelete` |
 3. **ALTER TABLE ADD** — Missing standard columns (RowGuid, audit fields, etc.)
 4. **ALTER TABLE ALTER COLUMN** — Fix data types
 5. **ALTER TABLE DROP CONSTRAINT** — Remove non-conforming constraints
@@ -135,14 +141,23 @@ The template includes ALL features. **Remove** code blocks for features NOT requ
 | Feature | If NOT Requested, Remove |
 |---------|--------------------------|
 | **Locking** | `LockState`, `LockTime`, `LockedBy`, `IsLocked` columns + extended properties |
-| **Soft Delete** | `SoftDelete` column, `INSTEAD OF DELETE` trigger, View definition |
-| **Delete Logging** | `DeleteLog` schema, `DeleteLog.Record` table, `AFTER DELETE` trigger |
+| **Soft Delete** | `SoftDelete` column, `{TableName}_SoftDelete` trigger, View definition |
+| **Delete Logging** | `DeleteLog` schema, `DeleteLog.Record` table, `{TableName}_LogHardDelete` trigger |
 | **Hierarchy** | `ParentId`, `NestedParentId`, `HierarchyId`, `HierarchyLevel`, `HierarchyPath` + indexes |
 | **Temporal** | `ValidFrom`, `ValidTo`, `PERIOD FOR SYSTEM_TIME`, `SYSTEM_VERSIONING` clause |
 | **Full-Text** | `CREATE FULLTEXT CATALOG`, `CREATE FULLTEXT INDEX` |
 | **Lookup** | `LookupValueCode` column, `LookupValue`/`LookupGroup`/`LookupGroupMapping` tables |
 | **Processing Order** | `ProcessingOrder` column |
 | **Dedupe Hash** | `DedupeHash` column, `IX_{TableName}_DedupeHash` index, `{TableName}_DedupeHash` trigger, extended property |
+
+**Trigger naming convention:** Triggers are named for *what they do*, not *when they fire*. The standard set is:
+
+| Trigger | Timing | Purpose |
+|---------|--------|---------|
+| `{TableName}_StampModifiedAt` | `AFTER UPDATE` | Always present; refreshes `ModifiedAt` and prevents it from going backward |
+| `{TableName}_SoftDelete` | `INSTEAD OF DELETE` | Soft Delete feature; flips `SoftDelete = 1` instead of physical delete |
+| `{TableName}_LogHardDelete` | `AFTER DELETE` | Delete Logging feature; audits hard deletes into `DeleteLog.Record` |
+| `{TableName}_DedupeHash` | `AFTER INSERT, UPDATE` | Dedupe Hash feature; computes SHA-256 over designated columns |
 
 #### Feature-Specific Inputs
 Some features need additional information beyond an enable/disable flag. If the user requests one of these without supplying the input, ask before generating the script.
