@@ -135,6 +135,22 @@ Extract from the user's request:
 
 **Important:** Rename ALL constraints, indexes, triggers, and views to match the new table name. Never leave `MyTable` in any object name.
 
+#### Naming Conventions
+
+Constraint and index names follow EF Core's default reverse-engineering output, so a SQL-scaffolded table stays byte-identical to what `dotnet ef migrations add` would produce against the same schema. This means a team can mix direct-SQL DDL and EF migrations without constraint-name churn in diffs.
+
+| Object | Pattern | Example |
+|---|---|---|
+| Primary key | `PK_<Table>_<KeyColumn>` | `PK_Recipe_Id` |
+| Foreign key | `FK_<DependentTable>_<PrincipalTable>_<FKColumn>` | `FK_Recipe_Chef_ChefId`; for self-referencing FKs the dependent and principal are the same table → `FK_Recipe_Recipe_NestedParentId` |
+| Index | `IX_<Table>_<Column>[_<Column>...]` | `IX_Recipe_ChefId`, `IX_Chef_SoftDelete_ModifiedAt` |
+| Unique index | `UIX_<Table>_<Column>[_<Column>...]` | `UIX_MyTable_RowGuid` |
+| Default | `DF_<Table>_<Column>` | `DF_Recipe_RowGuid` |
+| Check | `CHK_<Table>_<Column>_<Description>` | `CHK_MyTable_HierarchyId_NotEmpty` |
+| Unique constraint | `UQ_<Table>_<Column>` | `UQ_LookupValue_Name` |
+
+**Why include the FK column suffix:** when a table has multiple FKs to the same principal (e.g., `Order` with both `BillingAddressId` and `ShippingAddressId` referencing `Address`), the suffix is the only thing that disambiguates them. Single-FK cases pay a small cost in name length for the future-proofing.
+
 #### Feature Matrix (Subtraction Rule)
 The template includes ALL features. **Remove** code blocks for features NOT requested:
 

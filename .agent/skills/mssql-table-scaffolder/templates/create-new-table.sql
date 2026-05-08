@@ -48,21 +48,21 @@ CREATE TABLE [MySchema].[MyTable]
                  AS BIT),           -- WARNING: Keyword 'PERSISTED' cannot be specified after 'END' when the time-based condition is present, as the expression is non-deterministic.
 
     LookupValueCode TINYINT NULL
-        CONSTRAINT FK_MyTable_LookupValue
+        CONSTRAINT FK_MyTable_LookupValue_LookupValueCode
             FOREIGN KEY (LookupValueCode)
             REFERENCES [MySchema].[LookupValue] (Code)
             ON DELETE SET NULL  -- WARNING: Remove if using temporal tables
             ON UPDATE CASCADE,  -- WARNING: Remove if using temporal tables
 
     ParentId BIGINT NULL
-        CONSTRAINT FK_MyTable_MyParentTable
+        CONSTRAINT FK_MyTable_MyParentTable_ParentId
             FOREIGN KEY (ParentId)
             REFERENCES [MySchema].[MyParentTable] (MyParentTableId)
             ON DELETE CASCADE   -- WARNING: Remove if using temporal tables
             ON UPDATE CASCADE,  -- WARNING: Remove if using temporal tables
 
     NestedParentId BIGINT NULL
-        CONSTRAINT FK_MyTable_Self_NestedParentId
+        CONSTRAINT FK_MyTable_MyTable_NestedParentId
             REFERENCES [MySchema].[MyTable] (MyTableId)
             ON DELETE SET NULL   -- WARNING: Remove if using temporal tables
             ON UPDATE NO ACTION, -- WARNING: Remove if using temporal tables
@@ -550,12 +550,12 @@ CREATE TABLE [MySchema].[LookupGroupMapping] (
         PRIMARY KEY CLUSTERED (Id ASC),
     LookupGroupCode TINYINT NOT NULL,
     LookupValueCode TINYINT NOT NULL,
-    CONSTRAINT FK_LookupGroupMapping_LookupValue
+    CONSTRAINT FK_LookupGroupMapping_LookupValue_LookupValueCode
         FOREIGN KEY(LookupValueCode)
         REFERENCES [MySchema].[LookupValue](Code)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    CONSTRAINT FK_LookupGroupMapping_LookupGroup
+    CONSTRAINT FK_LookupGroupMapping_LookupGroup_LookupGroupCode
         FOREIGN KEY(LookupGroupCode)
         REFERENCES [MySchema].[LookupGroup](Code)
         ON UPDATE CASCADE
