@@ -49,12 +49,12 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
 | ADR | `{yyyyMMddHHmm}-{slug}.md` | Immutable once accepted |
 | RFC | `{yyyyMMddHHmm}-{slug}.md` | Snapshot of a proposal at a point in time |
 | Design Doc | `{yyyyMMddHHmm}-{slug}.md` | Snapshot of a design at a point in time |
-| SOP | `{yyyyMMddHHmm}-{slug}.md` | Versioned procedure |
 | PIR (Postmortem) | `{yyyyMMddHHmm}-{slug}.md` | Tied to an incident date |
 | Test Plan (release/app-level) | `{yyyyMMddHHmm}-{slug}.md` | Release/initiative scoped |
 | Project Status Update | `{yyyyMMddHHmm}-{slug}.md` | Iterative, dated |
 | Architecture Overview | `{slug}.md` | Living — updated as system evolves |
 | Runbook | `{slug}.md` | Living — updated as system evolves |
+| SOP | `{slug}.md` | Living — revised in place as procedures change; carries stable `SOP-{slug}` ID for cross-references |
 | Test Cases | `{slug}.md` | Living — updated as features change |
 | Singletons (`README`, glossaries, dictionaries, tech stack) | fixed name | One per repo |
 
@@ -141,9 +141,9 @@ Exceptions:
     /attachments
       /{slug}
   /sops                                     // Standard Operating Procedures — formalized org processes
-    - {yyyyMMddHHmm}-{slug}.md
+    - {slug}.md                             // Living documents — no date prefix (revised in place as procedures change)
     /attachments
-      /{yyyyMMddHHmm}-{slug}
+      /{slug}
   /pirs                                     // Post Incident Reviews — what broke, why, how we fixed it
     - {yyyyMMddHHmm}-{slug}.md
     /attachments

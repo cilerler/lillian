@@ -206,7 +206,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | request-for-comments | `/docs/rfcs/` (or module/component `Docs/rfcs/`) | `{yyyyMMddHHmm}-{slug}.md` | |
 | design-doc | `/docs/designs/` | `{yyyyMMddHHmm}-{slug}.md` | |
 | runbook | `/docs/runbooks/` (or module/component `Docs/runbooks/`) | `{slug}.md` | **No date prefix** — living document |
-| standard-operating-procedure | `/docs/sops/` | `{yyyyMMddHHmm}-{slug}.md` | |
+| standard-operating-procedure | `/docs/sops/` | `{slug}.md` | **No date prefix** — living document |
 | post-incident-review | `/docs/pirs/` | `{yyyyMMddHHmm}-{slug}.md` | System-lifetime, incident-driven (not project-bound) |
 | takeover-handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff** (noun-form), not Handover (verb). Same template covers both directions — incoming Takeover and outgoing Handover. |
 | data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
@@ -314,7 +314,7 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 | `/docs/rfcs/202604240930-new-auth.md` | `/docs/rfcs/attachments/202604240930-new-auth/` |
 | `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/attachments/202604240930-queue-choice/` |
 | `/docs/designs/202604241015-billing-flow.md` | `/docs/designs/attachments/202604241015-billing-flow/` |
-| `/docs/sops/202604241030-oncall-rotation.md` | `/docs/sops/attachments/202604241030-oncall-rotation/` |
+| `/docs/sops/oncall-rotation.md` *(living)* | `/docs/sops/attachments/oncall-rotation/` |
 | `/docs/pirs/202604241100-outage.md` | `/docs/pirs/attachments/202604241100-outage/` |
 | `/docs/runbooks/deploy-worker.md` *(living)* | `/docs/runbooks/attachments/deploy-worker/` |
 | `/docs/test-cases/checkout-flow.md` *(living)* | `/docs/test-cases/attachments/checkout-flow/` |
@@ -364,7 +364,7 @@ Why this shape:
 ### Gotchas
 
 - `takeover-handover.md` template renders to `Handoff.md` — different spelling (noun: the *handoff*). Same template used for both Takeover (incoming) and Handover (outgoing).
-- Runbooks and test-cases are the only date-less entries in the dated group — filenames are `{slug}.md`, not `{yyyyMMddHHmm}-{slug}.md`. They are living documents updated as features change.
+- Runbooks, SOPs, and test-cases are date-less — filenames are `{slug}.md`, not `{yyyyMMddHHmm}-{slug}.md`. They are living documents updated in place as systems / procedures / features change.
 - `data-dictionary`, `business-glossary`, and `tech-stack-overview` are **singletons** at `/docs/` root — not in a subfolder, never dated, one per repo.
 - `architecture-overview` is a **living slug-only doc** like Runbook — multiple allowed per scope, each describing a system / module / component / area. Filename is `{slug}.md` in `/docs/architectures/` (or module/component `Docs/architectures/`). Pick the narrowest scope that captures the right audience.
 - Brag documents and PIPs are personal/HR artifacts. Do not commit them to the repository.

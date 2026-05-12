@@ -2,7 +2,7 @@
 
 ## Metadata
 
-**SOP ID:** SOP-yyyyMMddHHmm-slug
+**SOP ID:** SOP-slug
 **Last Reviewed:** [YYYYMMDD]
 **Effective Date:** [YYYYMMDD]
 **Next Review:** [YYYYMMDD]
