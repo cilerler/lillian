@@ -189,6 +189,20 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## storm-research
+- Path: `.github/skills/storm-research/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - A multi-perspective, citation-verified research briefing is requested
+- Triggers:
+  - "storm research"
+  - "storm report"
+  - "STORM briefing"
+  - "multi-perspective research"
+- Note: heavyweight pipeline (~9-11 subagents per run); for a simple factual lookup, answer directly instead.
+
+---
+
 # Libraries
 
 Workspace libraries in `common-libraries/`. Use these instead of custom implementations.
