@@ -449,7 +449,7 @@ You cannot judge a diagram from JSON alone. After generating or editing the Exca
 ### How to Render
 
 ```pwsh
-cd .agent/skills/excalidraw-diagram-generator/references && dotnet run render_excalidraw.cs -- <path-to-file.excalidraw>;
+cd .github/skills/excalidraw-diagram-generator/references && dotnet run render_excalidraw.cs -- <path-to-file.excalidraw>;
 ```
 
 This outputs a PNG next to the `.excalidraw` file. Then use the **Read tool** on the PNG to actually view it.
@@ -501,7 +501,7 @@ The loop is done when:
 ### First-Time Setup
 If the render script hasn't been set up yet (one-time only):
 ```pwsh
-cd .agent/skills/excalidraw-diagram-generator/references;
+cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- install-browsers;
 ```
 

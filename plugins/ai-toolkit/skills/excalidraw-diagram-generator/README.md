@@ -5,14 +5,14 @@ A Claude Code skill that generates Excalidraw diagram JSON files with automatic 
 ## First-Time Setup
 
 ```pwsh
-cd .agent/skills/excalidraw-diagram-generator/references;
+cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- install-browsers;
 ```
 
 ## Usage
 
 ```pwsh
-cd .agent/skills/excalidraw-diagram-generator/references;
+cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- <path-to-file.excalidraw> [--output path.png] [--scale 2] [--width 1920];
 ```
 

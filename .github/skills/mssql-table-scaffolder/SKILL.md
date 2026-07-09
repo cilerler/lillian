@@ -1,5 +1,6 @@
 ---
 name: mssql-table-scaffolder
+description: Scaffolds production-ready MSSQL tables or generates migration scripts following enterprise conventions. Use when creating, generating, standardizing, or migrating database tables.
 type: guidance
 applies_to:
   - Developer

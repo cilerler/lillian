@@ -1,5 +1,6 @@
 ---
 name: observability
+description: Standard SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns for .NET services. Use when working on dashboards, metrics, tracing, alerting, SLIs, or any observability concern.
 type: guidance
 applies_to:
   - Architect

@@ -1,6 +1,6 @@
 ---
-paths:
-  - "**/*.sql"
+trigger: glob
+globs: **/*.sql
 ---
 
 # SQL Instructions

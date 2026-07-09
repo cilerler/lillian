@@ -1,5 +1,6 @@
 ---
 name: solution-structure
+description: Source of truth for the opinionated .NET solution folder structure (root scaffolding, /docs, /src/Modules/Component/Service hierarchy, /tools/Kubernetes, /tests) and the documentation placement rules that govern items inside it. Use when deciding folder structure, directory layout, repo layout, or where a file belongs.
 type: guidance
 applies_to:
   - Developer

@@ -1,5 +1,6 @@
 ---
 name: infrastructure
+description: Docker and Kubernetes patterns for .NET 10 services including health probes, resource limits, and graceful shutdown. Use when writing or reviewing Dockerfiles, Kubernetes manifests, container deployments, or health probes.
 type: guidance
 applies_to:
   - Developer

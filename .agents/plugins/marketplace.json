@@ -1,0 +1,19 @@
+{
+  "name": "cilerler",
+  "interface": {
+    "displayName": "Cengiz Ilerler's AI Toolkit"
+  },
+  "plugins": [
+    {
+      "name": "ai-toolkit",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ai-toolkit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
+    }
+  ]
+}

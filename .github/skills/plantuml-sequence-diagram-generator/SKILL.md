@@ -1,5 +1,6 @@
 ---
 name: plantuml-sequence-diagram-generator
+description: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns. Use when a sequence diagram, service flow, API interaction diagram, or architecture diagram is needed.
 type: guidance
 applies_to:
   - Planner

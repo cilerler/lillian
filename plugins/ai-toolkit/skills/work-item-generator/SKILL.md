@@ -1,5 +1,6 @@
 ---
 name: work-item-generator
+description: Interactive generator for work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks) that gathers context through targeted questions and produces structured documents. Use when creating work items or filing issues, tickets, or bug reports.
 type: guidance
 applies_to:
   - Planner

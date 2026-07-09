@@ -1,7 +1,6 @@
 ---
-paths:
-  - "**/Dockerfile"
-  - "**/kubernetes/**"
+trigger: glob
+globs: "**/Dockerfile, **/kubernetes/**"
 ---
 
 # Infrastructure Instructions

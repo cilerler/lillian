@@ -1,5 +1,6 @@
 ---
 name: mssql-bulk-data-operations
+description: Generates production-ready batched T-SQL scripts for large-scale INSERT, UPDATE, or DELETE operations on MSSQL with progress tracking, checkpointing, and transaction safety. Use for bulk or mass data operations, batch updates/inserts/deletes, or changing millions of records.
 type: guidance
 applies_to:
   - Developer

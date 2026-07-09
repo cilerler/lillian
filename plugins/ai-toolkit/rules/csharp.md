@@ -1,6 +1,6 @@
 ---
-paths:
-  - "**/*.cs"
+trigger: glob
+globs: **/*.cs
 ---
 
 # C# Instructions

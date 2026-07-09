@@ -8,11 +8,11 @@ applyTo: "**"
 # Repository Layout
 
 > [!IMPORTANT]
-> Source-of-truth lives under `.github/`. The `.agent/`, `.claude/`, and `plugins/` folders are **generated** by a git hook from `.github/` sources — do not edit them directly. Direct edits get overwritten on the next hook run and desync from source.
+> Source-of-truth lives under `.github/`. The `.agents/`, `.claude/`, and `plugins/` folders are **generated** by a git hook from `.github/` sources — do not edit them directly. Direct edits get overwritten on the next hook run and desync from source.
 
 - To change a skill, instruction, agent, prompt, or plugin behavior: edit the source under `.github/` (e.g., `.github/skills/<name>/`, `.github/instructions/`, `.github/agents/`, `.github/prompts/`).
-- If a search lands you in `.agent/`, `.claude/`, or `plugins/`, treat it as a build artifact — trace it back to the corresponding `.github/` source and edit there.
-- Never stage or commit changes inside `.agent/`, `.claude/`, or `plugins/`.
+- If a search lands you in `.agents/`, `.claude/`, or `plugins/`, treat it as a build artifact — trace it back to the corresponding `.github/` source and edit there.
+- Never stage or commit changes inside `.agents/`, `.claude/`, or `plugins/`.
 
 # Workflow Orchestration
 

@@ -45,6 +45,10 @@
       "mcp__MCP_MSSQL_MyOrganization_Production__ListTables"
     ],
     "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
       "mcp__MCP_MSSQL_MyOrganization_Production__CreateTable",
       "mcp__MCP_MSSQL_MyOrganization_Production__UpdateData",
       "mcp__MCP_MSSQL_MyOrganization_Production__DropTable",

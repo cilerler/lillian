@@ -1,5 +1,6 @@
 ---
 name: dotnet-service-generator
+description: Interactive scaffolder for .NET service modules with observability and DI conventions. Use when creating a new service, scaffolding or adding a service module, or generating service boilerplate.
 type: guidance
 applies_to:
   - Developer

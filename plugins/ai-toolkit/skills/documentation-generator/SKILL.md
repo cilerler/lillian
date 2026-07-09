@@ -1,5 +1,6 @@
 ---
 name: documentation-generator
+description: Document templates for ADRs, RFCs, design docs, runbooks, post-incident reviews, SOPs, handovers, business cases, test plans, test cases, role briefs, and more. Use when creating or updating any structured document such as an ADR, RFC, design doc, runbook, postmortem, SOP, handover, business case, brag document, project status update, retrospective, tech stack or architecture overview, data dictionary, performance improvement plan, test cases, test plan, role brief, or hiring/job ad.
 type: guidance
 applies_to:
   - Documenter

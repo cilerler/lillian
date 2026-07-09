@@ -7,12 +7,17 @@
     No symlinks required — everything is copied with platform-appropriate frontmatter and paths.
 
     Source of truth (.github/):
-      instructions/*.instructions.md  -> .claude/rules/*.md, .agent/rules/*.md
-      prompts/*.prompt.md             -> .claude/commands/*.md, .agent/prompts/*.md
-      agents/*.agent.md               -> .claude/agents/*.md
-      skills/                         -> .claude/skills/, .agent/skills/
+      skills/                         -> plugins/ai-toolkit/skills/ (verbatim)
+      prompts/*.prompt.md             -> plugins/ai-toolkit/commands/*.md, .agents/workflows/*.md
+      agents/*.agent.md               -> plugins/ai-toolkit/agents/*.md
+      instructions/*.instructions.md  -> .claude/rules/*.md, plugins/ai-toolkit/rules/*.md
       CONTRIBUTING.md                 -> (stays at .github/)
       copilot-instructions.md         -> (stays at .github/)
+
+    The plugin folder is the single generated bundle (installed by Claude Code,
+    Codex, and Antigravity via their respective manifests). Only rules (Claude)
+    and workflows (Antigravity) remain as repo-level generated files, because
+    those platforms cannot deliver them through plugins.
 
     In consumer repos using this as a submodule (.ai/), also copies:
       .ai/.github/*                   -> .github/*
@@ -25,7 +30,7 @@
     For consumer repos, set this to ".ai" to copy from the submodule.
 
 .EXAMPLE
-    # Base repo (melis): sync from .github/ to .claude/ and .agent/
+    # Base repo (melis): sync from .github/ to .claude/ and .agents/
     .\tools\sync-ai-platforms.ps1
 
     # Consumer repo: sync from submodule
@@ -62,7 +67,7 @@ function Parse-Frontmatter {
         # List item under current key
         if ($line -match "^\s+-\s+(.+)$" -and $currentKey) {
             if ($null -eq $currentList) { $currentList = @() }
-            $currentList += $Matches[1].Trim()
+            $currentList += $Matches[1].Trim().Trim('"').Trim("'")
             continue
         }
 
@@ -152,66 +157,59 @@ function Write-SyncedFile {
 # --- Path Rewriting ---
 
 # Rewrites .github/ references in body content to platform-native paths.
-# Skills are symlinked, so .github/skills/ -> .claude/skills/ or .agent/skills/
-# Agents/instructions/prompts are synced with renamed files.
+# Skills/commands/agents live ONLY in the plugin; .claude/ keeps rules,
+# .agents/ keeps workflows. References to .github/ sources are left intact
+# where the target has no native equivalent (the source dirs are symlinked
+# into consumer repos, so those paths stay resolvable).
 
-function Rewrite-PathsForClaude {
+function Rewrite-PathsForClaudeRules {
     param([string]$Body)
 
-    # Platform-specific directory mappings (specific filenames)
-    $Body = $Body -replace '\.github/skills/', '.claude/skills/'
-    $Body = $Body -replace '\.github/agents/(\w[\w-]*)\.agent\.md', '.claude/agents/$1.md'
+    # Cross-references between rules stay repo-local
     $Body = $Body -replace '\.github/instructions/(\w[\w-]*)\.instructions\.md', '.claude/rules/$1.md'
-    $Body = $Body -replace '\.github/prompts/(\w[\w-]*)\.prompt\.md', '.claude/commands/$1.md'
-
-    # Wildcard and dynamic patterns (e.g. *.agent.md, <role>.agent.md)
-    $Body = $Body -replace '\.github/agents/([^`\s]*?)\.agent\.md', '.claude/agents/$1.md'
     $Body = $Body -replace '\.github/instructions/([^`\s]*?)\.instructions\.md', '.claude/rules/$1.md'
-    $Body = $Body -replace '\.github/prompts/([^`\s]*?)\.prompt\.md', '.claude/commands/$1.md'
-
-    # Bare directory references (e.g. ".github/agents/")
-    $Body = $Body -replace '\.github/agents/', '.claude/agents/'
     $Body = $Body -replace '\.github/instructions/', '.claude/rules/'
-    $Body = $Body -replace '\.github/prompts/', '.claude/commands/'
 
     # Shared files
     $Body = $Body -replace '\.github/copilot-instructions\.md', 'CLAUDE.md'
-    $Body = $Body -replace '\.github/CONTRIBUTING\.md', '.github/CONTRIBUTING.md'
     return $Body
 }
 
-function Rewrite-PathsForGemini {
+function Rewrite-PathsForClaudePlugin {
     param([string]$Body)
 
-    # Platform-specific directory mappings (specific filenames)
-    $Body = $Body -replace '\.github/skills/', '.agent/skills/'
-    $Body = $Body -replace '\.github/instructions/(\w[\w-]*)\.instructions\.md', '.agent/rules/$1.md'
-    $Body = $Body -replace '\.github/prompts/(\w[\w-]*)\.prompt\.md', '.agent/prompts/$1.md'
+    # Plugin content references its own components via ${CLAUDE_PLUGIN_ROOT}
+    # (resolved at runtime by Claude Code) so paths work from the install cache.
+    $Body = $Body -replace '\.github/skills/', '$${CLAUDE_PLUGIN_ROOT}/skills/'
+    $Body = $Body -replace '\.github/agents/(\w[\w-]*)\.agent\.md', '$${CLAUDE_PLUGIN_ROOT}/agents/$1.md'
+    $Body = $Body -replace '\.github/agents/([^`\s]*?)\.agent\.md', '$${CLAUDE_PLUGIN_ROOT}/agents/$1.md'
+    $Body = $Body -replace '\.github/agents/', '$${CLAUDE_PLUGIN_ROOT}/agents/'
+    $Body = $Body -replace '\.github/prompts/(\w[\w-]*)\.prompt\.md', '$${CLAUDE_PLUGIN_ROOT}/commands/$1.md'
+    $Body = $Body -replace '\.github/prompts/([^`\s]*?)\.prompt\.md', '$${CLAUDE_PLUGIN_ROOT}/commands/$1.md'
+    $Body = $Body -replace '\.github/prompts/', '$${CLAUDE_PLUGIN_ROOT}/commands/'
 
-    # Wildcard and dynamic patterns
-    $Body = $Body -replace '\.github/instructions/([^`\s]*?)\.instructions\.md', '.agent/rules/$1.md'
-    $Body = $Body -replace '\.github/prompts/([^`\s]*?)\.prompt\.md', '.agent/prompts/$1.md'
-
-    # Bare directory references
-    $Body = $Body -replace '\.github/instructions/', '.agent/rules/'
-    $Body = $Body -replace '\.github/prompts/', '.agent/prompts/'
+    # Rules are repo-level (plugins cannot ship them)
+    $Body = $Body -replace '\.github/instructions/(\w[\w-]*)\.instructions\.md', '.claude/rules/$1.md'
+    $Body = $Body -replace '\.github/instructions/([^`\s]*?)\.instructions\.md', '.claude/rules/$1.md'
+    $Body = $Body -replace '\.github/instructions/', '.claude/rules/'
 
     # Shared files
-    $Body = $Body -replace '\.github/copilot-instructions\.md', 'GEMINI.md'
-    $Body = $Body -replace '\.github/CONTRIBUTING\.md', '.github/CONTRIBUTING.md'
+    $Body = $Body -replace '\.github/copilot-instructions\.md', 'CLAUDE.md'
     return $Body
 }
 
-function Rewrite-PathsForPlugin {
+function Rewrite-PathsForAntigravity {
     param([string]$Body)
 
-    # Plugin content is mirrored from .claude/, but plugin files reference
-    # paths inside the installed plugin via ${CLAUDE_PLUGIN_ROOT} (resolved at
-    # runtime by Claude Code). Rewrite .claude/ prefixes to that variable so
-    # the references resolve when the plugin is installed from a cache dir.
-    $Body = $Body.Replace('.claude/skills/',   '${CLAUDE_PLUGIN_ROOT}/skills/')
-    $Body = $Body.Replace('.claude/agents/',   '${CLAUDE_PLUGIN_ROOT}/agents/')
-    $Body = $Body.Replace('.claude/commands/', '${CLAUDE_PLUGIN_ROOT}/commands/')
+    # Prompts become workflows; skills/instructions refs keep their .github/
+    # source paths (Antigravity has no repo-level copies of those anymore —
+    # skills and rules ship inside the plugin).
+    $Body = $Body -replace '\.github/prompts/(\w[\w-]*)\.prompt\.md', '.agents/workflows/$1.md'
+    $Body = $Body -replace '\.github/prompts/([^`\s]*?)\.prompt\.md', '.agents/workflows/$1.md'
+    $Body = $Body -replace '\.github/prompts/', '.agents/workflows/'
+
+    # Shared files (AGENTS.md is read natively by Antigravity since v1.20.5)
+    $Body = $Body -replace '\.github/copilot-instructions\.md', 'AGENTS.md'
     return $Body
 }
 
@@ -320,7 +318,7 @@ if ($SourcePath -ne "") {
     }
 
     # Copy root entry points
-    foreach ($file in @("CLAUDE.md", "GEMINI.md", "AGENTS.md")) {
+    foreach ($file in @("CLAUDE.md", "AGENTS.md")) {
         $src = Join-Path $srcRoot $file
         if (Test-Path $src) {
             Copy-Item -Path $src -Destination (Join-Path $BasePath $file) -Force
@@ -334,22 +332,35 @@ if ($SourcePath -ne "") {
 # Use the target .github/ as source for all transforms
 $srcGithub = Join-Path $BasePath ".github"
 
-# --- 1. Skills (direct copy, no transform) ---
-
-$srcDir = Join-Path $srcGithub "skills"
-foreach ($target in @((Join-Path $BasePath ".claude\skills"), (Join-Path $BasePath ".agent\skills"))) {
-    $stats.Skills += Copy-DirectoryClean $srcDir $target
+# The plugin folder is the single generated bundle: Claude Code, Codex, and
+# Antigravity each install it via their own manifest (.claude-plugin/plugin.json,
+# .codex-plugin/plugin.json, plugin.json). Outside the plugin, only what plugins
+# cannot deliver is generated: .claude/rules/ and .agents/workflows/.
+$pluginRoot = Join-Path $BasePath "plugins\ai-toolkit"
+if (-not (Test-Path $pluginRoot)) {
+    New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
+    Write-Host "  plugins/ai-toolkit/ created (was missing)" -ForegroundColor Yellow
 }
 
-# --- 2. Instructions -> Rules (with frontmatter transform) ---
+# --- 1. Skills -> plugin skills/ (verbatim copy) ---
+#
+# SKILL.md is the cross-platform Agent Skills standard (agentskills.io):
+# the same file is consumed unmodified by Claude Code, Codex, Copilot, and
+# Antigravity. No transform needed.
+
+$stats.Skills += Copy-DirectoryClean (Join-Path $srcGithub "skills") (Join-Path $pluginRoot "skills")
+
+# --- 2. Instructions -> .claude/rules/ (Claude) + plugin rules/ (Antigravity) ---
+#
+# Rules cannot ride in a Claude plugin, so they stay repo-level for Claude.
+# Antigravity plugins DO support a rules/ component (Claude ignores the dir).
 
 $srcDir = Join-Path $srcGithub "instructions"
 $claudeDir = Join-Path $BasePath ".claude\rules"
-$geminiDir = Join-Path $BasePath ".agent\rules"
+$pluginRulesDir = Join-Path $pluginRoot "rules"
 
-# Clear targets
 if (Test-Path $claudeDir) { Get-ChildItem $claudeDir -Filter "*.md" | Remove-Item -Force }
-if (Test-Path $geminiDir) { Get-ChildItem $geminiDir -Filter "*.md" | Remove-Item -Force }
+if (Test-Path $pluginRulesDir) { Get-ChildItem $pluginRulesDir -Filter "*.md" | Remove-Item -Force }
 
 if (Test-Path $srcDir) {
     foreach ($file in Get-ChildItem $srcDir -Filter "*.instructions.md") {
@@ -366,23 +377,36 @@ if (Test-Path $srcDir) {
                 $claudeFm["paths"] = @($applyTo)
             }
         }
-        Write-SyncedFile (Join-Path $claudeDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaude $parsed.Body)
+        Write-SyncedFile (Join-Path $claudeDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaudeRules $parsed.Body)
 
-        # Gemini: strip applyTo, content only
-        Write-SyncedFile (Join-Path $geminiDir $cleanName) "" (Rewrite-PathsForGemini $parsed.Body)
+        # Antigravity: applyTo -> activation mode (always_on for catch-all globs, glob trigger otherwise)
+        $antigravityFm = [ordered]@{}
+        if ($parsed.Frontmatter.Contains("applyTo")) {
+            $applyTo = $parsed.Frontmatter["applyTo"]
+            if ($applyTo -isnot [array]) { $applyTo = @($applyTo) }
+            if ($applyTo -contains "**") {
+                $antigravityFm["trigger"] = "always_on"
+            } else {
+                $antigravityFm["trigger"] = "glob"
+                $antigravityFm["globs"] = ($applyTo -join ", ")
+            }
+        }
+        Write-SyncedFile (Join-Path $pluginRulesDir $cleanName) (Format-Frontmatter $antigravityFm) (Rewrite-PathsForAntigravity $parsed.Body)
 
         $stats.Instructions++
     }
 }
 
-# --- 3. Prompts -> Commands (with frontmatter transform) ---
+# --- 3. Prompts -> plugin commands/ (Claude) + .agents/workflows/ (Antigravity) ---
+#
+# Antigravity plugins have no workflows component, so workflows stay repo-level.
 
 $srcDir = Join-Path $srcGithub "prompts"
-$claudeDir = Join-Path $BasePath ".claude\commands"
-$geminiDir = Join-Path $BasePath ".agent\prompts"
+$pluginCommandsDir = Join-Path $pluginRoot "commands"
+$antigravityDir = Join-Path $BasePath ".agents\workflows"
 
-if (Test-Path $claudeDir) { Get-ChildItem $claudeDir -Filter "*.md" | Remove-Item -Force }
-if (Test-Path $geminiDir) { Get-ChildItem $geminiDir -Filter "*.md" | Remove-Item -Force }
+if (Test-Path $pluginCommandsDir) { Get-ChildItem $pluginCommandsDir -Filter "*.md" | Remove-Item -Force }
+if (Test-Path $antigravityDir) { Get-ChildItem $antigravityDir -Filter "*.md" | Remove-Item -Force }
 
 if (Test-Path $srcDir) {
     foreach ($file in Get-ChildItem $srcDir -Filter "*.prompt.md") {
@@ -394,25 +418,25 @@ if (Test-Path $srcDir) {
         if ($parsed.Frontmatter.Contains("description")) {
             $claudeFm["description"] = $parsed.Frontmatter["description"]
         }
-        Write-SyncedFile (Join-Path $claudeDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaude $parsed.Body)
+        Write-SyncedFile (Join-Path $pluginCommandsDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaudePlugin $parsed.Body)
 
-        # Gemini: keep description, drop mode
-        $geminiFm = [ordered]@{}
+        # Antigravity workflows: keep description, drop mode (invoked as /name)
+        $antigravityFm = [ordered]@{}
         if ($parsed.Frontmatter.Contains("description")) {
-            $geminiFm["description"] = $parsed.Frontmatter["description"]
+            $antigravityFm["description"] = $parsed.Frontmatter["description"]
         }
-        Write-SyncedFile (Join-Path $geminiDir $cleanName) (Format-Frontmatter $geminiFm) (Rewrite-PathsForGemini $parsed.Body)
+        Write-SyncedFile (Join-Path $antigravityDir $cleanName) (Format-Frontmatter $antigravityFm) (Rewrite-PathsForAntigravity $parsed.Body)
 
         $stats.Prompts++
     }
 }
 
-# --- 4. Agents (with frontmatter + tools transform) ---
+# --- 4. Agents -> plugin agents/ (with frontmatter + tools transform) ---
 
 $srcDir = Join-Path $srcGithub "agents"
-$claudeDir = Join-Path $BasePath ".claude\agents"
+$pluginAgentsDir = Join-Path $pluginRoot "agents"
 
-if (Test-Path $claudeDir) { Get-ChildItem $claudeDir -Filter "*.md" | Remove-Item -Force }
+if (Test-Path $pluginAgentsDir) { Get-ChildItem $pluginAgentsDir -Filter "*.md" | Remove-Item -Force }
 
 if (Test-Path $srcDir) {
     foreach ($file in Get-ChildItem $srcDir -Filter "*.agent.md") {
@@ -450,44 +474,9 @@ if (Test-Path $srcDir) {
 
         # Drop: handoffs (Copilot-only)
 
-        Write-SyncedFile (Join-Path $claudeDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaude $parsed.Body)
+        Write-SyncedFile (Join-Path $pluginAgentsDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaudePlugin $parsed.Body)
 
         $stats.Agents++
-    }
-}
-
-# --- 5. Populate Claude Code plugin folder (plugins/ai-toolkit/) ---
-#
-# Plugin manifests don't accept paths outside the plugin directory (the install
-# step copies the plugin to a cache dir and parent-traversal paths break).
-# So mirror the transformed .claude/ content into the plugin folder.
-
-$pluginRoot = Join-Path $BasePath "plugins\ai-toolkit"
-if (-not (Test-Path $pluginRoot)) {
-    New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
-    Write-Host "  plugins/ai-toolkit/ created (was missing)" -ForegroundColor Yellow
-}
-
-$stats.PluginFiles = 0
-foreach ($component in @("agents", "commands", "skills")) {
-    $src = Join-Path $BasePath ".claude\$component"
-    $dst = Join-Path $pluginRoot $component
-    $stats.PluginFiles += Copy-DirectoryClean $src $dst
-}
-
-# Rewrite .claude/ path references to ${CLAUDE_PLUGIN_ROOT}/ inside copied content
-$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
-$stats.PluginRewrites = 0
-foreach ($component in @("agents", "commands", "skills")) {
-    $componentDst = Join-Path $pluginRoot $component
-    if (-not (Test-Path $componentDst)) { continue }
-    Get-ChildItem $componentDst -Recurse -File -Filter "*.md" | ForEach-Object {
-        $content = [System.IO.File]::ReadAllText($_.FullName, $utf8NoBom)
-        $rewritten = Rewrite-PathsForPlugin $content
-        if ($rewritten -ne $content) {
-            [System.IO.File]::WriteAllText($_.FullName, $rewritten, $utf8NoBom)
-            $stats.PluginRewrites++
-        }
     }
 }
 
@@ -495,24 +484,17 @@ foreach ($component in @("agents", "commands", "skills")) {
 
 Write-Host ""
 Write-Host "Sync complete:" -ForegroundColor Green
-Write-Host "  Skills (copied):           $($stats.Skills) files" -ForegroundColor White
-Write-Host "  Instructions -> Rules:     $($stats.Instructions) files" -ForegroundColor White
-Write-Host "  Prompts -> Commands:       $($stats.Prompts) files" -ForegroundColor White
-Write-Host "  Agents:                    $($stats.Agents) files" -ForegroundColor White
+Write-Host "  Skills -> plugin:          $($stats.Skills) files" -ForegroundColor White
+Write-Host "  Instructions -> Rules:     $($stats.Instructions) files (.claude/rules + plugin rules)" -ForegroundColor White
+Write-Host "  Prompts -> Commands:       $($stats.Prompts) files (plugin commands + .agents/workflows)" -ForegroundColor White
+Write-Host "  Agents -> plugin:          $($stats.Agents) files" -ForegroundColor White
 if ($stats.GithubFiles -gt 0) {
     Write-Host "  .github/ (from submodule): $($stats.GithubFiles) files" -ForegroundColor White
 }
-if (-not $stats.ContainsKey("PluginFiles")) { $stats.PluginFiles = 0 }
-if ($stats.PluginFiles -eq 0) {
-    Write-Host "  Plugin (ai-toolkit):       0 files  (WARNING: nothing copied)" -ForegroundColor Yellow
-} else {
-    $rewriteSuffix = if ($stats.ContainsKey("PluginRewrites") -and $stats.PluginRewrites -gt 0) {
-        "  ($($stats.PluginRewrites) path-rewritten)"
-    } else { "" }
-    Write-Host "  Plugin (ai-toolkit):       $($stats.PluginFiles) files$rewriteSuffix" -ForegroundColor White
+if ($stats.Skills -eq 0) {
+    Write-Host "  WARNING: no skills copied into the plugin" -ForegroundColor Yellow
 }
 Write-Host ""
 Write-Host "Targets updated:" -ForegroundColor DarkGray
-Write-Host "  .claude/skills/  .claude/rules/  .claude/commands/  .claude/agents/" -ForegroundColor DarkGray
-Write-Host "  .agent/skills/   .agent/rules/   .agent/prompts/" -ForegroundColor DarkGray
-Write-Host "  plugins/ai-toolkit/{agents,commands,skills}/" -ForegroundColor DarkGray
+Write-Host "  .claude/rules/   .agents/workflows/" -ForegroundColor DarkGray
+Write-Host "  plugins/ai-toolkit/{skills,commands,agents,rules}/" -ForegroundColor DarkGray
