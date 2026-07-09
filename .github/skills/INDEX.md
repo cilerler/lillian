@@ -174,6 +174,21 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## session-handoff
+- Path: `.github/skills/session-handoff/SKILL.md`
+- Applies to: All agents (session level)
+- Mandatory when:
+  - The user wants to wrap up the session or hand off before clearing context
+- Triggers:
+  - "session handoff"
+  - "wrap up session"
+  - "hand off"
+  - "handoff summary"
+  - "summarize before I clear"
+- Note: for a long-form project/role handover **document**, use `documentation-generator` (takeover-handover template) instead.
+
+---
+
 # Libraries
 
 Workspace libraries in `common-libraries/`. Use these instead of custom implementations.
