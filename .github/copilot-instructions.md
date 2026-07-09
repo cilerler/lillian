@@ -5,15 +5,6 @@ applyTo: "**"
 > [!TIP]
 > Engineering standards live in `.github/CONTRIBUTING.md`.
 
-# Repository Layout
-
-> [!IMPORTANT]
-> Source-of-truth lives under `.github/`. The `.agents/`, `.claude/`, and `plugins/` folders are **generated** by a git hook from `.github/` sources — do not edit them directly. Direct edits get overwritten on the next hook run and desync from source.
-
-- To change a skill, instruction, agent, prompt, or plugin behavior: edit the source under `.github/` (e.g., `.github/skills/<name>/`, `.github/instructions/`, `.github/agents/`, `.github/prompts/`).
-- If a search lands you in `.agents/`, `.claude/`, or `plugins/`, treat it as a build artifact — trace it back to the corresponding `.github/` source and edit there.
-- Never stage or commit changes inside `.agents/`, `.claude/`, or `plugins/`.
-
 # Workflow Orchestration
 
 ## 1. Plan Node Default
@@ -64,3 +55,13 @@ applyTo: "**"
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+
+
+# Repository Layout
+
+> [!IMPORTANT]
+> Source-of-truth lives under `.github/`. The `.agents/`, `.claude/`, and `plugins/` folders are **generated** by a git hook from `.github/` sources — do not edit them directly. Direct edits get overwritten on the next hook run and desync from source.
+
+- To change a skill, instruction, agent, prompt, or plugin behavior: edit the source under `.github/` (e.g., `.github/skills/<name>/`, `.github/instructions/`, `.github/agents/`, `.github/prompts/`).
+- If a search lands you in `.agents/`, `.claude/`, or `plugins/`, treat it as a build artifact — trace it back to the corresponding `.github/` source and edit there.
+- Never stage or commit changes inside `.agents/`, `.claude/`, or `plugins/`.
