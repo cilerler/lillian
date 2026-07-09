@@ -203,6 +203,21 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
+## pressure-test
+- Path: `.github/skills/pressure-test/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - The user wants an idea or decision adversarially stress-tested before committing (GO / RESHAPE / KILL verdict)
+- Triggers:
+  - "pressure-test"
+  - "stress-test this idea"
+  - "convene the council"
+  - "validate a business idea"
+  - "brutal second opinion"
+- Note: adversarial 5-persona council + Judge (~5-11 subagents per run); uses the `council-*` agent personas from `.github/agents/`. Not for casual opinions or factual questions.
+
+---
+
 # Libraries
 
 Workspace libraries in `common-libraries/`. Use these instead of custom implementations.
