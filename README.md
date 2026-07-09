@@ -8,7 +8,7 @@ This repository provides a structured framework for AI-assisted software develop
 
 ## Features
 
-- **🤖 Specialized Agent Roles**: 8 distinct agents (Planner, Architect, Designer, DBA, Developer, Reviewer, Tester, Documenter)
+- **🤖 Specialized Agent Roles**: 8 workflow agents (Planner, Architect, Designer, DBA, Developer, Reviewer, Tester, Documenter) plus 5 council personas used by the pressure-test skill
 - **📋 Structured Workflow**: Clear transitions and responsibilities between agents
 - **🎯 Domain-Specific Skills**: Reusable skills for common engineering tasks
 - **📚 Technology-Specific Instructions**: Guidelines for Blazor, C#, SQL, Infrastructure, and Testing
@@ -234,6 +234,8 @@ See [.github/skills/documentation-generator/SKILL.md](.github/skills/documentati
 | **Tester** | Creates test cases and implements tests | Test cases, unit/integration tests |
 | **Documenter** | Produces technical documentation | RFCs, ADRs, runbooks, SOPs |
 
+Outside the workflow, five **council personas** (`council-contrarian`, `council-expansionist`, `council-logician`, `council-researcher`, `council-buyer`) serve the [pressure-test skill](.github/skills/pressure-test/SKILL.md) — they are convened by that skill, not invoked directly.
+
 ### Workflow Rules
 
 - ✅ All agent transitions require **explicit human approval**
@@ -282,14 +284,21 @@ root/
 
 ## Available Skills
 
-The repository includes production-ready skills for common engineering tasks:
+The repository includes production-ready skills for engineering, documentation, and decision-making tasks:
 
 - **documentation-generator**: Templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, and more
 - **dotnet-service-generator**: Scaffolds .NET service modules with observability and DI conventions
+- **excalidraw-diagram-generator**: Excalidraw diagram JSON files with automatic PNG rendering
 - **infrastructure**: Docker and Kubernetes patterns for .NET services
+- **mssql-bulk-data-operations**: Batched T-SQL scripts for large-scale INSERT/UPDATE/DELETE operations
 - **mssql-table-scaffolder**: Generates MSSQL tables or migration scripts following enterprise conventions
 - **observability**: SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns
 - **plantuml-sequence-diagram-generator**: Generates professional PlantUML sequence diagrams
+- **pressure-test**: Adversarial 5-persona council that stress-tests an idea into a GO / RESHAPE / KILL verdict
+- **session-handoff**: Structured end-of-session summary so a fresh agent can continue seamlessly
+- **solution-structure**: Opinionated .NET solution folder structure and file-placement rules
+- **storm-research**: Multi-perspective, citation-verified HTML research briefing (five expert lenses + verification)
+- **work-item-generator**: Interactive generator for initiatives, epics, features, stories, bugs, and tasks
 
 See [.github/skills/INDEX.md](.github/skills/INDEX.md) for detailed skill documentation.
 
