@@ -5,7 +5,6 @@
 **Test Plan ID:** TP-yyyyMMddHHmm-slug   *(release-scoped only — leave blank when filed under `/docs/projects/P[N]/TestPlan.md`)*
 **Last Updated:** [YYYYMMDD]
 **Created:** [YYYYMMDD]
-**Status:** [current value]
 **Scope:** App-wide | Module | Project P[N] | Release v[X.Y]
 **Project / Release:** [identifier — e.g., P3, v2.5, Q3-launch]
 **Owner:** [Test Lead name]
@@ -13,14 +12,6 @@
 ## Status
 
 <!-- Choose one: Draft | In Review | Approved | Archived | Canceled -->
-
-| Status | Description |
-|--------|-------------|
-| Draft | The Test Plan is being written. |
-| In Review | The Test Plan is under review by leads and stakeholders. |
-| Approved | The Test Plan is approved and execution can proceed. |
-| Archived | The release shipped; the Test Plan is preserved for reference. |
-| Canceled | The release was canceled or descoped before execution completed. |
 
 ---
 

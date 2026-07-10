@@ -1,18 +1,20 @@
 # Excalidraw Diagram Generator
 
-A Claude Code skill that generates Excalidraw diagram JSON files with automatic PNG rendering via Playwright.
+An agent skill that generates Excalidraw diagram JSON files with automatic PNG rendering via Playwright.
 
 ## First-Time Setup
 
+From this skill's `references/` directory, run:
+
 ```pwsh
-cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- install-browsers;
 ```
 
 ## Usage
 
+From this skill's `references/` directory, run:
+
 ```pwsh
-cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- <path-to-file.excalidraw> [--output path.png] [--scale 2] [--width 1920];
 ```
 

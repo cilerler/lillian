@@ -9,6 +9,9 @@ applies_to:
   - DBA
   - Reviewer
 mandatory: conditional
+mandatory_when:
+  - Deciding where a file/folder goes inside the .NET solution
+  - Placing a doc, dashboard, Kubernetes manifest, embedded SQL, or service scaffold
 triggers:
   - folder structure
   - directory layout
@@ -32,7 +35,7 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 | Skill | Reads from this skill |
 |-------|-----------------------|
 | `dotnet-service-generator` | `/src/{Namespace}.Modules.{Module}/{Component}/{Service}/...` paths and per-service folder shape |
-| `documentation-generator` | `/docs/...` placement, attachments convention, dated-vs-living filename rules, ticket/project folder shapes |
+| `documentation-generator` | `/docs/...` placement and ticket/project folder shapes (that skill owns filename, identifier, and attachments conventions) |
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
 | `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
 | `mssql-table-scaffolder` | `/Resources/SQL/` placement when SQL is embedded in a service |
@@ -41,50 +44,16 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 
 ## Documentation Placement Rules
 
-These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of the solution.
-
-### Dated vs Living Filenames
-
-| Doc type | Filename pattern | Rationale |
-|----------|------------------|-----------|
-| ADR | `{yyyyMMddHHmm}-{slug}.md` | Immutable once accepted |
-| RFC | `{yyyyMMddHHmm}-{slug}.md` | Snapshot of a proposal at a point in time |
-| Design Doc | `{yyyyMMddHHmm}-{slug}.md` | Snapshot of a design at a point in time |
-| PIR (Postmortem) | `{yyyyMMddHHmm}-{slug}.md` | Tied to an incident date |
-| Test Plan (release/app-level) | `{yyyyMMddHHmm}-{slug}.md` | Release/initiative scoped |
-| Project Status Update | `{yyyyMMddHHmm}-{slug}.md` | Iterative, dated |
-| Architecture Overview | `{slug}.md` | Living — updated as system evolves |
-| Runbook | `{slug}.md` | Living — updated as system evolves |
-| SOP | `{slug}.md` | Living — revised in place as procedures change; carries stable `SOP-{slug}` ID for cross-references |
-| Test Cases | `{slug}.md` | Living — updated as features change |
-| Singletons (`README`, glossaries, dictionaries, tech stack) | fixed name | One per repo |
-
-### Attachments Convention
-
-Per-document supporting files (diagrams, screenshots, spreadsheets, raw data, recordings) live in a sibling `attachments/{basename}/` folder, where `{basename}` is the document filename **without** `.md`.
-
-Exceptions:
-- **Singletons** at `/docs/` root (`business-glossary.md`, `data-dictionary.md`, `tech-stack-overview.md`) — no `attachments/`. Promote to a typed folder if support material is needed.
-- **Non-markdown reference folders** (`/specs`, `/diagrams`, `/notebooks`) — no `attachments/`; those files *are* the artifacts.
+These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of the solution. Attachments, filename, and identifier conventions are owned by the [`documentation-generator`](../documentation-generator/SKILL.md) skill.
 
 ### Tickets and Projects
 
 - One folder per ticket: `/docs/tickets/GITHUB-{N}/` with required `Handoff.md` + `attachments/Handoff/`.
 - One folder per project: `/docs/projects/P{N}/` with required `BusinessCase.md`, optional `BusinessCaseFinancialModel.md`, `Retrospective.md`, `TestPlan.md`, `StatusUpdates/{yyyyMMddHHmm}-{slug}.md`, `attachments/{BasenameMatchingDoc}/`.
 
-### Doc Identifier Schemes
-
-- **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues.
-- **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
-- **Documents** use a timestamp-slug ID: `{ABBR}-{yyyyMMddHHmm}-{slug}` where `ABBR` is the doc-type abbreviation (`ADR`, `RFC`, `PIR`, ...). Filename omits the abbreviation prefix (folder context supplies it). In-doc references use the full form.
-
 ---
 
 ## .NET Solution Folder Structure
-
-> **Attachments convention (`/docs/` only):** per-document supporting files (diagrams, screenshots, spreadsheets, raw data, recordings) live in a sibling `/attachments/{basename}/` folder, where `{basename}` is the document filename **without** `.md`. Exceptions are flagged inline in the tree:
-> - **Singletons** at `/docs/` root (`business-glossary.md`, `data-dictionary.md`, `tech-stack-overview.md`) — no `/attachments/`.
-> - **Non-markdown reference folders** (`/specs`, `/diagrams`, `/notebooks`) — no `/attachments/`; those files *are* the artifacts.
 
 ```
 /.vscode                                    // Visual Studio Code settings
@@ -254,6 +223,7 @@ LICENSE                                     // License file
 README.md                                   // Readme file explains the project
 CHANGELOG.md                                // Changelog file for the project
 azure-pipelines.yml                         // Azure DevOps pipeline configuration
+Directory.Build.props                       // Common properties for all projects in the solution
 Company.Solution.sln                        // Visual Studio solution file
 /src
   /Company.Project.Abstractions
@@ -273,7 +243,6 @@ Company.Solution.sln                        // Visual Studio solution file
     - appsettings.Production.json           // Configuration settings for the production environment
     - Dockerfile                            // Docker configuration for containerization
     - Company.Project.Host.csproj           // Project file
-    - Directory.Build.props                 // Common properties for all projects in the solution
     - Buildinfo.txt                         // Build information to show when the app starts
     - App.razor                             // Main application component
     - Routes.razor                          // Route configuration for the application

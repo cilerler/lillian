@@ -11,15 +11,6 @@
 
 <!-- Choose one: Draft | In Review | Approved | Rejected | Superseded by ADR-yyyyMMddHHmm-slug | Archived -->
 
-| Status | Description |
-|--------|-------------|
-| Draft | The decision is being written and not yet agreed upon. Open for discussion. |
-| In Review | The proposal is under active review by stakeholders. |
-| Approved | The decision has been agreed upon by stakeholders and is the official direction. |
-| Rejected | A proposed decision that was formally rejected. Kept to document what was considered. |
-| Superseded by ADR-yyyyMMddHHmm-slug | An older decision replaced by a new ADR. Creates a clear chain of decisions. |
-| Archived | A decision no longer relevant or in effect, but not directly replaced. |
-
 ## Context
 
 [Describe the situation that led to this decision. What problem are we solving? What constraints exist?]
@@ -94,9 +85,3 @@
 
 - [ADR-yyyyMMddHHmm-slug: Related decision]
 - [ADR-yyyyMMddHHmm-slug: Another related decision]
-
-## Revision History
-
-| Version | Date | Status | Change Description | Author(s) |
-|---------|------|--------|-------------------|-----------|
-| 1.0 | [YYYYMMDD] | Draft | Initial proposal | [Name] |

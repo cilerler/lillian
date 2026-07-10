@@ -14,6 +14,8 @@ Api/
 └── DeleteEndpoint.cs
 ```
 
+> **Error handling**: Unhandled exceptions flow to the centralized exception-handling middleware, which maps them to ProblemDetails responses. Endpoints catch only expected, actionable exceptions (e.g., `ValidationException` → 400) — never `catch (Exception)`.
+
 ## Api/{ServiceName}Api.cs
 
 Route group definition and endpoint registration:
@@ -54,15 +56,8 @@ public static class GetAllEndpoint
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
-            try
-            {
-                var result = await service.GetAllAsync(cancellationToken);
-                return Results.Ok(result);
-            }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
-            }
+            var result = await service.GetAllAsync(cancellationToken);
+            return Results.Ok(result);
         })
         .WithName("GetAll{ServiceName}")
         .Produces<IEnumerable<Response>>(StatusCodes.Status200OK)
@@ -90,17 +85,10 @@ public static class GetByIdEndpoint
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
-            try
-            {
-                var result = await service.GetByIdAsync(id, cancellationToken);
-                return result is null 
-                    ? Results.NotFound() 
-                    : Results.Ok(result);
-            }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
-            }
+            var result = await service.GetByIdAsync(id, cancellationToken);
+            return result is null 
+                ? Results.NotFound() 
+                : Results.Ok(result);
         })
         .WithName("Get{ServiceName}ById")
         .Produces<Response>(StatusCodes.Status200OK)
@@ -139,10 +127,6 @@ public static class CreateEndpoint
             catch (ValidationException e)
             {
                 return Results.BadRequest(e.Message);
-            }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
             }
         })
         .WithName("Create{ServiceName}")
@@ -186,10 +170,6 @@ public static class UpdateEndpoint
             {
                 return Results.BadRequest(e.Message);
             }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
-            }
         })
         .WithName("Update{ServiceName}")
         .Produces<Response>(StatusCodes.Status200OK)
@@ -218,17 +198,10 @@ public static class DeleteEndpoint
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
-            try
-            {
-                var success = await service.DeleteAsync(id, cancellationToken);
-                return success 
-                    ? Results.NoContent() 
-                    : Results.NotFound();
-            }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
-            }
+            var success = await service.DeleteAsync(id, cancellationToken);
+            return success 
+                ? Results.NoContent() 
+                : Results.NotFound();
         })
         .WithName("Delete{ServiceName}")
         .Produces(StatusCodes.Status204NoContent)
@@ -344,15 +317,8 @@ public static class ExecuteEndpoint
             [FromServices] I{ServiceName} service,
             CancellationToken cancellationToken) =>
         {
-            try
-            {
-                var result = await service.ExecuteAsync(request, cancellationToken);
-                return Results.Ok(result);
-            }
-            catch (Exception e)
-            {
-                return Results.Problem(e.Message);
-            }
+            var result = await service.ExecuteAsync(request, cancellationToken);
+            return Results.Ok(result);
         });
 
         return group;

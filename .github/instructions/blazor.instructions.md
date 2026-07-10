@@ -1,15 +1,7 @@
 ---
-applyTo: "**/*.razor"
+applyTo: "**/*.razor,**/*.razor.css"
 ---
 
 # Blazor Instructions
 
-Follow `.github/CONTRIBUTING.md` (UI Standards section).
-
-Key requirements:
-- **FluentUI Blazor** or **Tailwind CSS** exclusively (one per project, do not mix)
-- No custom CSS, JavaScript, or fonts unless explicitly approved
-- Follow:
-  - https://www.fluentui-blazor.net/
-  - https://fluent2.microsoft.design/
-  - https://tailwindcss.com/docs
+Follow `.github/CONTRIBUTING.md` (UI Standards section) — the framework choice (one per project, do not mix), the custom-CSS/JS/fonts policy, and the reference links all live there.

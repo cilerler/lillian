@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: "**/Dockerfile, **/kubernetes/**"
+globs: "**/Dockerfile, **/kubernetes/**, **/Kubernetes/**"
 ---
 
 # Infrastructure Instructions

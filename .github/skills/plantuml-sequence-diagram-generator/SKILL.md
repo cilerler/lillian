@@ -1,18 +1,19 @@
 ---
 name: plantuml-sequence-diagram-generator
-description: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns. Use when a sequence diagram, service flow, API interaction diagram, or architecture diagram is needed.
+description: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns. Use when a sequence diagram, service flow, or API interaction diagram is needed.
 type: guidance
 applies_to:
   - Planner
   - Architect
   - Developer
 mandatory: conditional
+mandatory_when:
+  - A sequence or interaction diagram is requested
 triggers:
   - sequence diagram
   - service flow
   - api interaction diagram
   - plantuml
-  - architecture diagram
 references: []
 summary: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns.
 ---
@@ -27,6 +28,7 @@ Before generating, ask:
 1. **Company Name** - For header/footer branding
 2. **Title** - Diagram subject (e.g., "Service Flow for XYZ Feature")
 3. **Participant Groupings** - Which services belong together? (backend, messaging, external)
+4. **Classification** - Header label (e.g., "Confidential\nINTERNAL USE ONLY", "Public")
 
 ## Template Structure
 
@@ -38,7 +40,7 @@ skinparam responseMessageBelowArrow true
 !define _version %date("yyyy.MMdd.HHmmss")
 !define _company [CompanyName]
 
-header Confidential\nINTERNAL USE ONLY
+header [Classification]
 title [Title Details]
 footer \n<b>_company (c) %date("yyyy")</b>\nVersion _version
 
@@ -164,12 +166,12 @@ end note
 
 ```plantuml
 wrk -> db: <<query>>
-rnote over db #FAFAFA
+rnote over db #ECEFF1
 <color: #607D8B>""SELECT TOP <color: #B71C1C>@BatchSize""
 <color: #607D8B>""FROM dbo.table AS t""
 <color: #607D8B>""WHERE t.Status = 1""
 end note
-db -> svc: <<recordSet>>
+db --> wrk: <<recordSet>>
 ```
 
 ### HTTP Endpoints

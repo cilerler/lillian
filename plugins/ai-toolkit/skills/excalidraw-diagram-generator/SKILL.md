@@ -1,6 +1,28 @@
 ---
-name: excalidraw-diagram
+name: excalidraw-diagram-generator
 description: Create Excalidraw diagram JSON files that make visual arguments. Use when the user wants to visualize workflows, architectures, or concepts.
+type: guidance
+applies_to:
+  - Developer
+  - Architect
+  - Documenter
+mandatory: conditional
+mandatory_when:
+  - Creating visual diagrams of workflows, architectures, or concepts
+  - Generating Excalidraw JSON files
+triggers:
+  - excalidraw
+  - diagram
+  - visualize
+  - architecture diagram
+  - workflow diagram
+references:
+  - references/color-palette.md
+  - references/element-templates.md
+  - references/json-schema.md
+  - references/render_excalidraw.cs
+  - references/render_template.html
+summary: Excalidraw diagram JSON files that make visual arguments, with automatic PNG rendering via a bundled renderer.
 ---
 
 # Excalidraw Diagram Creator
@@ -205,7 +227,7 @@ After generating the JSON, you MUST run the render-view-fix loop until the diagr
 
 ## Large / Comprehensive Diagram Strategy
 
-**For comprehensive or technical diagrams, you MUST build the JSON one section at a time.** Do NOT attempt to generate the entire file in a single pass. This is a hard constraint — Claude Code has a ~32,000 token output limit per response, and a comprehensive diagram easily exceeds that in one shot. Even if it didn't, generating everything at once leads to worse quality. Section-by-section is better in every way.
+**For comprehensive or technical diagrams, you MUST build the JSON one section at a time.** Do NOT attempt to generate the entire file in a single pass. This is a hard constraint — very large diagrams may exceed your platform's per-response output limit, so write the JSON file in appended chunks when it is large. Even when the limit isn't a concern, generating everything at once leads to worse quality. Section-by-section is better in every way.
 
 ### The Section-by-Section Workflow
 
@@ -448,17 +470,19 @@ You cannot judge a diagram from JSON alone. After generating or editing the Exca
 
 ### How to Render
 
+From this skill's `references/` directory, run:
+
 ```pwsh
-cd .github/skills/excalidraw-diagram-generator/references && dotnet run render_excalidraw.cs -- <path-to-file.excalidraw>;
+dotnet run render_excalidraw.cs -- <path-to-file.excalidraw>;
 ```
 
-This outputs a PNG next to the `.excalidraw` file. Then use the **Read tool** on the PNG to actually view it.
+This outputs a PNG next to the `.excalidraw` file. Then view the rendered PNG image.
 
 ### The Loop
 
 After generating the initial JSON, run this cycle:
 
-**1. Render & View** — Run the render script, then Read the PNG.
+**1. Render & View** — Run the render script, then view the rendered PNG image.
 
 **2. Audit against your original vision** — Before looking for bugs, compare the rendered result to what you designed in Steps 1-4. Ask:
 - Does the visual structure match the conceptual structure you planned?
@@ -485,7 +509,7 @@ After generating the initial JSON, run this cycle:
 - Reposition labels closer to the element they describe
 - Resize elements to rebalance visual weight across sections
 
-**5. Re-render & re-view** — Run the render script again and Read the new PNG.
+**5. Re-render & re-view** — Run the render script again and view the new PNG.
 
 **6. Repeat** — Keep cycling until the diagram passes both the vision check (Step 2) and the defect check (Step 3). Typically takes 2-4 iterations. Don't stop after one pass just because there are no critical bugs — if the composition could be better, improve it.
 
@@ -499,9 +523,8 @@ The loop is done when:
 - You'd be comfortable showing it to someone without caveats
 
 ### First-Time Setup
-If the render script hasn't been set up yet (one-time only):
+If the render script hasn't been set up yet (one-time only), from this skill's `references/` directory, run:
 ```pwsh
-cd .github/skills/excalidraw-diagram-generator/references;
 dotnet run render_excalidraw.cs -- install-browsers;
 ```
 

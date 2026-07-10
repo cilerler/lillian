@@ -6,6 +6,6 @@ description: Generate test scaffolding for existing code
 
 Load and follow `.github/CONTRIBUTING.md` (Testing section).
 
-Also load `${CLAUDE_PLUGIN_ROOT}/agents/tester.md` for the complete testing workflow and standards.
+Also load `${CLAUDE_PLUGIN_ROOT}/agents/workflow-tester.md` for the complete testing workflow and standards.
 
 The agent and CONTRIBUTING.md contain all framework requirements, naming conventions, and test patterns.

@@ -6,6 +6,10 @@ applies_to:
   - Developer
   - Reviewer
 mandatory: conditional
+mandatory_when:
+  - Creating or updating Dockerfiles
+  - Creating or updating Kubernetes manifests
+  - Configuring health probes
 triggers:
   - dockerfile
   - kubernetes
@@ -77,7 +81,7 @@ Source of truth: [`solution-structure`](../solution-structure/SKILL.md) § *.NET
 
 Quick reference:
 ```
-tools/kubernetes/
+tools/Kubernetes/
 ├── base/
 │   ├── kustomization.yaml
 │   ├── deployment.yaml
@@ -89,11 +93,10 @@ tools/kubernetes/
     └── production/
 ```
 
-### Variable Substitution
+### Placeholders (two mechanisms — do not mix them up)
 
-Use `$(VARIABLE_NAME)` syntax for Kustomize substitution:
-- `$(APPLICATION_NAME)` - Service name
-- `$(IMAGE)` - Container image with tag
+- `{APPLICATION_NAME}` — **scaffold-time token.** Replaced with the real service name when the manifests are generated; committed manifests contain the literal name. Nothing substitutes variables at deploy time.
+- `app-image:latest` — **deploy-time image placeholder.** The committed manifests reference this literal image; CI pins the real image via `kustomize edit set image "app-image:latest=<image>:<tag>"` in the `repo/` layer, and sets the namespace via `kustomize edit set namespace`. See the GitHub Actions example in `templates/kubernetes.md`.
 
 ---
 
@@ -117,13 +120,9 @@ Use `$(VARIABLE_NAME)` syntax for Kustomize substitution:
 
 ### Implementation
 
-See `.github/skills/dotnet-service-generator/references/health-check.md` for health check patterns.
+For health check implementation and registration patterns, see the dotnet-service-generator skill's `references/health-check.md`.
 
 ```csharp
-// Registration
-services.AddHealthChecks()
-    .AddCheck<MyServiceHealthCheck>("MyService", tags: ["ready"]);
-
 // Endpoints
 app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 {
@@ -133,6 +132,11 @@ app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/healthz/startup", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("startup")
 });
 ```
 

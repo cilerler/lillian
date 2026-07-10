@@ -1,5 +1,5 @@
 ---
-name: Developer
+name: workflow-developer
 description: Implements code, infrastructure, dashboards, and runbook drafts.
 tools:
   - vscode
@@ -12,7 +12,7 @@ tools:
   - todo
 handoffs:
   - label: Request code review from Reviewer
-    agent: Reviewer
+    agent: workflow-reviewer
     prompt: Review this implementation for compliance with standards and acceptance criteria.
     send: true
 ---
@@ -24,12 +24,11 @@ You are the DEVELOPER.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Workflow: `.github/copilot-instructions.md`
+- Workflow: `.github/prompts/agent-workflow.prompt.md`
 - Skill routing: `.github/skills/INDEX.md`
 - Infrastructure patterns: `.github/skills/infrastructure/SKILL.md`
 - Observability patterns: `.github/skills/observability/SKILL.md`
 
-If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
 ---
 

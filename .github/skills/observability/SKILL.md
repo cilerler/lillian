@@ -6,6 +6,10 @@ applies_to:
   - Architect
   - Developer
 mandatory: conditional
+mandatory_when:
+  - Defining SLIs or observability requirements
+  - Creating dashboards or alerts
+  - Instrumenting with OpenTelemetry
 triggers:
   - dashboard
   - metrics
@@ -91,13 +95,21 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 
 See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for complete Grafana JSON templates.
 
-**Output locations** (dashboards live at the level they monitor) — full paths defined in [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution*:
-- Service: `{ServicePath}/Observability/Grafana/dashboard.json`
-- Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
-- Module: `{ModulePath}/Observability/Grafana/dashboard.json`
-- App-wide: `src/Observability/Grafana/dashboard.json`
+### Generation Rules
 
-**Required**: All dashboards must include `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`. All PromQL queries must filter by `env="$env"`.
+This section is the single canonical home of all dashboard generation rules.
+
+1. **Output location and file naming**: Dashboards live at the level they monitor and are always named `dashboard.json` — full paths defined in [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution*:
+   - Service: `{ServicePath}/Observability/Grafana/dashboard.json`
+   - Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
+   - Module: `{ModulePath}/Observability/Grafana/dashboard.json`
+   - App-wide: `src/Observability/Grafana/dashboard.json`
+2. **Environment variable**: Every dashboard must include the `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`.
+3. **Datasource variable**: Every dashboard must include the `$datasource` template variable.
+4. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"` selectors.
+5. **Placeholder**: Use `$(SERVICE_NAME)` for dashboard uid and title — replaced during deployment.
+6. **Tags**: Include the `generated` tag on all dashboards.
+7. **Worker metric naming**: The `WorkerBackgroundService` base class generates metric names as `app_{snake_case_class_name}_{metric}` from the full class name — e.g., a class named `PaymentProcessorWorker` emits `app_payment_processor_worker_*` metrics (the `_worker` suffix is included).
 
 ### Service Health Dashboard
 
@@ -142,7 +154,7 @@ Required panels:
 
 ## OpenTelemetry Patterns
 
-Use `MyOrganization.OpenTelemetry` library. See [README](common-libraries/MyOrganization.OpenTelemetry/README.md).
+Use the `MyOrganization.OpenTelemetry` workspace library (see the library table in `.github/skills/INDEX.md`).
 
 ### Observability Triad
 

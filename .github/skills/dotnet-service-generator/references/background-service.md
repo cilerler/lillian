@@ -622,7 +622,7 @@ public class {ServiceName}Service : I{ServiceName}
     private readonly Meter _meter;
     private readonly Counter<long> _itemsProcessed;
 
-    public Service(
+    public {ServiceName}Service(
         ILogger<{ServiceName}Service> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory)
@@ -697,7 +697,7 @@ public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings
 {
     private readonly I{ServiceName} _service;
 
-    public Worker(
+    public {ServiceName}Worker(
         ILogger<{ServiceName}Worker> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
@@ -753,9 +753,9 @@ public static class StartupExtensions
             services.Configure(setupAction);
         }
 
-        services.AddScoped<I{ServiceName}, {ServiceName}Service>();
+        services.AddSingleton<I{ServiceName}, {ServiceName}Service>();
         services.AddSingleton<{ServiceName}Worker>();
-        services.AddSingleton<IHostedLifecycleService>(sp => sp.GetRequiredService<{ServiceName}Worker>());
+        services.AddHostedService(sp => sp.GetRequiredService<{ServiceName}Worker>());
         services.AddHealthChecks()
             .AddCheck<{ServiceName}HealthCheck>("{ServiceName}", tags: ["ready"]);
 
@@ -773,6 +773,8 @@ public static class StartupExtensions
     }
 }
 ```
+
+> **Registration notes**: The worker must be exposed to the host via `AddHostedService` — the host only starts hosted services registered as `IHostedService` (the `IHostedLifecycleService` hooks are discovered through that same registration). The `AddSingleton<{ServiceName}Worker>()` + factory pair ensures the host and any other consumers share one worker instance. `I{ServiceName}` is registered as **singleton** because the singleton worker consumes it via constructor injection and the base class does not create DI scopes. If the service needs scoped dependencies (e.g., a `DbContext`), register it scoped instead and have the worker inject `IServiceScopeFactory` and resolve `I{ServiceName}` from a new scope inside each `DoWorkAsync` execution.
 
 ## Configuration
 

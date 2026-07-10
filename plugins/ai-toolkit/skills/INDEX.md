@@ -3,25 +3,114 @@
 This file maps task triggers to skill documents.
 If multiple skills match a task, apply all applicable skills.
 
+> The per-skill entries below are **generated** by `tools/sync-ai-platforms.ps1` from each SKILL.md's frontmatter (`applies_to`, `mandatory_when`, `triggers`, `note`, `summary`). Edit the skill's frontmatter, not this block.
+
+<!-- BEGIN GENERATED SKILLS (edit SKILL.md frontmatter, not this block) -->
+
+## documentation-generator
+- Path: `.github/skills/documentation-generator/SKILL.md`
+- Applies to: Documenter, Planner, Architect, Developer, Tester
+- Mandatory when:
+  - Creating ADRs or RFCs
+  - Writing design documents
+  - Creating runbooks or SOPs
+  - Creating handover documentation
+  - Creating data dictionaries
+- Triggers:
+  - "documentation"
+  - "ADR"
+  - "RFC"
+  - "runbook"
+  - "post incident review"
+  - "postmortem"
+  - "design doc"
+  - "handover"
+  - "SOP"
+  - "business case"
+  - "brag document"
+  - "project status"
+  - "retrospective"
+  - "tech stack"
+  - "architecture overview"
+  - "data dictionary"
+  - "performance improvement"
+  - "test cases"
+  - "test plan"
+  - "role brief"
+  - "job ad"
+  - "hiring"
+  - "recruiting"
+
 ---
 
 ## dotnet-service-generator
 - Path: `.github/skills/dotnet-service-generator/SKILL.md`
-- Applies to: Developer (implementation), Architect (review)
+- Applies to: Developer
 - Mandatory when:
   - Creating a new .NET service
   - Scaffolding service modules
 - Triggers:
   - "create a service"
   - "scaffold service"
-  - "add new service"
+  - "add a new service"
   - "generate service boilerplate"
+
+---
+
+## excalidraw-diagram-generator
+- Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
+- Applies to: Developer, Architect, Documenter
+- Mandatory when:
+  - Creating visual diagrams of workflows, architectures, or concepts
+  - Generating Excalidraw JSON files
+- Triggers:
+  - "excalidraw"
+  - "diagram"
+  - "visualize"
+  - "architecture diagram"
+  - "workflow diagram"
+
+---
+
+## infrastructure
+- Path: `.github/skills/infrastructure/SKILL.md`
+- Applies to: Developer, Reviewer
+- Mandatory when:
+  - Creating or updating Dockerfiles
+  - Creating or updating Kubernetes manifests
+  - Configuring health probes
+- Triggers:
+  - "dockerfile"
+  - "kubernetes"
+  - "container"
+  - "deployment"
+  - "health probe"
+
+---
+
+## mssql-bulk-data-operations
+- Path: `.github/skills/mssql-bulk-data-operations/SKILL.md`
+- Applies to: Developer, DBA
+- Mandatory when:
+  - Performing large-scale UPDATE or DELETE operations (millions of rows)
+  - Staging record IDs into a tracking table for batch processing
+- Triggers:
+  - "bulk update"
+  - "bulk insert"
+  - "bulk delete"
+  - "update large dataset"
+  - "update millions of records"
+  - "batch update"
+  - "batch insert"
+  - "large data operation"
+  - "update 3M records"
+  - "mass update"
 
 ---
 
 ## mssql-table-scaffolder
 - Path: `.github/skills/mssql-table-scaffolder/SKILL.md`
-- Applies to: Developer (implementation), DBA (design)
+- Applies to: Developer
 - Mandatory when:
   - Creating or standardizing MSSQL tables
   - Adding new schema artifacts
@@ -34,22 +123,9 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## plantuml-sequence-diagram-generator
-- Path: `.github/skills/plantuml-sequence-diagram-generator/SKILL.md`
-- Applies to: Planner, Developer, Architect
-- Mandatory when:
-  - A sequence or interaction diagram is requested
-- Triggers:
-  - "sequence diagram"
-  - "PlantUML"
-  - "service flow"
-  - "API interaction diagram"
-
----
-
 ## observability
 - Path: `.github/skills/observability/SKILL.md`
-- Applies to: Architect (defines requirements), Developer (implements)
+- Applies to: Architect, Developer
 - Mandatory when:
   - Defining SLIs or observability requirements
   - Creating dashboards or alerts
@@ -64,19 +140,46 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## infrastructure
-- Path: `.github/skills/infrastructure/SKILL.md`
-- Applies to: Developer (implements), Reviewer (verification)
+## plantuml-sequence-diagram-generator
+- Path: `.github/skills/plantuml-sequence-diagram-generator/SKILL.md`
+- Applies to: Planner, Architect, Developer
 - Mandatory when:
-  - Creating or updating Dockerfiles
-  - Creating or updating Kubernetes manifests
-  - Configuring health probes
+  - A sequence or interaction diagram is requested
 - Triggers:
-  - "dockerfile"
-  - "kubernetes"
-  - "container"
-  - "deployment"
-  - "health probe"
+  - "sequence diagram"
+  - "service flow"
+  - "api interaction diagram"
+  - "plantuml"
+
+---
+
+## pressure-test
+- Path: `.github/skills/pressure-test/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - The user wants an idea or decision adversarially stress-tested before committing (GO / RESHAPE / KILL verdict)
+- Triggers:
+  - "pressure-test"
+  - "stress-test this idea"
+  - "convene the council"
+  - "validate a business idea"
+  - "brutal second opinion"
+- Note: adversarial 5-persona council + Judge (~5-11 subagents per run); uses the `council-*` agent personas. Not for casual opinions or factual questions.
+
+---
+
+## session-handoff
+- Path: `.github/skills/session-handoff/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - The user wants to wrap up the session or hand off before clearing context
+- Triggers:
+  - "session handoff"
+  - "wrap up session"
+  - "hand off"
+  - "handoff summary"
+  - "summarize before I clear"
+- Note: for a long-form project/role handover **document**, use `documentation-generator` (takeover-handover template) instead.
 
 ---
 
@@ -97,98 +200,6 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## documentation-generator
-- Path: `.github/skills/documentation-generator/SKILL.md`
-- Applies to: Documenter, Architect (ADRs, RFCs)
-- Mandatory when:
-  - Creating ADRs or RFCs
-  - Writing design documents
-  - Creating runbooks or SOPs
-  - Creating handover documentation
-  - Creating data dictionaries
-- Triggers:
-  - "ADR"
-  - "RFC"
-  - "design doc"
-  - "runbook"
-  - "postmortem"
-  - "SOP"
-  - "handover"
-  - "data dictionary"
-
----
-
-## work-item-generator
-- Path: `.github/skills/work-item-generator/SKILL.md`
-- Applies to: Planner, Developer, Architect
-- Mandatory when:
-  - Creating work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks)
-  - Filing bugs or logging issues
-- Triggers:
-  - "initiative"
-  - "epic"
-  - "feature"
-  - "story"
-  - "bug"
-  - "spike"
-  - "enhancement"
-  - "task"
-  - "create issue"
-  - "create ticket"
-  - "file a bug"
-
----
-
-## mssql-bulk-data-operations
-- Path: `.github/skills/mssql-bulk-data-operations/SKILL.md`
-- Applies to: Developer (implementation), DBA (operations)
-- Mandatory when:
-  - Performing large-scale INSERT, UPDATE, or DELETE operations (millions of rows)
-  - Generating batched T-SQL scripts for bulk data processing
-- Triggers:
-  - "bulk update"
-  - "bulk insert"
-  - "bulk delete"
-  - "update millions of records"
-  - "insert millions of records"
-  - "batch update"
-  - "batch insert"
-  - "large data operation"
-  - "mass update"
-  - "mass insert"
-
----
-
-## excalidraw-diagram-generator
-- Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
-- Applies to: Developer, Architect, Documenter
-- Mandatory when:
-  - Creating visual diagrams of workflows, architectures, or concepts
-  - Generating Excalidraw JSON files
-- Triggers:
-  - "excalidraw"
-  - "diagram"
-  - "visualize"
-  - "architecture diagram"
-  - "workflow diagram"
-
----
-
-## session-handoff
-- Path: `.github/skills/session-handoff/SKILL.md`
-- Applies to: All agents (session level)
-- Mandatory when:
-  - The user wants to wrap up the session or hand off before clearing context
-- Triggers:
-  - "session handoff"
-  - "wrap up session"
-  - "hand off"
-  - "handoff summary"
-  - "summarize before I clear"
-- Note: for a long-form project/role handover **document**, use `documentation-generator` (takeover-handover template) instead.
-
----
-
 ## storm-research
 - Path: `.github/skills/storm-research/SKILL.md`
 - Applies to: All agents
@@ -203,20 +214,30 @@ If multiple skills match a task, apply all applicable skills.
 
 ---
 
-## pressure-test
-- Path: `.github/skills/pressure-test/SKILL.md`
-- Applies to: All agents
+## work-item-generator
+- Path: `.github/skills/work-item-generator/SKILL.md`
+- Applies to: Planner, Developer, Architect
 - Mandatory when:
-  - The user wants an idea or decision adversarially stress-tested before committing (GO / RESHAPE / KILL verdict)
+  - Creating work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks)
+  - Filing bugs or logging issues
 - Triggers:
-  - "pressure-test"
-  - "stress-test this idea"
-  - "convene the council"
-  - "validate a business idea"
-  - "brutal second opinion"
-- Note: adversarial 5-persona council + Judge (~5-11 subagents per run); uses the `council-*` agent personas from `.github/agents/`. Not for casual opinions or factual questions.
+  - "work item"
+  - "initiative"
+  - "epic"
+  - "feature"
+  - "story"
+  - "bug"
+  - "spike"
+  - "enhancement"
+  - "task"
+  - "create issue"
+  - "create ticket"
+  - "file a bug"
+  - "log a bug"
+  - "report a bug"
 
 ---
+<!-- END GENERATED SKILLS -->
 
 # Libraries
 
@@ -231,6 +252,7 @@ Each library has a README with usage instructions.
 | MyOrganization.Services.DistributedLock | Distributed locking with heartbeat support | [README](common-libraries/MyOrganization.Services.DistributedLock/README.md) |
 | MyOrganization.Services.DistributedLock.Abstractions | Distributed lock abstractions | [README](common-libraries/MyOrganization.Services.DistributedLock.Abstractions/README.md) |
 | MyOrganization.Services.DistributedLock.Redis | Redis-based distributed lock implementation | [README](common-libraries/MyOrganization.Services.DistributedLock.Redis/README.md) |
+| MyOrganization.Services.LockManager | Application-level lock management | [README](common-libraries/MyOrganization.Services.LockManager/README.md) |
 | MyOrganization.Services.MessageQueue | Provider-agnostic messaging infrastructure | [README](common-libraries/MyOrganization.Services.MessageQueue/README.md) |
 | MyOrganization.Services.MessageQueue.RabbitMq | RabbitMQ messaging implementation | [README](common-libraries/MyOrganization.Services.MessageQueue.RabbitMq/README.md) |
 | MyOrganization.Services.CloudStorage.Abstractions | Provider-agnostic cloud storage | [README](common-libraries/MyOrganization.Services.CloudStorage.Abstractions/README.md) |
@@ -243,5 +265,6 @@ Each library has a README with usage instructions.
 | MyOrganization.Primitives | Common primitives | [README](common-libraries/MyOrganization.Primitives/README.md) |
 | MyOrganization.Testing.Primitives | Testing utilities | [README](common-libraries/MyOrganization.Testing.Primitives/README.md) |
 | MyOrganization.System.Xml.Serialization | XML serialization utilities | [README](common-libraries/MyOrganization.System.Xml.Serialization/README.md) |
+| MyOrganization.Text.Json | JSON serialization utilities | [README](common-libraries/MyOrganization.Text.Json/README.md) |
 | MyOrganization.Kiota.Client | Kiota HTTP client | [README](common-libraries/MyOrganization.Kiota.Client/README.md) |
 | MyOrganization.OData.Client | OData client | [README](common-libraries/MyOrganization.OData.Client/README.md) |

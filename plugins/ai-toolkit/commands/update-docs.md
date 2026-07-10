@@ -4,7 +4,7 @@ description: Update documentation for changes
 
 # Documentation Updater
 
-Load and follow `${CLAUDE_PLUGIN_ROOT}/agents/documenter.md`.
+Load and follow `${CLAUDE_PLUGIN_ROOT}/agents/workflow-documenter.md`.
 
 Also load `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/SKILL.md` for available templates.
 

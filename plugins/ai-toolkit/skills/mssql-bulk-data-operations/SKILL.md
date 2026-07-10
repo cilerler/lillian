@@ -1,29 +1,29 @@
 ---
 name: mssql-bulk-data-operations
-description: Generates production-ready batched T-SQL scripts for large-scale INSERT, UPDATE, or DELETE operations on MSSQL with progress tracking, checkpointing, and transaction safety. Use for bulk or mass data operations, batch updates/inserts/deletes, or changing millions of records.
+description: Generates production-ready batched T-SQL scripts for large-scale UPDATE and DELETE operations on MSSQL, plus tracking-table staging for batch processing, with progress tracking, checkpointing, and transaction safety. Use for bulk or mass data operations, batch updates/deletes, or changing millions of records.
 type: guidance
 applies_to:
   - Developer
   - DBA
 mandatory: conditional
+mandatory_when:
+  - Performing large-scale UPDATE or DELETE operations (millions of rows)
+  - Staging record IDs into a tracking table for batch processing
 triggers:
   - bulk update
   - bulk insert
   - bulk delete
   - update large dataset
   - update millions of records
-  - insert millions of records
   - batch update
   - batch insert
   - large data operation
   - update 3M records
-  - add 5M records
   - mass update
-  - mass insert
 references:
   - templates/batch-insert.sql
   - templates/batch-update.sql
-summary: Generates production-ready batched T-SQL scripts for large-scale INSERT, UPDATE, or DELETE operations on MSSQL with progress tracking, checkpointing, and transaction safety.
+summary: Generates production-ready batched T-SQL scripts for large-scale UPDATE and DELETE operations on MSSQL, plus tracking-table staging for batch processing, with progress tracking, checkpointing, and transaction safety.
 ---
 
 # Bulk Data Operations
@@ -33,7 +33,7 @@ Generates production-ready T-SQL scripts for processing large datasets (millions
 
 ## When to Use
 Use this when the user asks to:
-- Update, insert, or delete a large number of records (typically millions)
+- Update or delete a large number of records (typically millions), or stage record IDs into a tracking table for batch processing
 - Perform a bulk data operation that needs batching to avoid lock escalation
 - Generate a safe batch processing script for a large table
 

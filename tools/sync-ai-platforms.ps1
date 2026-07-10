@@ -342,6 +342,73 @@ if (-not (Test-Path $pluginRoot)) {
     Write-Host "  plugins/ai-toolkit/ created (was missing)" -ForegroundColor Yellow
 }
 
+# --- 0.5 Generate skill catalogs from frontmatter (DRY: no hand-maintained lists) ---
+#
+# Runs BEFORE the plugin copy so the plugin ships the freshly generated INDEX.md.
+#
+# INDEX.md's per-skill entries and README.md's Available Skills bullets are
+# generated from each SKILL.md's frontmatter between marker comments.
+# Edit the frontmatter, not the generated blocks.
+
+function Replace-GeneratedBlock {
+    param([string]$Path, [string]$Begin, [string]$End, [string]$NewContent)
+    if (-not (Test-Path $Path)) { return $false }
+    $text = [System.IO.File]::ReadAllText($Path)
+    $pattern = "(?s)" + [regex]::Escape($Begin) + ".*?" + [regex]::Escape($End)
+    if ($text -notmatch $pattern) { return $false }
+    $replacement = "$Begin`n$NewContent$End"
+    $text = [regex]::Replace($text, $pattern, { param($m) $replacement })
+    $text = $text -replace "`r`n", "`n"
+    [System.IO.File]::WriteAllText($Path, $text, [System.Text.UTF8Encoding]::new($false))
+    return $true
+}
+
+$skillsRoot = Join-Path $srcGithub "skills"
+$catalog = @()
+if (Test-Path $skillsRoot) {
+    foreach ($dir in (Get-ChildItem $skillsRoot -Directory | Sort-Object Name)) {
+        $skillFile = Join-Path $dir.FullName "SKILL.md"
+        if (-not (Test-Path $skillFile)) { continue }
+        $fm = (Parse-Frontmatter (Get-Content $skillFile -Raw)).Frontmatter
+        $catalog += [pscustomobject]@{
+            Name          = $dir.Name
+            AppliesTo     = if ($fm.Contains("applies_to")) { @($fm["applies_to"]) -join ", " } else { "" }
+            MandatoryWhen = if ($fm.Contains("mandatory_when")) { @($fm["mandatory_when"]) } else { @() }
+            Triggers      = if ($fm.Contains("triggers")) { @($fm["triggers"]) } else { @() }
+            Note          = if ($fm.Contains("note")) { $fm["note"] } else { "" }
+            Summary       = if ($fm.Contains("summary")) { $fm["summary"] } elseif ($fm.Contains("description")) { $fm["description"] } else { "" }
+        }
+    }
+}
+
+# INDEX.md skills section
+$indexBlock = ""
+foreach ($s in $catalog) {
+    $indexBlock += "`n## $($s.Name)`n"
+    $indexBlock += "- Path: ``.github/skills/$($s.Name)/SKILL.md```n"
+    if ($s.AppliesTo)              { $indexBlock += "- Applies to: $($s.AppliesTo)`n" }
+    if (@($s.MandatoryWhen).Count -gt 0) {
+        $indexBlock += "- Mandatory when:`n"
+        foreach ($m in @($s.MandatoryWhen)) { $indexBlock += "  - $m`n" }
+    }
+    if (@($s.Triggers).Count -gt 0) {
+        $indexBlock += "- Triggers:`n"
+        foreach ($t in @($s.Triggers)) { $indexBlock += "  - `"$t`"`n" }
+    }
+    if ($s.Note)                   { $indexBlock += "- Note: $($s.Note)`n" }
+    $indexBlock += "`n---`n"
+}
+$indexPath = Join-Path $skillsRoot "INDEX.md"
+$stats.IndexGenerated = Replace-GeneratedBlock $indexPath "<!-- BEGIN GENERATED SKILLS (edit SKILL.md frontmatter, not this block) -->" "<!-- END GENERATED SKILLS -->" $indexBlock
+
+# README.md Available Skills list
+$readmeBlock = ""
+foreach ($s in $catalog) {
+    $readmeBlock += "- **$($s.Name)**: $($s.Summary)`n"
+}
+$readmePath = Join-Path $BasePath "README.md"
+$stats.ReadmeGenerated = Replace-GeneratedBlock $readmePath "<!-- BEGIN GENERATED SKILLS LIST (sync-ai-platforms.ps1) -->" "<!-- END GENERATED SKILLS LIST -->" $readmeBlock
+
 # --- 1. Skills -> plugin skills/ (verbatim copy) ---
 #
 # SKILL.md is the cross-platform Agent Skills standard (agentskills.io):
@@ -367,23 +434,26 @@ if (Test-Path $srcDir) {
         $parsed = Parse-Frontmatter (Get-Content $file.FullName -Raw)
         $cleanName = $file.Name -replace "\.instructions\.md$", ".md"
 
+        # Normalize applyTo: Copilot's documented format is a single string
+        # (comma-separated for multiple globs); Claude wants a list.
+        $applyToList = $null
+        if ($parsed.Frontmatter.Contains("applyTo")) {
+            $applyToList = $parsed.Frontmatter["applyTo"]
+            if ($applyToList -is [string]) { $applyToList = @($applyToList -split '\s*,\s*') }
+            if ($applyToList -isnot [array]) { $applyToList = @($applyToList) }
+        }
+
         # Claude: applyTo -> paths
         $claudeFm = [ordered]@{}
-        if ($parsed.Frontmatter.Contains("applyTo")) {
-            $applyTo = $parsed.Frontmatter["applyTo"]
-            if ($applyTo -is [array]) {
-                $claudeFm["paths"] = $applyTo
-            } else {
-                $claudeFm["paths"] = @($applyTo)
-            }
+        if ($null -ne $applyToList) {
+            $claudeFm["paths"] = $applyToList
         }
         Write-SyncedFile (Join-Path $claudeDir $cleanName) (Format-Frontmatter $claudeFm) (Rewrite-PathsForClaudeRules $parsed.Body)
 
         # Antigravity: applyTo -> activation mode (always_on for catch-all globs, glob trigger otherwise)
         $antigravityFm = [ordered]@{}
-        if ($parsed.Frontmatter.Contains("applyTo")) {
-            $applyTo = $parsed.Frontmatter["applyTo"]
-            if ($applyTo -isnot [array]) { $applyTo = @($applyTo) }
+        if ($null -ne $applyToList) {
+            $applyTo = $applyToList
             if ($applyTo -contains "**") {
                 $antigravityFm["trigger"] = "always_on"
             } else {
@@ -494,6 +564,7 @@ if ($stats.GithubFiles -gt 0) {
 if ($stats.Skills -eq 0) {
     Write-Host "  WARNING: no skills copied into the plugin" -ForegroundColor Yellow
 }
+Write-Host "  Skill catalog:             INDEX.md generated=$($stats.IndexGenerated), README list generated=$($stats.ReadmeGenerated) ($($catalog.Count) skills)" -ForegroundColor White
 Write-Host ""
 Write-Host "Targets updated:" -ForegroundColor DarkGray
 Write-Host "  .claude/rules/   .agents/workflows/" -ForegroundColor DarkGray

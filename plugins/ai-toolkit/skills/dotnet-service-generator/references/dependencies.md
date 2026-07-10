@@ -91,7 +91,6 @@ var response = await httpClient.PostAsync(url, content);
 public TimeSpan HttpTimeout { get; set; } = TimeSpan.FromSeconds(120);
 
 // StartupExtensions - register named client with resilience pipeline
-// StartupExtensions - register named client with resilience pipeline
 services.AddHttpClient(Constants.HttpClientName)
     .AddResilienceHandler("{ServiceName}Pipeline", static (builder, context) =>
     {
@@ -285,9 +284,9 @@ await _unitOfWork.SaveChangesAsync(cancellationToken);
 Service with multiple optional dependencies:
 
 ```csharp
-public class {ServiceName} : I{ServiceName}
+public class {ServiceName}Service : I{ServiceName}
 {
-    private readonly ILogger<{ServiceName}> _logger;
+    private readonly ILogger<{ServiceName}Service> _logger;
     private readonly IDistributedTracing _tracer;
     private readonly Meter _meter;
     private readonly {ServiceName}Settings _settings;
@@ -297,8 +296,8 @@ public class {ServiceName} : I{ServiceName}
     private readonly HttpClient _httpClient;
     private readonly HybridCache _hybridCache;
 
-    public {ServiceName}(
-        ILogger<{ServiceName}> logger,
+    public {ServiceName}Service(
+        ILogger<{ServiceName}Service> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
         IOptions<{ServiceName}Settings> options,
@@ -321,7 +320,7 @@ public class {ServiceName} : I{ServiceName}
         _settings = options.Value;
         
         _distributedCache = distributedCache;
-        _httpClient = httpClientFactory.CreateClient(nameof({ServiceName}));
+        _httpClient = httpClientFactory.CreateClient(Constants.HttpClientName);
         _hybridCache = hybridCache;
     }
 }

@@ -5,6 +5,9 @@ type: guidance
 applies_to:
   - All agents
 mandatory: conditional
+mandatory_when:
+  - The user wants to wrap up the session or hand off before clearing context
+note: for a long-form project/role handover **document**, use `documentation-generator` (takeover-handover template) instead.
 triggers:
   - session handoff
   - wrap up session

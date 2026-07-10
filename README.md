@@ -240,7 +240,7 @@ Outside the workflow, five **council personas** (`council-contrarian`, `council-
 
 - ✅ All agent transitions require **explicit human approval**
 - ✅ Each agent outputs and **stops** - user decides when to proceed
-- ✅ Agents must read their specific definition from `.github/agents/<role>.agent.md`
+- ✅ Agents must read their specific definition from `.github/agents/workflow-<role>.agent.md`
 - ✅ After 3 consecutive FAIL verdicts from Reviewer, **escalate to user**
 
 ## Repository Structure
@@ -284,21 +284,23 @@ root/
 
 ## Available Skills
 
-The repository includes production-ready skills for engineering, documentation, and decision-making tasks:
+The repository includes production-ready skills for engineering, documentation, and decision-making tasks. The list below is **generated** by the sync script from each skill's `summary:` frontmatter:
 
-- **documentation-generator**: Templates for ADRs, RFCs, design docs, runbooks, postmortems, SOPs, and more
-- **dotnet-service-generator**: Scaffolds .NET service modules with observability and DI conventions
-- **excalidraw-diagram-generator**: Excalidraw diagram JSON files with automatic PNG rendering
-- **infrastructure**: Docker and Kubernetes patterns for .NET services
-- **mssql-bulk-data-operations**: Batched T-SQL scripts for large-scale INSERT/UPDATE/DELETE operations
-- **mssql-table-scaffolder**: Generates MSSQL tables or migration scripts following enterprise conventions
-- **observability**: SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns
-- **plantuml-sequence-diagram-generator**: Generates professional PlantUML sequence diagrams
-- **pressure-test**: Adversarial 5-persona council that stress-tests an idea into a GO / RESHAPE / KILL verdict
-- **session-handoff**: Structured end-of-session summary so a fresh agent can continue seamlessly
-- **solution-structure**: Opinionated .NET solution folder structure and file-placement rules
-- **storm-research**: Multi-perspective, citation-verified HTML research briefing (five expert lenses + verification)
-- **work-item-generator**: Interactive generator for initiatives, epics, features, stories, bugs, and tasks
+<!-- BEGIN GENERATED SKILLS LIST (sync-ai-platforms.ps1) -->
+- **documentation-generator**: Document templates for ADRs, RFCs, design docs, runbooks, post incident reviews, SOPs, handovers, business cases, test plans, test cases, role briefs, and more.
+- **dotnet-service-generator**: Interactive scaffolder for .NET service modules with observability and DI conventions.
+- **excalidraw-diagram-generator**: Excalidraw diagram JSON files that make visual arguments, with automatic PNG rendering via a bundled renderer.
+- **infrastructure**: Docker and Kubernetes patterns for .NET 10 services including health probes, resource limits, and graceful shutdown.
+- **mssql-bulk-data-operations**: Generates production-ready batched T-SQL scripts for large-scale UPDATE and DELETE operations on MSSQL, plus tracking-table staging for batch processing, with progress tracking, checkpointing, and transaction safety.
+- **mssql-table-scaffolder**: Scaffolds production-ready MSSQL tables or generates migration scripts following enterprise conventions.
+- **observability**: Standard SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns for .NET services.
+- **plantuml-sequence-diagram-generator**: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns.
+- **pressure-test**: Adversarial 5-persona council that attacks an idea from every angle, then a Judge returns one GO / RESHAPE / KILL verdict with the cheapest 48-hour test to de-risk it. Optional anonymized peer-review round.
+- **session-handoff**: Structured end-of-session summary so a fresh agent can continue seamlessly after the context is cleared. Chat-only output.
+- **solution-structure**: Source of truth for the opinionated .NET solution folder structure (root scaffolding, /docs, /src/Modules/Component/Service hierarchy, /tools/Kubernetes, /tests) and the documentation placement rules that govern items inside it.
+- **storm-research**: Multi-perspective, citation-verified HTML research briefing — five expert lenses, contradiction map, synthesized report, adversarial peer review with primary-source verification.
+- **work-item-generator**: Interactive generator for work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks) that gathers context through targeted questions and produces structured documents.
+<!-- END GENERATED SKILLS LIST -->
 
 See [.github/skills/INDEX.md](.github/skills/INDEX.md) for detailed skill documentation.
 

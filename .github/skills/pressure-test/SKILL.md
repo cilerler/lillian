@@ -5,6 +5,9 @@ type: guidance
 applies_to:
   - All agents
 mandatory: conditional
+mandatory_when:
+  - The user wants an idea or decision adversarially stress-tested before committing (GO / RESHAPE / KILL verdict)
+note: adversarial 5-persona council + Judge (~5-11 subagents per run); uses the `council-*` agent personas. Not for casual opinions or factual questions.
 triggers:
   - pressure-test
   - stress-test this idea

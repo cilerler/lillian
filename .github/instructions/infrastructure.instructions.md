@@ -1,7 +1,5 @@
 ---
-applyTo:
-  - "**/Dockerfile"
-  - "**/kubernetes/**"
+applyTo: "**/Dockerfile,**/kubernetes/**,**/Kubernetes/**"
 ---
 
 # Infrastructure Instructions

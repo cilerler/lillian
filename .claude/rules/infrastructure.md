@@ -2,6 +2,7 @@
 paths:
   - "**/Dockerfile"
   - "**/kubernetes/**"
+  - "**/Kubernetes/**"
 ---
 
 # Infrastructure Instructions

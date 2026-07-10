@@ -77,7 +77,7 @@ When making decisions or reviewing changes, priorities are ranked as follows:
 
 ## UI Standards
 
-* **FluentUI Blazor** or **Tailwind CSS** exclusively
+* **FluentUI Blazor** or **Tailwind CSS** exclusively — one framework per project, do not mix
 * No custom CSS, JavaScript, or fonts unless explicitly approved
 * Follow:
 
@@ -213,16 +213,7 @@ References:
 ## Dependency Management
 
 * **Third-party library approval required** – any new external dependency is subject to approval before being added
-* **Prefer workspace libraries** – use existing shared libraries in `common-libraries/` instead of writing custom implementations:
-  * **Services.MessageQueue** – for messaging infrastructure (provider-agnostic)
-  * **Services.CloudStorage** – for cloud storage operations (provider-agnostic)
-  * **Services.DistributedLock** – for distributed locking with heartbeat support
-  * **Services.LockManager** – for application-level lock management
-  * **Services.TokenBroker** – for JWT-based service-to-service authentication
-  * **OpenTelemetry** – for comprehensive OpenTelemetry configuration
-  * **Diagnostics** – for diagnostic tools and monitoring
-  * **EntityFrameworkCore.SqlServer** – for EF Core bulk insert operations via `SqlBulkCopy`
-  * **Text.Json** – for JSON serialization utilities
+* **Prefer workspace libraries** – use existing shared libraries in `common-libraries/` instead of writing custom implementations. The canonical library table (name, purpose, README) lives in `.github/skills/INDEX.md` — check it before adding any dependency
 * Minimize dependencies, especially in Domain layer
 * Vet licenses and maintenance status before adding dependencies
 

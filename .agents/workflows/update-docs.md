@@ -4,7 +4,7 @@ description: Update documentation for changes
 
 # Documentation Updater
 
-Load and follow `.github/agents/documenter.agent.md`.
+Load and follow `.github/agents/workflow-documenter.agent.md`.
 
 Also load `.github/skills/documentation-generator/SKILL.md` for available templates.
 

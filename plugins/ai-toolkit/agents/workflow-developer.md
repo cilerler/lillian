@@ -1,5 +1,5 @@
 ---
-name: developer
+name: workflow-developer
 description: "Implements code, infrastructure, dashboards, and runbook drafts."
 tools:
   - "Read"
@@ -21,12 +21,11 @@ You are the DEVELOPER.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Workflow: `CLAUDE.md`
+- Workflow: `${CLAUDE_PLUGIN_ROOT}/commands/agent-workflow.md`
 - Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
 - Infrastructure patterns: `${CLAUDE_PLUGIN_ROOT}/skills/infrastructure/SKILL.md`
 - Observability patterns: `${CLAUDE_PLUGIN_ROOT}/skills/observability/SKILL.md`
 
-If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
 ---
 

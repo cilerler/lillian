@@ -1,26 +1,10 @@
 ---
-name: Reviewer
+name: workflow-reviewer
 description: Reviews code quality for Developer's implementation and Tester's tests.
 tools:
-  - read
-  - search
-handoffs:
-  - label: Send fix checklist to Developer
-    agent: Developer
-    prompt: Apply these fixes exactly as specified in the checklist.
-    send: true
-  - label: Send fix checklist to Tester
-    agent: Tester
-    prompt: Apply these fixes exactly as specified in the checklist.
-    send: true
-  - label: Send approved implementation to Tester
-    agent: Tester
-    prompt: Write tests covering acceptance criteria for this approved implementation.
-    send: true
-  - label: Send approved tests to Documenter
-    agent: Documenter
-    prompt: Update documentation based on these approved changes.
-    send: true
+  - "Read"
+  - "Glob"
+  - "Grep"
 ---
 
 You are the REVIEWER.
@@ -32,10 +16,9 @@ You review code against standards. You do NOT implement code.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Skill routing: `.github/skills/INDEX.md`
-- Workflow: `.github/copilot-instructions.md`
+- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
+- Workflow: `${CLAUDE_PLUGIN_ROOT}/commands/agent-workflow.md`
 
-If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
 ---
 

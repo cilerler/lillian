@@ -216,7 +216,7 @@ histogram_quantile(0.95, sum by (le) (rate(app_${worker}_duration_seconds_bucket
 histogram_quantile(0.99, sum by (le) (rate(app_${worker}_duration_seconds_bucket{env="$env", service_name="$service"}[5m])))
 ```
 
-> **Note**: `${worker}` is the snake_case service class name (e.g., `payment_processor` for `PaymentProcessor`). The base class generates metric names as `app_{snake_case_class_name}_{metric}`.
+> **Note**: `${worker}` is the snake_case worker class name (e.g., `payment_processor_worker` for `PaymentProcessorWorker`). The base class generates metric names as `app_{snake_case_class_name}_{metric}` from the full class name, so the `_worker` suffix is included.
 
 ---
 
@@ -705,7 +705,7 @@ Replace `$(SERVICE_NAME)` with the actual service name. Uses the same template v
 
 ## Background Worker Dashboard
 
-For services extending `WorkerBackgroundService<TSettings>`. Replace `$(SERVICE_NAME)` with the actual service name and `$(WORKER)` with the snake_case class name (e.g., `payment_processor`).
+For services extending `WorkerBackgroundService<TSettings>`. Replace `$(SERVICE_NAME)` with the actual service name and `$(WORKER)` with the snake_case worker class name (e.g., `payment_processor_worker` for `PaymentProcessorWorker`).
 
 ### Additional Template Variable
 
@@ -982,10 +982,4 @@ For services extending `WorkerBackgroundService<TSettings>`. Replace `$(SERVICE_
 
 ## Generation Rules
 
-1. **Output location**: Always generate under `tools/grafana/`
-2. **Environment variable**: Every dashboard must include the `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`
-3. **Datasource variable**: Every dashboard must include the `$datasource` variable
-4. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"`
-5. **Placeholder**: Use `$(SERVICE_NAME)` for dashboard uid and title - replaced during deployment
-6. **Tags**: Include `generated` tag on all dashboards
-7. **Naming**: Dashboard files use kebab-case: `{dashboard-type}-dashboard.json`
+Generation rules live in SKILL.md — this file carries only the dashboard JSON starting points.

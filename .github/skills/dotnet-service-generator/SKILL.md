@@ -5,6 +5,9 @@ type: guidance
 applies_to:
   - Developer
 mandatory: conditional
+mandatory_when:
+  - Creating a new .NET service
+  - Scaffolding service modules
 triggers:
   - create a service
   - scaffold service
@@ -57,7 +60,7 @@ Based on service purpose:
 | Uploads/downloads files | ICloudStorageFactory |
 | Sends/receives messages | IMessageQueueFactory |
 | Needs coordination/locking | IDistributedLock |
-| Runs on schedule/background | Worker.cs (extends WorkerBackgroundService) |
+| Runs on schedule/background | `{ServiceName}Worker.cs` (extends WorkerBackgroundService) |
 | Exposes HTTP endpoints | `Api/` folder |
 
 ## Step 3: Confirm Dependencies
@@ -76,7 +79,7 @@ Additional options:
 [ ] 6. Repository/UoW pattern (in Internals/)
 [ ] 7. ICloudStorageFactory
 [ ] 8. IMessageQueueFactory
-[ ] 9. Worker.cs (background service)
+[ ] 9. {ServiceName}Worker.cs (background service)
 [ ] 10. Api/ folder (HTTP endpoints)
 
 Confirm or adjust (e.g., "add 4, remove 2"):
@@ -172,17 +175,7 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 5. Optional dependencies (alphabetical)
 
 ### Meter Creation
-```csharp
-_meter = meterFactory.Create(new MeterOptions(Startup.AssemblyName)
-{
-    Version = Startup.AssemblyVersion,
-    Tags = new TagList
-    {
-        { "code.namespace", GetType().Namespace },
-        { "code.class", GetType().Name }
-    }
-});
-```
+Meter creation follows the observability skill's instrumentation pattern (see `.github/skills/observability/SKILL.md`). The reference files in this skill carry the copy-paste-complete code.
 
 ### Metric Constants
 Define metric names in `Constants.Metrics` nested class to ensure consistency between code and Grafana dashboards:

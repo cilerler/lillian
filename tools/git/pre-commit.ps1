@@ -33,7 +33,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Stage all generated files
-git add "$repoRoot/.claude" "$repoRoot/.agents" "$repoRoot/plugins/ai-toolkit"
+git add "$repoRoot/.claude" "$repoRoot/.agents" "$repoRoot/plugins/ai-toolkit" "$repoRoot/.github/skills/INDEX.md" "$repoRoot/README.md"
 
 Write-Host "`n✅ AI platforms synced and staged!" -ForegroundColor Green
 exit 0

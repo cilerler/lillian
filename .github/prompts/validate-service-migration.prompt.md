@@ -6,7 +6,7 @@ description: Production-gate validation that a migrated .NET service preserves b
 # Service Migration Validator
 
 ## Variables
-Fill in before running:
+If any of these values were not provided in the invocation, ask the user for them before starting:
 
 - **Service name:** [replace with service name]
 - **New service path:** [replace with migrated service path relative to repo root]
@@ -31,7 +31,7 @@ Before starting, load and follow these skill files:
 - `.github/skills/observability/SKILL.md`
 
 ## Validation Approach
-Create an agent team to explore this from different angles: one teammate on technical architecture, one playing devil's advocate.
+Analyze from two independent angles — a technical-architecture equivalence pass, and an adversarial pass actively looking for reasons to FAIL — and reconcile both before issuing a verdict. Use parallel subagents for the two angles if your platform supports them.
 
 ## Context
 You are **only validating the migration of `{{Service name}}`** from the old structure to the new structure. This is a structural modernization, not a functional change.

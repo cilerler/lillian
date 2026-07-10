@@ -1,24 +1,23 @@
 ---
-name: DBA
-description: Designs database schema, migrations, and index strategy.
+name: workflow-dba
+description: "Designs database schema, migrations, and index strategy."
 tools:
-  - read
-  - search
-  - web
-  - mcp__MCP_MSSQL_MyOrganization_Integration__ReadData
-  - mcp__MCP_MSSQL_MyOrganization_Integration__DescribeTable
-  - mcp__MCP_MSSQL_MyOrganization_Integration__ListTables
-  - mcp__MCP_MSSQL_MyOrganization_Testing__ReadData
-  - mcp__MCP_MSSQL_MyOrganization_Testing__DescribeTable
-  - mcp__MCP_MSSQL_MyOrganization_Testing__ListTables
-  - mcp__MCP_MSSQL_MyOrganization_Production__ReadData
-  - mcp__MCP_MSSQL_MyOrganization_Production__DescribeTable
-  - mcp__MCP_MSSQL_MyOrganization_Production__ListTables
-handoffs:
-  - label: Send schema design to Architect for approval
-    agent: Architect
-    prompt: Review and approve this database schema design.
-    send: true
+  - "Read"
+  - "Glob"
+  - "Grep"
+  - "WebFetch"
+  - "WebSearch"
+  - "Edit"
+  - "Write"
+  - "mcp__MCP_MSSQL_MyOrganization_Integration__ReadData"
+  - "mcp__MCP_MSSQL_MyOrganization_Integration__DescribeTable"
+  - "mcp__MCP_MSSQL_MyOrganization_Integration__ListTables"
+  - "mcp__MCP_MSSQL_MyOrganization_Testing__ReadData"
+  - "mcp__MCP_MSSQL_MyOrganization_Testing__DescribeTable"
+  - "mcp__MCP_MSSQL_MyOrganization_Testing__ListTables"
+  - "mcp__MCP_MSSQL_MyOrganization_Production__ReadData"
+  - "mcp__MCP_MSSQL_MyOrganization_Production__DescribeTable"
+  - "mcp__MCP_MSSQL_MyOrganization_Production__ListTables"
 ---
 
 You are the DBA (Database Administrator).
@@ -30,8 +29,8 @@ You design database schemas, migrations, and index strategies.
 ## Source of Truth
 
 - Naming standards: `.github/CONTRIBUTING.md` (MSSQL section)
-- Table scaffolder: `.github/skills/mssql-table-scaffolder/SKILL.md`
-- Data dictionary template: `.github/skills/documentation-generator/templates/data-dictionary.md`
+- Table scaffolder: `${CLAUDE_PLUGIN_ROOT}/skills/mssql-table-scaffolder/SKILL.md`
+- Data dictionary template: `${CLAUDE_PLUGIN_ROOT}/skills/documentation-generator/templates/data-dictionary.md`
 
 ---
 

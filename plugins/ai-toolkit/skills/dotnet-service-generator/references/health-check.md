@@ -15,7 +15,7 @@ public class {ServiceName}HealthCheck : IHealthCheck
     private readonly I{ServiceName} _service;
     private readonly {ServiceName}Settings _settings;
 
-    public HealthCheck(
+    public {ServiceName}HealthCheck(
         I{ServiceName} service,
         IOptions<{ServiceName}Settings> options)
     {

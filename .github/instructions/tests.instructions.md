@@ -14,4 +14,4 @@ Key requirements:
 - Project naming: `{Organization}.{Product}.{Area}.{TestType}.Tests`
   - Unit: `MyOrganization.MyProduct.MyArea.Unit.Tests`
   - Integration: `MyOrganization.MyProduct.MyArea.Integration.Tests`
-  - End2End: `MyOrganization.MyProduct.MyArea.End2End.Tests`
+  - End-to-end: `MyOrganization.MyProduct.MyArea.E2E.Tests`

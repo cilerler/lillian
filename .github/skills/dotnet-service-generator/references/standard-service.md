@@ -25,6 +25,7 @@ Services/{ServiceName}/
 │   └── {ServiceName}Settings.cs
 ├── Contracts/                       # Internal interfaces
 │   └── I{ServiceName}.cs           # Default: internal (move to Abstractions/Interfaces/ if externally consumed)
+├── Docs/                            # Service-scoped documentation (optional)
 ├── Exceptions/
 │   └── {Name}Exception.cs
 ├── Extensions/
@@ -286,7 +287,7 @@ public class {ServiceName}Service : I{ServiceName}
     private readonly Counter<long> _operationCounter;
     private readonly Histogram<double> _operationDuration;
 
-    public {ServiceName}(
+    public {ServiceName}Service(
         ILogger<{ServiceName}Service> logger,
         IDistributedTracing distributedTracing,
         IMeterFactory meterFactory,
@@ -358,102 +359,15 @@ public class {ServiceName}Service : I{ServiceName}
 
 ## {ServiceName}Worker.cs
 
-```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
-
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
-
-public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings>
-{
-    private readonly I{ServiceName} _service;
-
-    public Worker(
-        ILogger<{ServiceName}Worker> logger,
-        IDistributedTracing distributedTracing,
-        IMeterFactory meterFactory,
-        IOptions<{ServiceName}Settings> options,
-        IEnumerable<IHealthCheck> healthChecks,
-        I{ServiceName} service)
-        : base(logger, distributedTracing, meterFactory, options, healthChecks)
-    {
-        _service = service;
-    }
-
-    public override async Task DoWorkAsync(CancellationToken cancellationToken)
-    {
-        var hasData = await _service.CheckForNewDataAsync(cancellationToken);
-        IdleCycle = !hasData;
-        if (IdleCycle) return;
-
-        await _service.ProcessAsync(cancellationToken);
-    }
-}
-```
-
-Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse. See `references/background-service.md` for the `WorkerBackgroundService` base class.
+See `background-service.md` for the Worker pattern and the `WorkerBackgroundService` base class. Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse.
 
 ## {ServiceName}HealthCheck.cs
 
-```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+See `health-check.md` for the health check pattern and registration.
 
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
+## Clients/
 
-public class {ServiceName}HealthCheck : IHealthCheck
-{
-    private readonly {ServiceName}Settings _settings;
-
-    public HealthCheck(IOptions<{ServiceName}Settings> options)
-    {
-        _settings = options.Value;
-    }
-
-    public Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context,
-        CancellationToken cancellationToken = default)
-    {
-        // Implement service-specific health checks
-        return Task.FromResult(HealthCheckResult.Healthy());
-    }
-}
-```
-
-## Clients/I{ExternalApi}Client.cs
-
-```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
-
-public interface I{ExternalApi}Client
-{
-    Task<TResponse> GetAsync(string id, CancellationToken cancellationToken);
-}
-```
-
-## Clients/{ExternalApi}Client.cs
-
-```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
-
-public class {ExternalApi}Client : I{ExternalApi}Client
-{
-    private readonly HttpClient _httpClient;
-
-    public {ExternalApi}Client(HttpClient httpClient)
-    {
-        _httpClient = httpClient;
-    }
-
-    public async Task<TResponse> GetAsync(string id, CancellationToken cancellationToken)
-    {
-        var response = await _httpClient.GetAsync($"/api/resource/{id}", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken);
-    }
-}
-```
-
-Registration stays in `Extensions/StartupExtensions.cs` using `AddHttpClient<>`.
+See `dependencies.md` for the typed HTTP client pattern (interface, implementation, and registration). Registration stays in `Extensions/StartupExtensions.cs` using `AddHttpClient<>`.
 
 ## Internals/{Name}.cs
 

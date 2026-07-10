@@ -1,10 +1,12 @@
 ---
-description: "Perform comprehensive code review for quality, security, and best practices"
+description: "Standalone deep-dive audit across 8 quality dimensions, using the workflow Reviewer's severity scale"
 ---
 
 # Comprehensive Code Review
 
 Perform a deep, thorough code review examining all aspects of code quality.
+
+This is the **standalone deep audit** — for the workflow review gate, use `/code-review` instead. Load `.github/agents/workflow-reviewer.agent.md` first: its severity scale (Blocker/Major/Minor) and output contract apply here too; the dimensions below define the audit's breadth, not a different vocabulary.
 
 ## Scope
 
@@ -69,36 +71,11 @@ Identify the code to review (files, PR, or specified scope).
 
 ## Output Format
 
+Use the output contract from `workflow-reviewer.agent.md` — Verdict (PASS/FAIL), findings grouped by Blocker/Major/Minor with file:line references, Fix Checklist on FAIL, up to 5 optional improvements on PASS — with two adaptations for this deep audit:
+
+- Tag every finding with its dimension from the list above (e.g., `[Security]`, `[Performance]`).
+- Security findings are always **Blocker**.
+
 ### Summary
 
-[1-2 sentence overall assessment]
-
-### Verdict: PASS or FAIL
-
-### Findings by Category
-
-**Security** (Critical)
-- [list or "None"]
-
-**Blocker** (Prevents merge)
-- [list or "None"]
-
-**Major** (Must fix)
-- [list or "None"]
-
-**Minor** (Should fix)
-- [list or "None"]
-
-**Nitpick** (Optional)
-- [list or "None"]
-
-### Fix Checklist (if FAIL)
-
-1. [Specific fix with file:line reference]
-2. [Specific fix with file:line reference]
-
-### Recommendations (if PASS)
-
-| Area | Recommendation | Priority |
-|------|----------------|----------|
-| [area] | [recommendation] | High/Medium/Low |
+[1-2 sentence overall assessment before the verdict]

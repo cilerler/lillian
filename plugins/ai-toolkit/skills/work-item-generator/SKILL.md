@@ -7,6 +7,9 @@ applies_to:
   - Developer
   - Architect
 mandatory: conditional
+mandatory_when:
+  - Creating work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks)
+  - Filing bugs or logging issues
 triggers:
   - work item
   - initiative
@@ -40,15 +43,16 @@ Generates structured work item documents by gathering context through targeted q
 
 ## Work Item Hierarchy
 
-Work items are organized into two tiers. Product-side items define *what* to build. Developer-side items define *how* to build it. Tasks break developer items into concrete steps.
+Work items are organized into two tiers. Product-side items define *what* to build. Developer-side items define *how* to build it. A Feature is the parent of Stories, Bugs, Spikes, and Enhancements — that link connects the two tiers. Tasks break developer items into concrete steps.
 
 ```
-Product Side                    Developer Side
-─────────────                   ──────────────
-🎯 Initiative                   💡 Story ──────┐
-  └─ 🚀 Epic                   🪲 Bug ────────┼─ ✔️ Task(s)
-       └─ 🎁 Feature           🔬 Spike ──────┤
-                                🛠️ Enhancement ┘
+🎯 Initiative
+  └─ 🚀 Epic
+       └─ 🎁 Feature
+            ├─ 💡 Story ──────┐
+            ├─ 🪲 Bug ────────┼─ ✔️ Task(s)
+            ├─ 🔬 Spike ──────┤
+            └─ 🛠️ Enhancement ┘
 ```
 
 ## Work Item Types
@@ -61,7 +65,7 @@ Product Side                    Developer Side
 | Story | 💡 | Developer | A request, idea, or new functionality |
 | Bug | 🪲 | Developer | An unexpected problem or behavior |
 | Spike | 🔬 | Developer | A time-boxed research task to reduce uncertainty |
-| Enhancement | 🛠️ | Developer | An improvement to refactoring or technical debt |
+| Enhancement | 🛠️ | Developer | An improvement to refactoring or technical debt reduction |
 | Task | ✔️ | Developer | A specific piece of work (child of Story, Bug, Spike, or Enhancement) |
 
 ## Classification Fields
@@ -115,7 +119,12 @@ The primary dimension this work affects. Each item has exactly one Impact.
 
 Story points using the Fibonacci sequence: **1, 2, 3, 5, 8, 13, 21**
 
-Formula: `MapToClosestFibonacci(Hours × Complexity × Risk)`
+Formula: `MapToClosestFibonacci(Hours × Complexity × Risk)` — estimate the raw hours, multiply by the two factors below, then snap to the nearest Fibonacci value.
+
+| Factor | Scale |
+|--------|-------|
+| Complexity | 1.0 = routine work · 1.5 = unfamiliar territory or many moving parts · 2.0 = novel problem or algorithmically hard |
+| Risk | 1.0 = isolated change · 1.5 = touches shared code or data · 2.0 = critical path, data migration, or hard to reverse |
 
 Effort is estimated at the developer-item and task level. Product-side items derive their effort from the sum of their children.
 
@@ -125,8 +134,11 @@ Standard relationship types between work items:
 
 | Relationship | Inverse |
 |-------------|---------|
+| is parent of | is child of |
 | blocks | is blocked by |
 | duplicates | is duplicated by |
+
+Parent-child links form the hierarchy shown above (Initiative → Epic → Feature → Story/Bug/Spike/Enhancement → Task) and are the links the Effort children-sum rule rolls up through.
 
 ## Workflow
 

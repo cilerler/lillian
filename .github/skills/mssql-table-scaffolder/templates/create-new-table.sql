@@ -204,20 +204,25 @@ BEGIN
 END
 GO
 
+-- Dedicated schema for the shared hard-delete audit table.
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'DeleteLog')
+    EXEC ('CREATE SCHEMA [DeleteLog]');
+GO
+
 CREATE TABLE [DeleteLog].[Record]
 (
     Id BIGINT IDENTITY(1, 1) NOT FOR REPLICATION NOT NULL
-        CONSTRAINT PK_DeleteLog_Id
+        CONSTRAINT PK_Record_Id
             PRIMARY KEY CLUSTERED (Id ASC),
     RowGuid UNIQUEIDENTIFIER ROWGUIDCOL NOT NULL
-        CONSTRAINT DF_DeleteLog_RowGuid
+        CONSTRAINT DF_Record_RowGuid
             DEFAULT (NEWID()),
     [RowVersion] ROWVERSION,
     DeletedAt DATETIME2(7) NOT NULL
-        CONSTRAINT DF_DeleteLog_DeletedAt
+        CONSTRAINT DF_Record_DeletedAt
             DEFAULT (SYSUTCDATETIME()),
     DeletedBy VARCHAR(261) NOT NULL
-        CONSTRAINT DF_DeleteLog_ModifiedBy
+        CONSTRAINT DF_Record_DeletedBy
             DEFAULT (SUSER_SNAME()),
     FullyQualifiedTableName VARCHAR(261) NOT NULL,
     EntityId BIGINT NOT NULL
@@ -230,7 +235,7 @@ GO
 CREATE NONCLUSTERED INDEX IX_Record_DeletedAt_FullyQualifiedTableName ON [DeleteLog].[Record] ([DeletedAt] ASC, [FullyQualifiedTableName] ASC) INCLUDE (EntityId);
 GO
 
-ALTER TABLE [DeleteLog].[Record] WITH CHECK ADD CONSTRAINT [CF_Record_FullyQualifiedTableName] CHECK ([FullyQualifiedTableName]='MySchema.MyTable')
+ALTER TABLE [DeleteLog].[Record] WITH CHECK ADD CONSTRAINT [CHK_Record_FullyQualifiedTableName] CHECK ([FullyQualifiedTableName]='MySchema.MyTable')
 GO
 
 -- External delete logging; physically deletes records and logs deletions into an external audit/logging table.
@@ -255,6 +260,7 @@ BEGIN
 END
 GO
 
+-- NOTE: This view cannot be indexed (no unique clustered index) because indexed views do not support UNION ALL.
 CREATE VIEW [MySchema].[MyView]
 WITH SCHEMABINDING
 AS
@@ -285,9 +291,6 @@ FROM
     [DeleteLog].[Record] AS dl
 WHERE
     dl.FullyQualifiedTableName = 'MySchema.MyTable';
-GO
-
-CREATE UNIQUE CLUSTERED INDEX IX_MyView_MyTableId_HardDelete ON [MySchema].[MyView] (MyTableId, HardDelete);
 GO
 
 EXEC sys.sp_addextendedproperty @name = N'MS_Description',

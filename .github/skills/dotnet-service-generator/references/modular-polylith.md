@@ -327,15 +327,6 @@ src/
         └── NotificationPreferences/                # Email/push settings
 ```
 
-### Cross-Module Communication
-
-| Producer | Event | Consumer |
-|---|---|---|
-| `CookingExperience.Social.ReviewManager` | `ReviewCreatedEvent` | `RecipeManagement.Discovery.Recommender` |
-| `MealPlanning.Shopping.ListGenerator` | `ListGeneratedEvent` | `MealPlanning.Shopping.PriceTracker` |
-
-Consumers reference the producing module's `.Abstractions` project (cross-module) or the producing component's `Abstractions/` folder (intra-module). Internal service types are never crossed.
-
 ### Observability Drill-Down
 
 Dashboards cascade from broad to specific, enabling incident triage:

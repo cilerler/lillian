@@ -5,7 +5,7 @@ description: Migrate an existing .NET service to current architecture standards
 # Service Migrator
 
 ## Variables
-Fill in before running:
+If any of these values were not provided in the invocation, ask the user for them before starting:
 
 - **Service name:** [replace with service name]
 - **Service path:** [replace with path relative to repo root]

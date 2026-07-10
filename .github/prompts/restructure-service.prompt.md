@@ -6,7 +6,7 @@ description: Restructure an existing .NET service to match current folder struct
 # Service Restructurer
 
 ## Variables
-Fill in before running:
+If any of these values were not provided in the invocation, ask the user for them before starting:
 
 - **Service path:** [replace with path relative to repo root, e.g., src/Services/PaymentProcessor]
 - **Module name:** [replace with target module name, or "none" if standalone]
@@ -60,7 +60,7 @@ Scan `{{Service path}}` and produce a report:
 Present the plan as a table showing every file move, rename, and namespace change. Include:
 
 1. **File moves** — source → destination path
-2. **Class renames** — e.g., `{ServiceName}Settings` → `Settings`, `{ServiceName}HealthCheck` → `HealthCheck`
+2. **Class renames** — align to the `{ServiceName}` prefix convention from solution-structure (`{ServiceName}Service`, `{ServiceName}Worker`, `{ServiceName}Settings`, `{ServiceName}HealthCheck`); file name must match class name
 3. **Namespace changes** — old → new for each file
 4. **New folders** — empty folders to create
 5. **Module/Component scaffolding** — if creating module/component levels, list what gets created
@@ -82,8 +82,8 @@ After approval, execute the restructuring:
 7. **After each rename, grep for the old class name across the entire service folder** and update every reference — generic type parameters, field declarations, constructor parameters, DI registrations, logger types, static member access, `nameof()`, etc. Zero occurrences of the old name must remain.
 8. Split `Api.cs` into `Api/Api.cs` + individual endpoint files if applicable
 9. Split Worker/Service if the service extends `WorkerBackgroundService`:
-   - Business logic (checking for data, processing) → `Service.cs` implementing `I{ServiceName}`
-   - Lifecycle/scheduling (DoWorkAsync override, IdleCycle) → `Worker.cs` extending `WorkerBackgroundService<Settings>`
+   - Business logic (checking for data, processing) → `{ServiceName}Service.cs` implementing `I{ServiceName}`
+   - Lifecycle/scheduling (DoWorkAsync override, IdleCycle) → `{ServiceName}Worker.cs` extending `WorkerBackgroundService<{ServiceName}Settings>`
    - Worker takes `I{ServiceName}` as constructor dependency and delegates to it
 10. Update `StartupExtensions.cs` registrations to reference new class names and namespaces
 11. If metric names are inline strings, extract to `Constants.Metrics` nested class
@@ -99,7 +99,7 @@ After restructuring the service itself:
 ## Phase 4: Verify
 
 1. Confirm all files are in correct locations matching `standard-service.md` structure
-2. Confirm no `{ServiceName}` prefix on class names (except `I{ServiceName}.cs` and exception classes)
+2. Confirm core service files use the `{ServiceName}` prefix per solution-structure (`{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`) and every file name matches its class name
 3. **Grep for old class names** (`{ServiceName}Settings`, `{ServiceName}HealthCheck`, etc.) — zero matches must remain
 4. Confirm namespaces match folder paths
 5. Confirm no empty folders exist

@@ -9,6 +9,12 @@ applies_to:
   - Developer
   - Tester
 mandatory: conditional
+mandatory_when:
+  - Creating ADRs or RFCs
+  - Writing design documents
+  - Creating runbooks or SOPs
+  - Creating handover documentation
+  - Creating data dictionaries
 triggers:
   - documentation
   - ADR
@@ -18,7 +24,6 @@ triggers:
   - postmortem
   - design doc
   - handover
-  - handoff
   - SOP
   - business case
   - brag document
@@ -197,7 +202,7 @@ Documentation can live at three scopes:
 | **Module** | `/Modules/{Module}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single module |
 | **Component** | `/Modules/{Module}/{Component}/Docs/` | ADRs, RFCs, runbooks, test-cases scoped to a single component |
 
-Choose the narrowest scope that still captures the right audience. Module-specific runbooks go under the module; app-wide ones go under `/docs/`. Full repo layout is defined in the [`solution-structure`](../solution-structure/SKILL.md) skill — that skill is the source of truth for folder placement, dated-vs-living filenames, the `attachments/{basename}/` convention, and ticket / project folder shapes.
+Choose the narrowest scope that still captures the right audience. Module-specific runbooks go under the module; app-wide ones go under `/docs/`. Full repo layout is defined in the [`solution-structure`](../solution-structure/SKILL.md) skill — that skill is the source of truth for folder placement and tree shapes. This skill owns dated-vs-living filename conventions, identifier schemes, and the `attachments/{basename}/` convention, defined below.
 
 ### Where each document goes
 
@@ -207,7 +212,7 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | request-for-comments | `/docs/rfcs/` (or module/component `Docs/rfcs/`) | `{yyyyMMddHHmm}-{slug}.md` | |
 | design-doc | `/docs/designs/` | `{yyyyMMddHHmm}-{slug}.md` | |
 | runbook | `/docs/runbooks/` (or module/component `Docs/runbooks/`) | `{slug}.md` | **No date prefix** — living document |
-| standard-operating-procedure | `/docs/sops/` | `{slug}.md` | **No date prefix** — living document |
+| standard-operating-procedure | `/docs/sops/` | `{slug}.md` | **No date prefix** — living document. The file is `{slug}.md`; other docs reference it by the stable ID `SOP-{slug}` — same filename-vs-ID split as dated docs (see Identifier schemes) |
 | post-incident-review | `/docs/pirs/` | `{yyyyMMddHHmm}-{slug}.md` | System-lifetime, incident-driven (not project-bound) |
 | takeover-handover | `/docs/tickets/{TICKET-ID}/` | `Handoff.md` | Fixed name. Note spelling: **Handoff** (noun-form), not Handover (verb). Same template covers both directions — incoming Takeover and outgoing Handover. |
 | data-dictionary | `/docs/` | `data-dictionary.md` | Fixed name, singleton |
@@ -225,11 +230,14 @@ Choose the narrowest scope that still captures the right audience. Module-specif
 | performance-improvement-plan | — | — | HR artifact; lives outside the repo |
 | role-brief | — | — | Lives outside the repo (HR-adjacent intake artifact, not engineering deliverable) |
 
+**Why dated vs living:** the `{yyyyMMddHHmm}-{slug}.md` pattern marks **point-in-time records** — immutable once accepted (ADR) or snapshots of a proposal, design, incident, release test scope, or status at a date. The `{slug}.md` pattern marks **living documents** revised in place as the system evolves (runbooks, SOPs, architecture overviews, test cases). **Singletons** (`README`, glossaries, dictionaries, tech stack) keep fixed names — one per repo.
+
 ### Identifier schemes
 
 - **Tickets** use the external tracker identifier, e.g. `GITHUB-{N}` for GitHub issues. Adapt the prefix if another tracker is used.
 - **Projects** use a sequential internal ID: `P1`, `P2`, `P3`, ...
 - **Documents** use a timestamp-slug ID: `{ABBR}-{yyyyMMddHHmm}-{slug}` where `ABBR` is the document-type abbreviation (`ADR`, `RFC`, `PIR`, etc.), the timestamp follows .NET DateTime conventions (`yyyy`=year, `MM`=month, `dd`=day, `HH`=24-hour, `mm`=minute), and `slug` is the kebab-case title. The filename omits the abbreviation prefix (folder context supplies it) — file is `{yyyyMMddHHmm}-{slug}.md`, in-document references use the full `{ABBR}-{yyyyMMddHHmm}-{slug}` form.
+- **SOPs** are the one living doc type with an ID of its own: the filename stays `{slug}.md` (the `/docs/sops/` folder supplies the type, same omit-the-prefix rule as dated documents), while cross-references from runbooks, tickets, and other SOPs use the full `SOP-{slug}` form. Living docs have no timestamp, so the slug is the stable handle.
 - **ID placement inside a document:** the ID lives in the `## Metadata` block (e.g., `**ADR ID:** ADR-202603121430-adopt-event-sourcing-for-billing`), **not** in the `# H1 title`. The H1 is the human-readable title only — `# Architectural Decision Record: Adopt event sourcing for the billing module` — keeping the ID out of the title prevents repetition and keeps the heading scannable.
 
 ### Codenames vs functional names in prose
@@ -286,6 +294,23 @@ Rules that govern the `## Metadata` block at the top of every template. The temp
 
 **Metadata is data, not links.** Pointers to other docs go **only** in `## References` — never as `**RFC:**` / `**Business Case:**` / `**References:**` field inside Metadata. One canonical location per fact.
 
+### Status vocabulary
+
+Templates that track lifecycle carry a `## Status` section whose `<!-- Choose one: ... -->` comment lists the values valid for that document type. The shared vocabulary is defined once here — generated documents record only the chosen value, never a vocabulary table.
+
+| Status | Description |
+|--------|-------------|
+| Draft | The document is being written and not yet agreed upon. Open for discussion. |
+| In Review | The document is under active review by stakeholders. |
+| Approved | Agreed upon by stakeholders; the official direction (execution or implementation can proceed). |
+| Implemented | The proposal or design has been implemented and is live in production. |
+| Rejected | Formally declined, with reasons documented. Kept to record what was considered. |
+| Superseded by [Doc ID] | Replaced by a newer document (e.g., `Superseded by ADR-yyyyMMddHHmm-slug`). Creates a clear chain. |
+| Archived | No longer relevant or in effect, but not directly replaced. Preserved for reference. |
+| Canceled | Intentionally abandoned or descoped before completion. No further work will be done. |
+
+The Post Incident Review extends this with incident-specific statuses (Awaiting Root Cause, Pending Approval, Completed, Follow-up Required, Closed, Obsolete, Reopened) defined in its template.
+
 ### Supporting attachments
 
 Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.excalidraw`, `.puml`, `.png`), screenshots, spreadsheets, raw data, benchmark output, recordings — lives in a sibling `attachments/` folder next to the document, under a subfolder that matches the document's basename (without `.md`).
@@ -334,6 +359,7 @@ Any non-markdown supporting material for a document — diagrams (`.mermaid`, `.
 - Tickets and projects are always folders — `/docs/tickets/{TICKET-ID}/` and `/docs/projects/P{N}/` exist as directories regardless of how many docs they hold.
 - Link from doc to attachment with a relative path: `![flow](./attachments/202604240930-new-auth/flow.mermaid)`. See *Embedding diagrams in markdown* below for format-specific patterns.
 - Create the subfolder only when there is material to put in it. Empty `attachments/` folders are clutter.
+- **Non-markdown reference folders do not use this convention.** `/specs`, `/diagrams`, and `/notebooks` take no `attachments/` — the files in them *are* the artifacts.
 - **Singletons do not use this convention.** `data-dictionary.md`, `business-glossary.md`, and `tech-stack-overview.md` live at `/docs/` root and have no sibling `attachments/` folder — placing a generic `attachments/` at the docs root pollutes the top level and isn't scoped to any doc type. If a singleton genuinely needs supporting material, embed it inline or promote the doc into its own typed folder first.
 - Commit only sharable supporting files. Personal scratch, raw recordings, or sensitive data belong elsewhere.
 
@@ -603,40 +629,3 @@ Use before reviews or promotion cycles.
 **Template:** [templates/performance-improvement-plan.md](templates/performance-improvement-plan.md)
 
 Use when an employee's performance needs formal guidance.
-
----
-
-## Role Responsibilities
-
-### Documenter
-- **Pre-implementation:** Creates RFC from Architect's technical design
-- **Post-implementation:** Updates README, ADRs, runbooks, SOPs, Business Glossary, Tech Stack Overview, Business Case
-- Selects appropriate template based on documentation need
-- Ensures runbooks/SOPs are readable by unfamiliar engineers
-
-### Architect
-- Produces design doc using `templates/design-doc.md`
-- Creates ADRs for significant architectural decisions
-- Reviews RFCs and design docs from others
-
-### DBA
-- Creates/updates data dictionary for schema changes
-
-### Developer
-- Creates runbook drafts for new services/features
-- Documents operational procedures
-
-### Tester
-- **Pre-implementation:** Drafts Test Cases from Planner's acceptance criteria — serves as the build contract for Developer
-- **Post-implementation:** Implements Test Cases as executable unit/integration tests, iterates with Reviewer
-- **During FAIL cycles:** Updates both the Test Cases document and the executable tests together
-- **If a Test Plan exists for the release/project:** Ensures Test Cases align with the TP's scope, exit criteria, and test approach; updates the TP's Test Cases Index to link the new TC document
-
-### Test Lead (when a Test Plan is invoked)
-- Authors and owns the Test Plan at release / project / app scope
-- Coordinates with Planner, Architect, and Tester(s) to define scope, environments, and exit criteria
-- Maintains the Test Cases Index inside the TP
-- Drives sign-off at exit-criteria milestones
-
-### Planner
-- Identifies documentation needs in the plan

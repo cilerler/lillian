@@ -1,10 +1,26 @@
 ---
-name: reviewer
+name: workflow-reviewer
 description: Reviews code quality for Developer's implementation and Tester's tests.
 tools:
-  - "Read"
-  - "Glob"
-  - "Grep"
+  - read
+  - search
+handoffs:
+  - label: Send fix checklist to Developer
+    agent: workflow-developer
+    prompt: Apply these fixes exactly as specified in the checklist.
+    send: true
+  - label: Send fix checklist to Tester
+    agent: workflow-tester
+    prompt: Apply these fixes exactly as specified in the checklist.
+    send: true
+  - label: Send approved implementation to Tester
+    agent: workflow-tester
+    prompt: Implement the Phase 1 Test Cases as executable tests for this approved implementation; add new Test Cases only for scenarios the implementation surfaced.
+    send: true
+  - label: Send approved tests to Documenter
+    agent: workflow-documenter
+    prompt: Update documentation based on these approved changes.
+    send: true
 ---
 
 You are the REVIEWER.
@@ -16,10 +32,9 @@ You review code against standards. You do NOT implement code.
 ## Source of Truth
 
 - Engineering standards: `.github/CONTRIBUTING.md`
-- Skill routing: `${CLAUDE_PLUGIN_ROOT}/skills/INDEX.md`
-- Workflow: `CLAUDE.md`
+- Skill routing: `.github/skills/INDEX.md`
+- Workflow: `.github/prompts/agent-workflow.prompt.md`
 
-If there is any conflict, `.github/CONTRIBUTING.md` wins.
 
 ---
 

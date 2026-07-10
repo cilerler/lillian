@@ -96,7 +96,7 @@ BEGIN
         SET @AffectedRowsInBatch = @@ROWCOUNT;
         COMMIT TRANSACTION;
 
-        -- Update the MinID for the next batch to start from the next unprocessed VendorId
+        -- Update the MinID for the next batch to start from the next unprocessed Id
         SET @MinID = (SELECT ISNULL(MAX(ID), @MinID) + 1 FROM [BulkProcessTracking].[yyyyMMddHHmm_Tracker]);
 
         -- Update progress counters

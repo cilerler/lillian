@@ -5,6 +5,9 @@ type: guidance
 applies_to:
   - Developer
 mandatory: conditional
+mandatory_when:
+  - Creating or standardizing MSSQL tables
+  - Adding new schema artifacts
 triggers:
   - create table
   - generate table
@@ -138,7 +141,7 @@ Extract from the user's request:
 
 #### Naming Conventions
 
-Constraint and index names follow EF Core's default reverse-engineering output, so a SQL-scaffolded table stays byte-identical to what `dotnet ef migrations add` would produce against the same schema. This means a team can mix direct-SQL DDL and EF migrations without constraint-name churn in diffs.
+Constraint and index names follow this skill's explicit conventions table below. Explicit, deterministic names are what keep manual DDL and EF Core interoperable: `dotnet ef dbcontext scaffold` (database-first) captures these exact names into the model (via `HasName` / `HasDatabaseName` / `HasConstraintName` where they differ from EF's own conventions), so a later `dotnet ef migrations add` against that model reproduces them — a team can mix direct-SQL DDL and EF migrations without constraint-name churn in diffs. Never leave a constraint unnamed (e.g. an inline DEFAULT): SQL Server auto-generates a hash-suffixed name that scaffolds differently on every environment.
 
 | Object | Pattern | Example |
 |---|---|---|
@@ -166,6 +169,10 @@ The template includes ALL features. **Remove** code blocks for features NOT requ
 | **Lookup** | `LookupValueCode` column, `LookupValue`/`LookupGroup`/`LookupGroupMapping` tables |
 | **Processing Order** | `ProcessingOrder` column |
 | **Dedupe Hash** | `DedupeHash` column, `IX_{TableName}_DedupeHash` index, `{TableName}_DedupeHash` trigger, extended property |
+
+**Feature compatibility notes:**
+- **Temporal and Soft Delete are mutually exclusive** — Soft Delete relies on an `INSTEAD OF DELETE` trigger, and INSTEAD OF triggers are not allowed on system-versioned temporal tables. Never generate both on the same table.
+- **Soft Delete without Delete Logging** — the view's second `UNION ALL` branch selects from `[DeleteLog].[Record]`, which only exists when Delete Logging is also requested. When Soft Delete is requested alone, omit that branch and generate the view over the base table only.
 
 **Trigger naming convention:** Triggers are named for *what they do*, not *when they fire*. The standard set is:
 
@@ -220,8 +227,9 @@ Output: Basic table with standard audit columns only.
 Create an Order table in Sales schema with:
 - CustomerId (FK to Customer)
 - OrderDate, TotalAmount, Notes
-- Features: Temporal, Soft Delete, Locking
+- Features: Soft Delete, Delete Logging, Locking
 ```
+(Temporal is omitted here because it cannot be combined with Soft Delete — see Feature compatibility notes.)
 
 #### Hierarchical Table
 ```

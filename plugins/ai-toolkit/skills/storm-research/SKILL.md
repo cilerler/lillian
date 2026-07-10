@@ -5,6 +5,9 @@ type: guidance
 applies_to:
   - All agents
 mandatory: conditional
+mandatory_when:
+  - A multi-perspective, citation-verified research briefing is requested
+note: heavyweight pipeline (~9-11 subagents per run); for a simple factual lookup, answer directly instead.
 triggers:
   - storm research
   - storm report
