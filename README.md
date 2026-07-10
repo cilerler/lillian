@@ -43,16 +43,16 @@ The `plugins/ai-toolkit/` folder carries a manifest for each platform's plugin s
 
 ```pwsh
 # Claude Code (also delivers agent personas)
-/plugin marketplace add cilerler/melis
+/plugin marketplace add cilerler/lillian
 /plugin install ai-toolkit@cilerler
 
 # OpenAI Codex (delivers skills)
-codex plugin marketplace add cilerler/melis
+codex plugin marketplace add cilerler/lillian
 codex plugin install ai-toolkit
 
 # Google Antigravity (also delivers rules)
-git clone https://github.com/cilerler/melis.git
-agy plugin install ./melis/plugins/ai-toolkit
+git clone https://github.com/cilerler/lillian.git
+agy plugin install ./lillian/plugins/ai-toolkit
 ```
 
 > GitHub Copilot CLI plugins (public preview) resolve `.claude-plugin/plugin.json` as a manifest location, so the Claude manifest doubles for Copilot CLI.
@@ -70,7 +70,7 @@ This repository is designed as a shared AI instructions base. Add it to your cod
 Symlinks are committed and shared with all contributors.
 
 ```pwsh
-git submodule add -b main https://github.com/cilerler/melis.git ".ai";
+git submodule add -b main https://github.com/cilerler/lillian.git ".ai";
 ```
 
 Pull updates:
@@ -84,13 +84,13 @@ git submodule update --remote ".ai";
 Nothing is committed. Each developer runs the setup locally.
 
 ```pwsh
-git clone https://github.com/cilerler/melis.git ".ai";
+git clone https://github.com/cilerler/lillian.git ".ai";
 
 # Exclude from git tracking (local-only, never committed)
 # Idempotent: wrapped in a marker block so re-running replaces instead of duplicating.
 $excludePath = ".\.git\info\exclude";
 $block = @"
-# >>> melis >>>
+# >>> lillian >>>
 # AI instructions base (managed block — safe to re-run)
 .ai/
 CLAUDE.md
@@ -103,11 +103,11 @@ AGENTS.md
 .github/prompts
 .github/copilot-instructions.md
 .github/CONTRIBUTING.md
-# <<< melis <<<
+# <<< lillian <<<
 "@;
 
 $existing = if (Test-Path $excludePath) { Get-Content -Path $excludePath -Raw } else { "" };
-$pattern  = "(?ms)# >>> melis >>>.*?# <<< melis <<<\s*";
+$pattern  = "(?ms)# >>> lillian >>>.*?# <<< lillian <<<\s*";
 if ($existing -match $pattern) {
     ($existing -replace $pattern, $block) | Set-Content -Path $excludePath -NoNewline;
 } else {

@@ -30,7 +30,7 @@
     For consumer repos, set this to ".ai" to copy from the submodule.
 
 .EXAMPLE
-    # Base repo (melis): sync from .github/ to .claude/ and .agents/
+    # Base repo (lillian): sync from .github/ to .claude/ and .agents/
     .\tools\sync-ai-platforms.ps1
 
     # Consumer repo: sync from submodule
