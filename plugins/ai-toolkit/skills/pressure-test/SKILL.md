@@ -150,6 +150,27 @@ BUILD — Contrarian X/10 · Expansionist X/10 · Logician X/10 · Researcher X/
 
 If a seat was dropped under the Rules, render it as `—/10 (contract not met)` and compute the spread over the remaining scores.
 
+## Step 3.5 (optional): Render the verdict as an HTML artifact
+
+Run this when the user asks for a visual, shareable, or HTML verdict (or make it a
+default output alongside the markdown). It turns the same verdict into a one-page
+briefing that reads as a set with the storm-research report.
+
+1. Read `assets/verdict-template.html` in this skill folder. Clone it; do not rebuild the CSS.
+2. Fill every `{{TOKEN}}` from the verdict you just produced:
+   - Put the verdict class on `.page` — `verdict-go` / `verdict-reshape` / `verdict-kill` —
+     it tints the banner and the Call box.
+   - Repeat the `.score-row` once per seat (highest BUILD first); set the fill class by band
+     (1–3 `fill-red` · 4–5 `fill-amber` · 6–7 `fill-green` · 8–10 `fill-blue`) and
+     `width` = score×10%. A dropped seat reads `—/10`.
+   - Repeat the `.seat` card once per persona: role label, one-line stance, 3–5 points,
+     must-hear, divergence, and the BUILD chip.
+   - Keep §04b "Blind spot the review caught" ONLY if the peer-review round ran; delete it otherwise.
+   - Keep §08 "The Reshape" ONLY when the verdict is RESHAPE; delete it for GO / KILL.
+     Retitle §06 "Money read" → "Cost read" for non-commercial briefs.
+   - Set every `{{DATE}}` from the system clock, never from memory.
+3. Save it per the verdict-saving rule in **Rules** (same `docs/pressure-tests/` location, uncommitted unless asked; if files can't be written, output the full HTML inline).
+
 ## Step 4: The re-test (RESHAPE only)
 
 If the user accepts the RESHAPE, don't reconvene the full council. Re-run only the personas whose objections drove the pivot — usually two — against the reshaped brief. Then re-issue the **complete** verdict block from the Step 3 template: replace the re-run seats' BUILD scores, carry the others forward marked "(carried)" in the score row, recompute the spread and Confidence over the mixed row, and add one line naming which seats were re-tested and why. If the verdict was saved to a file, append the new verdict under a `## Re-test [date]` heading — never overwrite the original. A full re-test is warranted only if the pivot changed who it's for or how it makes money.
@@ -164,5 +185,5 @@ If the user accepts the RESHAPE, don't reconvene the full council. Re-run only t
 - The peer-review round is opt-in (or auto on a BUILD spread ≥ 5 — never auto in the sequential fallback). It roughly doubles the run — 5 council + 5 reviewers + Judge — so don't spend it on throwaway ideas.
 - Anonymization during review is mandatory, but know its limit: it mainly prevents deference, not identification — the Buyer and Researcher self-identify by style even with names stripped, so reviewers are told to score the argument anyway.
 - Researcher figures without a URL are **discarded from the verdict rationale** — they must not appear in the Judge's reasoning. Sole exception: the disclosed no-web blind mode (see Portability), where every figure is UNVERIFIED and may inform the verdict but never decide it.
-- If the user says "save the verdict", write the brief, all five responses, the reviews (if any), and the verdict to `pressure-test-[slug]-[YYYY-MM-DD].md` (date from the system clock, never from memory) under `docs/pressure-tests/` if the project has a docs tree, else the working directory. Leave it uncommitted unless the user asks. If the platform cannot write files, output the full markdown in the reply for the user to save.
+- If the user says "save the verdict", write the brief, all five responses, the reviews (if any), and the verdict to `pressure-test-[slug]-[YYYY-MM-DD].md` (date from the system clock, never from memory) under `docs/pressure-tests/` if the project has a docs tree, else the working directory. If the user wants a visual, shareable, or HTML verdict, build the one-page artifact per Step 3.5 and save it as `pressure-test-[slug]-[YYYY-MM-DD].html` in that same location — additionally or instead, per what they asked. The markdown is the full archive (brief + all five raw responses + reviews); the HTML is the skimmable briefing. Leave outputs uncommitted unless the user asks. If the platform cannot write files, output the full markdown or HTML in the reply for the user to save.
 - After editing this skill or the council personas, re-run the three fixture briefs in `references/calibration-briefs.md` on every platform you use it on. They assert mechanics, not verdicts — a run fails if a hard mechanical check fails.

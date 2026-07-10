@@ -4,6 +4,15 @@
 * text=auto
 
 ###############################################################################
+# Markdown is (re)generated with LF by tools/sync-ai-platforms.ps1 (WriteAllText,
+# LF-normalized). Pin *.md to LF in the working tree too, so a Windows checkout
+# (text=auto -> CRLF) doesn't disagree with the generator and report every synced
+# file as modified. The repo already stores these blobs as LF; this only stops
+# the working tree from being smudged back to CRLF.
+###############################################################################
+*.md text eol=lf
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by

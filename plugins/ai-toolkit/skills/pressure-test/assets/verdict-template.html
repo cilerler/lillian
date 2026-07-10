@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--
+  PRESSURE-TEST VERDICT TEMPLATE
+  Clone this file at Step 3 (the Judge's verdict) and fill every {{TOKEN}}.
+
+  RULES
+  - Keep the <style> block VERBATIM. Do not restyle; the look must match the
+    storm-research report so the two read as one set.
+  - Put the verdict class on the .page element: verdict-go / verdict-reshape /
+    verdict-kill. It tints the banner and the "Call" box from one place.
+  - BUILD score bar — set the fill class by band and width = score x 10%:
+        1-3 = fill-red   4-5 = fill-amber   6-7 = fill-green   8-10 = fill-blue
+    Optionally give the single lowest / veto seat fill-red for emphasis even at 4-5.
+  - REPEAT the .score-row 5x (one per seat, HIGHEST score first).
+  - REPEAT the .seat card 5x (one per persona). Seat accent colours are fixed by
+    role: Contrarian=red, Expansionist=green, Logician=slate, Researcher=blue,
+    Buyer=amber. A dropped seat (contract not met) renders its score as "—/10" —
+    never invent a score.
+  - Include the §04b "Blind spot the review caught" box ONLY if the blind
+    peer-review round ran; DELETE it otherwise.
+  - Include §08 "The Reshape" ONLY when the verdict is RESHAPE; DELETE it for
+    GO / KILL.
+  - For non-commercial briefs, retitle §06 "Money read" to "Cost read" (effort,
+    opportunity cost, reversibility).
+  - Set every {{DATE}} from the system clock, never from memory.
+  - Delete these instructional comments and the repeating-block markers before
+    delivering. Fully self-contained: no network, no external fonts/JS.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pressure-Test Verdict: {{TITLE}}</title>
+<style>
+  :root {
+    --blue: #2563eb; --blue-dark: #1e3a8a; --ink: #16203a; --muted: #5b6677; --line: #e4e9f2;
+    --bg-soft: #f6f8fc; --green: #15803d; --green-bg: #e9f6ee; --amber: #b45309; --amber-bg: #fdf3e7;
+    --slate: #475569; --slate-bg: #eef1f6; --red: #b91c1c; --red-bg: #fdecec;
+    /* default tint = reshape amber; the .page verdict class overrides it */
+    --tint: #b45309; --tint-dk: #7c4a06;
+  }
+  /* verdict tint — set ONE of these on .page */
+  .verdict-go     { --tint: #15803d; --tint-dk: #14532d; }
+  .verdict-reshape{ --tint: #b45309; --tint-dk: #7c4a06; }
+  .verdict-kill   { --tint: #b91c1c; --tint-dk: #7f1d1d; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: #eef1f6; line-height: 1.62; font-weight: 400; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 900px; margin: 0 auto; background: #fff; padding: 64px 72px 80px; box-shadow: 0 1px 40px rgba(22,32,58,0.08); }
+  .eyebrow { font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--blue); margin-bottom: 14px; }
+  h1 { font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-weight: 800; font-size: 40px; line-height: 1.12; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; }
+  .lede { font-size: 17px; color: var(--muted); max-width: 640px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 26px; padding-top: 22px; border-top: 2px solid var(--line); font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; color: var(--muted); }
+  .meta-row b { color: var(--ink); font-weight: 600; }
+  /* verdict banner — tinted by the .page verdict class */
+  .verdict-banner { margin-top: 22px; background: linear-gradient(135deg, var(--tint-dk) 0%, var(--tint) 100%); border-radius: 10px; padding: 22px 26px; color: #fff; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .verdict-word { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: 0.02em; line-height: 1; }
+  .verdict-meta { border-left: 1px solid rgba(255,255,255,0.35); padding-left: 22px; }
+  .verdict-meta .conf { font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+  .verdict-meta .oneline { font-size: 15px; font-weight: 500; margin-top: 4px; max-width: 560px; }
+  .howto { margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; padding: 18px 22px; background: var(--bg-soft); }
+  .howto h4 { font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .howto ul { list-style: none; }
+  .howto li { font-size: 13.5px; color: #2b3950; margin-bottom: 7px; padding-left: 16px; position: relative; }
+  .howto li::before { content: "›"; position: absolute; left: 0; color: var(--blue); font-weight: 700; }
+  .section { margin-top: 56px; }
+  .section-num { font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13px; font-weight: 600; color: var(--blue); letter-spacing: 0.05em; }
+  h2 { font-family: 'Montserrat', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 25px; letter-spacing: -0.01em; color: var(--ink); margin: 6px 0 18px; line-height: 1.2; }
+  h2 .bar { display: inline-block; width: 38px; height: 4px; background: var(--blue); border-radius: 2px; vertical-align: middle; margin-right: 14px; }
+  p { margin-bottom: 14px; }
+  .ceo { background: var(--bg-soft); border-left: 5px solid var(--tint); padding: 26px 30px; border-radius: 4px; font-size: 16.5px; }
+  .ceo strong { font-weight: 700; color: var(--tint-dk); }
+  /* two-up risk / upside */
+  .twoup { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { border-radius: 10px; padding: 22px 24px; border: 1px solid var(--line); }
+  .card.risk { background: var(--red-bg); border-color: #f3c9c9; }
+  .card.up { background: var(--green-bg); border-color: #bfe3cc; }
+  .card h4 { font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .card.risk h4 { color: var(--red); }
+  .card.up h4 { color: var(--green); }
+  .card p { font-size: 14.5px; color: #2b3950; margin-bottom: 0; }
+  /* build scores */
+  .scores { display: flex; flex-direction: column; gap: 13px; margin-top: 6px; }
+  .score-row { display: grid; grid-template-columns: 150px 1fr 40px; align-items: center; gap: 14px; }
+  .score-name { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
+  .score-name span { display: block; font-family: 'Roboto Mono', monospace; font-weight: 400; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-top: 1px; }
+  .score-track { background: #eef1f6; border-radius: 7px; height: 16px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 7px; }
+  .fill-red { background: var(--red); }
+  .fill-amber { background: var(--amber); }
+  .fill-green { background: var(--green); }
+  .fill-blue { background: var(--blue); }
+  .score-val { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 15px; color: var(--ink); text-align: right; }
+  .spread-note { margin-top: 16px; font-size: 13.5px; color: var(--muted); font-family: 'Roboto Mono', monospace; }
+  .spread-note b { color: var(--ink); }
+  /* synthesis — dark */
+  .connection { background: linear-gradient(135deg, #16203a 0%, #1e3a8a 100%); color: #eaf0fb; border-radius: 12px; padding: 34px 38px; }
+  .connection h2 { color: #fff; }
+  .connection h2 .bar { background: #6ea8ff; }
+  .connection .section-num { color: #9ec1ff; }
+  .connection p { color: #d3def3; font-size: 16px; }
+  .connection .punch { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 600; font-size: 18px; color: #fff; line-height: 1.4; margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.18); }
+  /* blind-spot callout (only if peer review ran) */
+  .review { border: 1px dashed var(--amber); background: #fffaf2; border-radius: 10px; padding: 22px 26px; margin-top: 18px; }
+  .review .tag { font-family: 'Roboto Mono', monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); }
+  .review h4 { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 700; font-size: 16px; color: var(--ink); margin: 6px 0 10px; }
+  .review p { font-size: 14px; color: #4a3a22; margin-bottom: 0; }
+  /* persona seats */
+  .seat { border: 1px solid var(--line); border-top-width: 4px; border-radius: 10px; padding: 22px 26px; margin-bottom: 18px; }
+  .seat.red { border-top-color: var(--red); }
+  .seat.green { border-top-color: var(--green); }
+  .seat.slate { border-top-color: var(--slate); }
+  .seat.blue { border-top-color: var(--blue); }
+  .seat.amber { border-top-color: var(--amber); }
+  .seat-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+  .seat-role { font-family: 'Roboto Mono', monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .seat h3 { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 700; font-size: 19px; color: var(--ink); margin-top: 2px; }
+  .seat-score { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 13px; color: #fff; border-radius: 20px; padding: 5px 12px; white-space: nowrap; flex-shrink: 0; }
+  .seat-score.red { background: var(--red); }
+  .seat-score.amber { background: var(--amber); }
+  .seat-score.green { background: var(--green); }
+  .seat-score.blue { background: var(--blue); }
+  .stance { font-size: 15.5px; font-style: italic; color: #283449; margin: 10px 0 14px; }
+  .seat ul { list-style: none; margin-bottom: 14px; }
+  .seat li { font-size: 14px; color: #283449; margin-bottom: 8px; padding-left: 16px; position: relative; line-height: 1.5; }
+  .seat li::before { content: "•"; position: absolute; left: 0; color: var(--blue); font-weight: 700; }
+  .pill-line { display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; flex-wrap: wrap; }
+  .pill { font-family: 'Roboto Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+  .pill.hear { background: #e7f0fe; color: var(--blue); }
+  .pill.div { background: var(--amber-bg); color: var(--amber); }
+  .pill-line span { font-size: 14px; color: #2b3950; }
+  .pill-line span b { font-weight: 600; }
+  /* frontier / 48h test */
+  .frontier { border: 2px dashed var(--blue); border-radius: 12px; padding: 30px 34px; background: var(--bg-soft); }
+  .frontier .q { font-family: 'Montserrat', 'Segoe UI', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.32; color: var(--blue-dark); margin-bottom: 16px; }
+  .frontier ol { margin: 0 0 4px 20px; }
+  .frontier li { font-size: 14.5px; color: #2b3950; margin-bottom: 8px; }
+  .frontier .kill { font-size: 14px; color: var(--tint-dk); margin-top: 12px; font-weight: 500; }
+  /* pivot action items */
+  .action-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .action-item:last-child { border-bottom: none; }
+  .action-mark { font-family: 'Roboto Mono', monospace; font-weight: 600; font-size: 13px; color: var(--green); flex-shrink: 0; width: 30px; }
+  .action-item .do { font-weight: 600; color: var(--ink); }
+  .action-item p { font-size: 14.5px; margin-bottom: 0; color: #2b3950; }
+  .money { border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 6px; padding: 22px 26px; background: #fff; }
+  .money p { font-size: 15px; color: #283449; margin-bottom: 0; }
+  .footer-note { margin-top: 40px; border-top: 2px solid var(--line); padding-top: 20px; font-size: 13px; color: var(--muted); }
+  .footer-note b { color: var(--ink); }
+  .foot { margin-top: 22px; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #9aa6b8; text-align: center; }
+  @media (max-width: 640px) { .page { padding: 40px 24px 56px; } h1 { font-size: 30px; } .twoup { grid-template-columns: 1fr; } .score-row { grid-template-columns: 110px 1fr 34px; } .verdict-meta { border-left: none; padding-left: 0; } }
+  @media print { body { background: #fff; } .page { box-shadow: none; max-width: 100%; padding: 0; } .connection, .verdict-banner, .card, .seat-score { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<!-- Set the verdict class here: verdict-go | verdict-reshape | verdict-kill -->
+<body>
+<div class="page {{VERDICT_CLASS}}">
+
+  <header>
+    <div class="eyebrow">Pressure-Test &middot; Idea Council</div>
+    <h1>{{TITLE: e.g., "<Idea> : The Council Verdict"}}</h1>
+    <p class="lede">Five adversarial personas were sent to break the idea; one Judge weighed them and ruled. Every seat scored the same question, so the spread is the signal.</p>
+    <div class="meta-row">
+      <span><b>Date</b> &nbsp;{{DATE: from the system clock — never inferred}}</span>
+      <span><b>Method</b> &nbsp;5-persona adversarial council + Judge{{ + " + blind peer review" IF the review round ran}}</span>
+      <span><b>Subject</b> &nbsp;{{SUBJECT: one line — what was tested}}</span>
+    </div>
+    <div class="verdict-banner">
+      <div class="verdict-word">{{VERDICT: GO | RESHAPE | KILL}}</div>
+      <div class="verdict-meta">
+        <div class="conf">Confidence: {{CONFIDENCE: Low | Medium | High}} &middot; {{SPREAD_LABEL: e.g., "BUILD spread 3 (4–7)"}} &middot; {{REVIEW_LABEL: "no peer-review round" | "blind peer review ran"}}</div>
+        <div class="oneline">{{ONE_LINE: the call in one plain sentence}}</div>
+      </div>
+    </div>
+    <div class="howto">
+      <h4>How to read this</h4>
+      <ul>
+        <li><b>The council is adversarial by design.</b> Each persona had a mandate (attack it, sell it, reason it, research it, buy it) and was forbidden to hedge — the value is in the friction.</li>
+        <li><b>BUILD is each persona's honest 1–10 call</b> made <em>outside</em> its mandate (1 = walk away, 10 = no-brainer). Same question for all five, so the scores are comparable.</li>
+        <li><b>DIVERGENCE is where a persona breaks character</b> to give its real view — weigh it above the number.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ============ 01 THE CALL (Judge: Why) ============ -->
+  <section class="section">
+    <div class="section-num">01</div>
+    <h2><span class="bar"></span>The Call</h2>
+    <div class="ceo">
+      <p>{{WHY: 2-3 sentences resolving the council's central tension. Bold the single most important sentence with <strong>…</strong>.}}</p>
+    </div>
+  </section>
+
+  <!-- ============ 02 RISK / UPSIDE ============ -->
+  <section class="section">
+    <div class="section-num">02</div>
+    <h2><span class="bar"></span>Biggest Risk &middot; Biggest Upside</h2>
+    <div class="twoup">
+      <div class="card risk">
+        <h4>✕ Biggest risk</h4>
+        <p>{{BIGGEST_RISK: the single thing most likely to kill it.}}</p>
+      </div>
+      <div class="card up">
+        <h4>✓ Biggest upside</h4>
+        <p>{{BIGGEST_UPSIDE: the strongest reason to do it.}}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 BUILD SCORES ============ -->
+  <section class="section">
+    <div class="section-num">03</div>
+    <h2><span class="bar"></span>The BUILD Scores</h2>
+    <div class="scores">
+      <!-- REPEAT this .score-row 5x, HIGHEST score first. fill class by band: 1-3 red · 4-5 amber · 6-7 green · 8-10 blue. width = score×10%. -->
+      <div class="score-row">
+        <div class="score-name">{{PERSONA}}<span>{{ROLE}}</span></div>
+        <div class="score-track"><div class="score-fill {{FILL_CLASS}}" style="width:{{WIDTH: score×10%, e.g. 70%}}"></div></div>
+        <div class="score-val">{{SCORE}}</div>
+      </div>
+    </div>
+    <p class="spread-note">Spread = <b>{{SPREAD}}</b> (max {{MAX}} − min {{MIN}}). {{SPREAD_READ: e.g., "Below the ≥5 threshold, so the blind peer-review round did not auto-trigger." Name the lowest seat and why it matters.}}</p>
+  </section>
+
+  <!-- ============ 04 THE THROUGH-LINE (Judge: the tension, named & resolved) ============ -->
+  <section class="section">
+    <div class="connection">
+      <div class="section-num">04</div>
+      <h2><span class="bar"></span>{{SYNTH_TITLE: e.g., "What the Council Converged On" / "The Tension, Resolved"}}</h2>
+      <p>{{SYNTH_SETUP: name the real tension between the personas — where the bull and the bear actually clash.}}</p>
+      <p>{{SYNTH_RESOLVE: resolve it — the through-line only visible across all five seats, esp. the DIVERGENCE lines.}}</p>
+      <p class="punch">{{SYNTH_PUNCH: the one-sentence payoff the founder should carry away.}}</p>
+    </div>
+
+    <!-- ============ 04b BLIND SPOT (peer-review round only — DELETE if it didn't run) ============ -->
+    <div class="review">
+      <div class="tag">Blind spot the review caught</div>
+      <h4>{{BLINDSPOT_TITLE: the thing no single persona saw until cross-review}}</h4>
+      <p>{{BLINDSPOT_BODY: what the anonymized reviewers converged on that changes or sharpens the verdict.}}</p>
+    </div>
+  </section>
+
+  <!-- ============ 05 THE COUNCIL (5 seats) ============ -->
+  <section class="section">
+    <div class="section-num">05</div>
+    <h2><span class="bar"></span>The Council, Seat by Seat</h2>
+
+    <!-- REPEAT this .seat 5x — one per persona. Accent (seat class) + score chip colour by role/score.
+         Roles → seat class: Contrarian=red · Expansionist=green · Logician=slate · Researcher=blue · Buyer=amber.
+         Score chip class by band: 1-3/4-5 red or amber, 6-7 green, 8-10 blue. Lead with the most decisive seat if you like.
+         A dropped seat (contract not met) → score chip reads "—/10". -->
+    <div class="seat {{SEAT_CLASS}}">
+      <div class="seat-head">
+        <div>
+          <div class="seat-role">{{ROLE_LABEL: e.g., "The Buyer · voice of the customer"}}</div>
+          <h3>{{STANCE: the persona's one-line stance, in quotes}}</h3>
+        </div>
+        <div class="seat-score {{SCORE_CHIP_CLASS}}">BUILD {{SCORE}}/10</div>
+      </div>
+      <ul>
+        <!-- 3-5 POINTS bullets -->
+        <li>{{POINT}}</li>
+      </ul>
+      <div class="pill-line"><span class="pill hear">Must-hear</span><span>{{MUST_HEAR}}</span></div>
+      <div class="pill-line"><span class="pill div">Divergence</span><span>{{DIVERGENCE: the honest, out-of-character call — or "none".}}</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 06 MONEY READ (retitle "Cost read" for non-commercial briefs) ============ -->
+  <section class="section">
+    <div class="section-num">06</div>
+    <h2><span class="bar"></span>{{MONEY_TITLE: "Money Read" | "Cost Read"}}</h2>
+    <div class="money">
+      <p>{{MONEY_READ: rough price, realistic time-to-first-dollar, and whether they can ship fast given their edge. For non-commercial: effort, opportunity cost, reversibility.}}</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 THE CHEAPEST 48-HOUR TEST ============ -->
+  <section class="section">
+    <div class="section-num">07</div>
+    <h2><span class="bar"></span>The Cheapest 48-Hour Test</h2>
+    <div class="frontier">
+      <div class="q">{{TEST_INTRO: the smallest, fastest thing that validates the riskiest assumption BEFORE building.}}</div>
+      <ol>
+        <!-- REPEAT one <li> per step -->
+        <li>{{TEST_STEP}}</li>
+      </ol>
+      <p class="kill">{{KILL_CRITERION: the result that tells them to stop — the cheap way to be proven wrong.}}</p>
+    </div>
+  </section>
+
+  <!-- ============ 08 THE RESHAPE (RESHAPE verdict ONLY — DELETE for GO / KILL) ============ -->
+  <section class="section">
+    <div class="section-num">08</div>
+    <h2><span class="bar"></span>The Reshape — Keep the Upside, Fix the Flaw</h2>
+    <!-- REPEAT one .action-item per pivot move -->
+    <div class="action-item">
+      <div class="action-mark">{{NN}}</div>
+      <div><span class="do">{{PIVOT_MOVE: the change in one sentence.}}</span><p>{{PIVOT_DETAIL: why + how it preserves the upside while removing the fatal flaw.}}</p></div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <div class="footer-note">
+    <!-- Optional closing notes: cross-method convergence, what shifted from the original plan, caveats. Delete if unused. -->
+    <p style="margin-bottom:0;">{{FOOTER_NOTE: optional — e.g., cross-method convergence, or what the verdict shifts from the founder's stated plan.}}</p>
+  </div>
+
+  <div class="foot">Pressure-Test &middot; 5-persona adversarial council + Judge &middot; {{DATE}} &middot; Verdict: {{VERDICT}} ({{CONFIDENCE}} confidence) &middot; BUILD {{SCORE_ROW: e.g., "5·7·6·6·4, spread 3"}}</div>
+
+</div>
+</body>
+</html>
