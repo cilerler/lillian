@@ -23,7 +23,7 @@ triggers:
 references:
   - templates/batch-insert.sql
   - templates/batch-update.sql
-summary: Generates production-ready batched T-SQL scripts for large-scale UPDATE and DELETE operations on MSSQL, plus tracking-table staging for batch processing, with progress tracking, checkpointing, and transaction safety.
+summary: Generates production-ready batched T-SQL for large-scale UPDATE/DELETE on MSSQL, plus tracking-table staging, with progress tracking, checkpointing, and transaction safety.
 ---
 
 # Bulk Data Operations

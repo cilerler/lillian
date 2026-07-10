@@ -307,7 +307,7 @@ The repository includes production-ready skills for engineering, documentation, 
 - **dotnet-service-generator**: Interactive scaffolder for .NET service modules with observability and DI conventions.
 - **excalidraw-diagram-generator**: Excalidraw diagram JSON files that make visual arguments, with automatic PNG rendering via a bundled renderer.
 - **infrastructure**: Docker and Kubernetes patterns for .NET 10 services including health probes, resource limits, and graceful shutdown.
-- **mssql-bulk-data-operations**: Generates production-ready batched T-SQL scripts for large-scale UPDATE and DELETE operations on MSSQL, plus tracking-table staging for batch processing, with progress tracking, checkpointing, and transaction safety.
+- **mssql-bulk-data-operations**: Generates production-ready batched T-SQL for large-scale UPDATE/DELETE on MSSQL, plus tracking-table staging, with progress tracking, checkpointing, and transaction safety.
 - **mssql-table-scaffolder**: Scaffolds production-ready MSSQL tables or generates migration scripts following enterprise conventions.
 - **observability**: Standard SLIs, dashboard templates, alert conventions, and OpenTelemetry patterns for .NET services.
 - **plantuml-sequence-diagram-generator**: Generate professional PlantUML sequence diagrams with consistent styling, colors, and standardized interaction patterns.
