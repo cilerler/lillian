@@ -162,6 +162,18 @@ Run once after setup, and again after pulling updates:
 
 This generates the plugin bundle (`plugins/ai-toolkit/`) plus the two repo-level outputs plugins cannot deliver: `.claude/rules/` and `.agents/workflows/`. Since `.claude/` and `.agents/` are symlinked, the consumer repo sees them automatically; skills, commands, and agents come from the installed plugin.
 
+### Auto-Sync on Commit (Git Hook)
+
+Git does **not** use the hook until you point it at the committed hooks directory. This is per-clone local config — it lives in `.git/config` and is never committed — so run it once after cloning:
+
+```pwsh
+git config core.hooksPath tools/git/hooks;
+```
+
+After that, any commit that changes an AI source file automatically runs [tools/sync-ai-platforms.ps1](tools/sync-ai-platforms.ps1), bumps the plugin's **patch** version ([tools/bump-plugin-version.ps1](tools/bump-plugin-version.ps1)), and stages the regenerated files and folders. Commits that don't touch `.github/` sources are skipped, so it adds no overhead to unrelated work. Minor and major bumps stay manual.
+
+> This hook is for contributors to this template repo. Consumer repositories that install via submodule or clone regenerate with the manual sync step above instead — the hook's paths assume it runs from this repo's root.
+
 ### Setup Notes
 
 - If your repo already has `.github/CONTRIBUTING.md` or `.github/copilot-instructions.md`, skip those symlinks and keep your project-specific files
@@ -275,7 +287,11 @@ root/
 ├── .claude-plugin/marketplace.json  # Claude plugin marketplace
 │
 ├── tools/
-│   └── sync-ai-platforms.ps1        # generates plugins/, .claude/rules/, .agents/workflows/ from .github/
+│   ├── sync-ai-platforms.ps1        # generates plugins/, .claude/rules/, .agents/workflows/ from .github/
+│   ├── bump-plugin-version.ps1      # patch-bumps the plugin version (run by the pre-commit hook)
+│   └── git/                         # opt-in pre-commit hook — runs sync + bump on commit
+│       ├── hooks/pre-commit         #   shell shim → pre-commit.ps1
+│       └── pre-commit.ps1           #   gate + pointer: runs each generator, stages outputs
 │
 ├── AGENTS.md                        # Codex & Antigravity entry point (pointer)
 ├── CLAUDE.md                        # Claude entry point (pointer)
