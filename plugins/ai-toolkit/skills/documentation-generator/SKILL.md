@@ -306,7 +306,7 @@ Templates that track lifecycle carry a `## Status` section whose `<!-- Choose on
 | Implemented | The proposal or design has been implemented and is live in production. |
 | Rejected | Formally declined, with reasons documented. Kept to record what was considered. |
 | Superseded by [Doc ID] | Replaced by a newer document (e.g., `Superseded by ADR-yyyyMMddHHmm-slug`). Creates a clear chain. |
-| Archived | No longer relevant or in effect, but not directly replaced. Preserved for reference. |
+| Archived | No longer relevant or in effect, but not directly replaced. Preserved for reference. For Test Plans specifically: the release shipped; the plan is preserved for reference. |
 | Canceled | Intentionally abandoned or descoped before completion. No further work will be done. |
 
 The Post Incident Review extends this with incident-specific statuses (Awaiting Root Cause, Pending Approval, Completed, Follow-up Required, Closed, Obsolete, Reopened) defined in its template.
@@ -460,7 +460,7 @@ Use before coding complex features.
 
 Use for cross-feature, release, or project-level test strategy.
 
-**Created by:** Test Lead (or senior Tester)
+**Created by:** Test Lead (or senior Tester) — coordinates with Planner, Architect, and Tester(s) to define scope, environments, and exit criteria, and maintains the Test Cases Index inside the TP
 
 **When to use:** opt-in, *not* per-feature.
 
@@ -484,7 +484,7 @@ Use for QA verification of acceptance criteria.
 
 **Timing:** Test Cases are **drafted before Developer starts** — they serve as the build contract, derived 1:1 from the Planner's acceptance criteria. Developer builds against them. After Developer passes Reviewer, the Tester implements the Test Cases as executable unit/integration tests. Both the Test Cases document and the executable tests are updated together during Reviewer FAIL iterations.
 
-If a Test Plan exists for the release/project, ensure these Test Cases align with the TP's exit criteria, environment expectations, and overall approach.
+If a Test Plan exists for the release/project, ensure these Test Cases align with the TP's scope, exit criteria, environment expectations, and overall approach — and update the TP's Test Cases Index to link the new TC document (the index goes stale silently if nobody maintains it).
 
 Drafting Test Cases pre-implementation catches missing or ambiguous acceptance criteria while they are still cheap to fix and prevents the Tester from backfilling cases to match what was built (confirmation bias).
 

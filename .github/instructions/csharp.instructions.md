@@ -45,3 +45,11 @@ This allows unit tests or debugging sessions to see generated SQL without execut
 ### Reference Implementation
 
 The `MyOrganization.EntityFrameworkCore.SqlServer` workspace library (BatchLock feature) is the canonical end-to-end example — embedded SQL script with debug mode, lazy resource loading, and constants. See the library table in `.github/skills/INDEX.md`.
+
+### Benefits
+
+- SQL syntax highlighting and validation in editors
+- Proper code review of SQL changes (not hidden in C# strings)
+- Separation of concerns (SQL logic vs C# orchestration)
+- Debug mode for testing without execution
+- Consistent pattern across the codebase

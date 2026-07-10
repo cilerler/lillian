@@ -4,6 +4,7 @@ description: Interactive scaffolder for .NET service modules with observability 
 type: guidance
 applies_to:
   - Developer
+  - Architect
 mandatory: conditional
 mandatory_when:
   - Creating a new .NET service

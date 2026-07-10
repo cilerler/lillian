@@ -45,7 +45,7 @@ If multiple skills match a task, apply all applicable skills.
 
 ## dotnet-service-generator
 - Path: `.github/skills/dotnet-service-generator/SKILL.md`
-- Applies to: Developer
+- Applies to: Developer, Architect
 - Mandatory when:
   - Creating a new .NET service
   - Scaffolding service modules

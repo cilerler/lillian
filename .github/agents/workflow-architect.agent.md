@@ -54,6 +54,7 @@ Approved plan with acceptance criteria from Planner.
 5. Identify applicable skills from INDEX.md
 6. If DBA is involved: review and approve DBA's schema design
 7. If Designer is involved: review and approve Designer's UI mockups
+8. Review RFCs and Design Docs drafted by Documenter — the document quality gate before approval (this is design review, not code review)
 
 ---
 

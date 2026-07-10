@@ -3,7 +3,7 @@ applyTo: "**"
 ---
 
 > [!TIP]
-> Engineering standards live in `.github/CONTRIBUTING.md`.
+> Engineering standards live in `.github/CONTRIBUTING.md`. If anything conflicts with it, CONTRIBUTING.md wins.
 
 # Workflow Orchestration
 
