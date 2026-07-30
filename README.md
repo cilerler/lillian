@@ -65,7 +65,17 @@ This repository is designed as a shared AI instructions base. Add it to your cod
 
 > In the examples below, `.ai` is the local directory you choose for the submodule or clone (e.g. `.ai`, `vendor/ai-templates`).
 
-### Private Repositories (Git Submodule)
+Two setups. The choice is **whether the wiring is committed**, which is about contributors — not about whether the repository is public or private.
+
+| | Committed setup | Local-only setup |
+|---|---|---|
+| Vendoring | git submodule | plain clone |
+| Committed to your repo | `.gitmodules`, the `.ai` gitlink, all symlinks | nothing |
+| Contributors | get the wiring on clone | run the setup themselves |
+| Pins a version | yes — the gitlink records a commit | no — `.ai` tracks itself |
+| Use when | several people work in the repo | you work alone, or people should opt in |
+
+### Committed Setup (Git Submodule)
 
 Symlinks are committed and shared with all contributors.
 
@@ -91,28 +101,80 @@ Pull updates:
 git submodule update --remote ".ai";
 ```
 
-### Public Repositories (Local Clone)
+### Local-Only Setup (Plain Clone)
 
-Nothing is committed. Each developer runs the setup locally.
+Nothing is committed. Each developer runs the setup themselves.
 
 ```pwsh
 git clone https://github.com/cilerler/lillian.git ".ai";
+```
 
-# Exclude from git tracking (local-only, never committed)
+Then keep the vendored content out of git. Add this block to your **`.gitignore`**:
+
+```gitignore
+# =========================
+# AI Files
+# =========================
+CLAUDE.local.md
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.mcp.json
+.github/agents
+.github/instructions
+.github/prompts
+.github/skills
+.copilotignore
+.claudeignore
+.aiexclude
+.geminiignore
+.claude/
+.agents/
+.agent/
+.ai/
+```
+
+> [!IMPORTANT]
+> **A trailing slash matches directories only.** Git records a symlink as a *file* entry, even when it points at a directory — so `.github/skills/` silently fails to match the symlink `.github/skills`, and it lands in your next commit.
+>
+> That is why the list above is split:
+> - **No trailing slash** — `.github/agents`, `.github/instructions`, `.github/prompts`, `.github/skills`, and the root `.md` entries. These *are* symlinks.
+> - **Trailing slash kept** — `.claude/`, `.agents/`, `.ai/`. These are real directories; only their contents are linked.
+>
+> `.agent/` covers Antigravity's legacy folder name alongside the current `.agents/`.
+
+Two entries are **deliberately absent**: `.github/copilot-instructions.md` and `.github/CONTRIBUTING.md`. Both are copies your repository owns and commits — see *Copy the Repo-Owned Files*.
+
+<details>
+<summary>Alternative: <code>.git/info/exclude</code> instead of <code>.gitignore</code></summary>
+
+Use this only when the repository must show **no trace** of the setup — a shared repo where teammates shouldn't see AI entries in a tracked file.
+
+The cost is real: `.git/info/exclude` lives inside `.git/`, so it is per-clone and invisible. Re-clone the repository and it is gone, silently, and the next commit sweeps up every symlink.
+
+```pwsh
 # Idempotent: wrapped in a marker block so re-running replaces instead of duplicating.
 $excludePath = ".\.git\info\exclude";
 $block = @"
 # >>> lillian >>>
 # AI instructions base (managed block — safe to re-run)
-.ai/
+CLAUDE.local.md
 CLAUDE.md
 AGENTS.md
-.claude
-.agents
+GEMINI.md
+.mcp.json
 .github/agents
 .github/instructions
-.github/skills
 .github/prompts
+.github/skills
+.copilotignore
+.claudeignore
+.aiexclude
+.geminiignore
+.claude/
+.agents/
+.agent/
+.ai/
 # <<< lillian <<<
 "@;
 
@@ -124,6 +186,8 @@ if ($existing -match $pattern) {
     Add-Content -Path $excludePath -Value "`n$block";
 }
 ```
+
+</details>
 
 Pull updates:
 
@@ -221,6 +285,16 @@ Content reaches an assistant through **two independent channels**, and knowing w
 
 > **Expect duplicates if you also install the plugin.** Claude Code namespaces plugin skills as `/ai-toolkit:skill-name` and project skills as `/skill-name`, so each skill shows up twice under two names. Harmless — VS Code Copilot behaves the same way. Pick one channel if it bothers you; project scope is the one that needs no setup on a new machine.
 
+> **The two channels update separately.** They are different clones of this repository, so pulling one does nothing to the other and they drift silently:
+>
+> ```pwsh
+> git -C .ai pull;                              # refreshes project scope
+> # in a Claude Code session:
+> /plugin marketplace update cilerler           # refreshes the installed plugin
+> ```
+>
+> Compare `git -C .ai rev-parse --short HEAD` against the marketplace clone's HEAD. "I updated the toolkit but my skills didn't change" is almost always this. If you use project scope only, the second command is unnecessary.
+
 ### Copy the Repo-Owned Files
 
 Two files are **copied, not symlinked** — they belong to your repository, are committed with it, and are read by people as well as agents:
@@ -247,55 +321,105 @@ Everything else — plan-mode defaults, verification rules, core principles — 
 
 ### Refresh the Copies Automatically
 
-Copies go stale when lillian moves. Detect it where the pull actually happens — inside the `.ai` clone — with a `post-merge` hook. Hooks in `.git/hooks/` are per-clone and never committed, so this stays on your machine:
+Copies go stale when this repository moves. Detect it where the pull actually happens — inside the `.ai` clone — with a `post-merge` hook.
+
+Put **nothing but a pointer** inside `.git/`. Everything that decides what happens is committed to your repo, so the flow is controlled from files you version rather than from git's private directory — which is per-clone and vanishes without warning.
+
+```
+.ai/.git/hooks/post-merge   →  tools/git/hooks/post-merge   the only file inside .git/
+tools/git/hooks/post-merge  →  tools/git/post-merge.ps1     committed shim
+tools/git/post-merge.ps1    →  scripts/…                    orchestrator
+scripts/ai-copies-refresh   ·                               the task
+```
+
+**1. `.ai/.git/hooks/post-merge`** — the stub. Written once and never touched again: it hops to the consuming repo and hands over.
 
 ```sh
-# .ai/.git/hooks/post-merge      (remember: chmod +x)
 #!/bin/sh
-cp .github/CONTRIBUTING.md ../.github/CONTRIBUTING.md
 
-if ! diff -q .github/copilot-instructions.md ../.github/copilot-instructions.md >/dev/null 2>&1; then
-  echo "NOTE: lillian's copilot-instructions.md differs from yours — review before porting."
-  echo "      diff .ai/.github/copilot-instructions.md .github/copilot-instructions.md"
-fi
-
-echo "CONTRIBUTING.md refreshed — check 'git diff' in the parent repo."
+# Delegate to the consuming repo's committed hook.
+cd "$(git rev-parse --show-toplevel)/.." || exit 1
+sh ./tools/git/hooks/post-merge
 ```
 
-It fires on every `git pull` inside `.ai`, including fast-forwards. The working directory is `.ai`, so `../` is your repository. `CONTRIBUTING.md` is refreshed; `copilot-instructions.md` is only *reported*, never overwritten, because you own your edits.
+> On **macOS and Linux**, mark it executable or git skips it silently:
+> `chmod +x .ai/.git/hooks/post-merge`
+>
+> On **Windows** this is unnecessary — NTFS has no execute bit, `core.filemode` is `false`, and Git for Windows runs hooks through its bundled shell regardless.
 
-> A `post-merge` hook cannot live in the parent repo — `.ai` is a separate git repository, so the parent's hooks never fire when it updates.
+**2. `tools/git/hooks/post-merge`** — committed shim, identical in shape to your `pre-commit`. No `../` here: the stub already moved the working directory to your repo.
 
-If you'd rather not depend on a hook firing, compare on demand instead — no state to track:
+```sh
+#!/bin/sh
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+pwsh -File "$REPO_ROOT/tools/git/post-merge.ps1"
+```
+
+Because it resolves the root itself, this shim also works when `core.hooksPath` points at `tools/git/hooks` and your **own** `git pull` fires it — same script, same result, no special case.
+
+**3. `tools/git/post-merge.ps1`** — orchestrator. No logic; it points at each task script in turn and stops on the first failure:
 
 ```pwsh
-if ((Get-FileHash ".ai\.github\CONTRIBUTING.md").Hash -ne (Get-FileHash ".github\CONTRIBUTING.md").Hash) {
-    Write-Warning "CONTRIBUTING.md is out of date with lillian";
+$ErrorActionPreference = "Stop"
+
+# uncomment the following line to disable post-merge refresh
+# exit 0;
+
+Write-Host "`n🔄 Running post-merge refresh..." -ForegroundColor Cyan
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+& "$scriptDir/scripts/ai-copies-refresh.ps1"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+
+Write-Host "`n✅ Refresh complete!" -ForegroundColor Green
+exit 0
+```
+
+**4. `tools/git/scripts/ai-copies-refresh.ps1`** — the task. Self-contained and standalone-runnable:
+
+```pwsh
+$ErrorActionPreference = "Stop"
+
+Write-Host "`nRefreshing files copied from .ai/..." -ForegroundColor Cyan
+
+# Resolve from this script's location, not the working directory — the hook
+# invokes it with .ai/ as the current directory.
+$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$source   = Join-Path $repoRoot ".ai/.github"
+$target   = Join-Path $repoRoot ".github"
+
+if (-not (Test-Path $source)) {
+    Write-Host "No .ai/ checkout found. Skipping refresh." -ForegroundColor Gray
+    exit 0
 }
+
+# Verbatim copy — this file is kept identical to upstream
+Copy-Item (Join-Path $source "CONTRIBUTING.md") (Join-Path $target "CONTRIBUTING.md") -Force
+Write-Host "CONTRIBUTING.md refreshed — review with 'git diff'." -ForegroundColor Green
+
+# Owned by this repo — report drift, never overwrite
+$upstream = Join-Path $source "copilot-instructions.md"
+$mine     = Join-Path $target "copilot-instructions.md"
+
+if ((Test-Path $mine) -and (Get-FileHash $upstream).Hash -ne (Get-FileHash $mine).Hash) {
+    Write-Host "copilot-instructions.md differs upstream — port by hand:" -ForegroundColor Yellow
+    Write-Host "  git diff --no-index $mine $upstream" -ForegroundColor Gray
+}
+
+exit 0
 ```
 
-That works from anywhere — a Claude Code `SessionStart` hook, a build step, or by hand.
-
-### Sync AI Platforms
-
-Run once after setup, and again after pulling updates:
+The hook fires on every `git pull` inside `.ai`, including fast-forwards. Because paths resolve from `$PSScriptRoot`, both scripts also run directly:
 
 ```pwsh
-& ".\.ai\tools\sync-ai-platforms.ps1";
+& ".\tools\git\post-merge.ps1";                      # whole chain
+& ".\tools\git\scripts\ai-copies-refresh.ps1";       # just this task
 ```
 
-This generates the plugin bundle (`plugins/ai-toolkit/`) plus the two outputs plugins cannot deliver: `.claude/rules/` and `.agents/workflows/`. All three land inside `.ai/`, and the sub-symlinks created above expose them at the paths each assistant expects.
-
-> [!IMPORTANT]
-> **The installed plugin and your `.ai/` checkout update separately.** They are two different clones of this repository — pulling one does nothing to the other, so they drift silently:
->
-> ```pwsh
-> git -C .ai pull;                              # refreshes project scope
-> # in a Claude Code session:
-> /plugin marketplace update cilerler           # refreshes the installed plugin
-> ```
->
-> Check with `git -C .ai rev-parse --short HEAD` against the marketplace clone's HEAD. "I updated lillian but my skills didn't change" is almost always this. If you rely on project scope only, the second command is unnecessary.
+> A `post-merge` hook cannot live in the consuming repository — `.ai` is a separate git repository, so the parent's hooks never fire when it updates. Only the shim has to sit inside `.ai/.git/hooks/`; the orchestrator and task scripts are yours and committed.
 
 ### Auto-Sync on Commit (Git Hook)
 
@@ -312,7 +436,8 @@ After that, any commit that changes an AI source file automatically runs [tools/
 ### Setup Notes
 
 - If your repo already has its own `CONTRIBUTING.md` or `copilot-instructions.md`, keep yours and cherry-pick from lillian's rather than overwriting — and drop the matching `cp` line from the `post-merge` hook.
-- **Do not create a `.codex/` folder for skills.** Codex reads project skills from `.agents/skills`, which the setup above already provides. `.codex/config.toml` is machine configuration, not shared content, and nothing in lillian belongs there.
+- **Do not create a `.codex/` folder for skills.** Codex reads project skills from `.agents/skills`, which the setup above already provides. `.codex/config.toml` is machine configuration, not shared content, and nothing here belongs there.
+- **Do not run `tools/sync-ai-platforms.ps1`.** It is a contributor step for this repository. The outputs it generates — `plugins/ai-toolkit/`, `.claude/rules/`, `.agents/workflows/` — are committed and arrive with the clone. Running it from a consuming repo writes into `.ai/`, dirtying vendored content and setting up a conflict on the next pull there.
 
 ### Managing Symlinks
 
