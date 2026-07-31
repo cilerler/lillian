@@ -132,7 +132,6 @@ GEMINI.md
 .geminiignore
 .claude/
 .agents/
-.agent/
 .ai/
 ```
 
