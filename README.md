@@ -73,6 +73,7 @@ Two setups. The choice is **whether the wiring is committed**, which is about co
 |---|---|---|
 | Vendoring | git submodule | plain clone |
 | Committed to your repo | `.gitmodules`, the `.ai` gitlink, all symlinks | nothing |
+| `.gitignore` AI block | **must not be present** — it would block the commit | required — it is what keeps them local |
 | Contributors | get the wiring on clone | run the setup themselves |
 | Pins a version | yes — the gitlink records a commit | no — `.ai` tracks itself |
 | Use when | several people work in the repo | you work alone, or people should opt in |
@@ -81,11 +82,23 @@ Two setups. The choice is **whether the wiring is committed**, which is about co
 
 Symlinks are committed and shared with all contributors.
 
+> [!IMPORTANT]
+> **Do not add the AI Files ignore block** — it belongs to the local-only setup, and the two are opposites. Here `.ai/`, `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/` and the four `.github/*` symlinks are all *supposed* to be committed.
+>
+> If your repo already carries that block (from a template, or from a previous local-only setup), **remove it before running the command below.** `git submodule add` refuses an ignored path outright — *"The following path is ignored by one of your .gitignore files: .ai"* — and even forced through with `-f`, every symlink you create afterwards would be silently unstageable.
+>
+> Two entries are worth keeping either way, because they are per-developer rather than shared wiring:
+>
+> ```gitignore
+> CLAUDE.local.md
+> .mcp.json
+> ```
+
 ```pwsh
 git submodule add -b main https://github.com/cilerler/lillian.git ".ai";
 ```
 
-Because the symlinks are committed, anyone cloning your repository needs two things — worth putting in that repo's own README:
+Because the symlinks are committed, cloning the repository requires two additional steps. Document them in that repository's own README:
 
 ```pwsh
 # 1. Fetch the submodule. A plain `git clone` leaves .ai/ empty and every symlink dangles.
@@ -329,6 +342,9 @@ One thing may still need adjusting: the `tasks/todo.md` and `tasks/lessons.md` p
 
 ### Auto-Sync on Commit (Git Hook)
 
+> [!CAUTION]
+> This hook belongs to **this** repository only. Do not enable it in a repository that vendors this one: its paths assume the repo root is here, and it would rewrite generated output that is already committed and arrives with the checkout. See *Setup Notes* — consuming repos never run the sync.
+
 Git does **not** use the hook until you point it at the committed hooks directory. This is per-clone local config — it lives in `.git/config` and is never committed — so run it once after cloning:
 
 ```pwsh
@@ -336,8 +352,6 @@ git config core.hooksPath tools/git/hooks;
 ```
 
 After that, any commit that changes an AI source file automatically runs [tools/sync-ai-platforms.ps1](tools/sync-ai-platforms.ps1), bumps the plugin's **patch** version ([tools/bump-plugin-version.ps1](tools/bump-plugin-version.ps1)), and stages the regenerated files and folders. Commits that don't touch `.github/` sources are skipped, so it adds no overhead to unrelated work. Minor and major bumps stay manual.
-
-> This hook is for contributors to this template repo. Consumer repositories that install via submodule or clone regenerate with the manual sync step above instead — the hook's paths assume it runs from this repo's root.
 
 ### Setup Notes
 
