@@ -513,6 +513,7 @@ The repository includes production-ready skills for engineering, documentation, 
 - **solution-structure**: Source of truth for the opinionated .NET solution folder structure (root scaffolding, /docs, /src/Modules/Component/Service hierarchy, /tools/Kubernetes, /tests) and the documentation placement rules that govern items inside it.
 - **storm-research**: Multi-perspective, citation-verified HTML research briefing — five expert lenses, contradiction map, synthesized report, adversarial peer review with primary-source verification.
 - **work-item-generator**: Interactive generator for work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks) that gathers context through targeted questions and produces structured documents.
+- **workspace-productivity**: Initializes folders and documents, syncs tasks, triages stale items, and maintains a two-tier memory system for decoding workplace shorthand.
 <!-- END GENERATED SKILLS LIST -->
 
 See [.github/skills/INDEX.md](.github/skills/INDEX.md) for detailed skill documentation.

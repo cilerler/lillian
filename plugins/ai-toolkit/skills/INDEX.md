@@ -237,6 +237,23 @@ If multiple skills match a task, apply all applicable skills.
   - "report a bug"
 
 ---
+
+## workspace-productivity
+- Path: `.github/skills/workspace-productivity/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - The user wants to initialize the productivity system in Google Drive for the first time
+  - The user wants to sync, update, or triage their task list
+  - The user wants to perform a comprehensive scan of Workspace activities
+- Triggers:
+  - "workspace productivity"
+  - "sync tasks"
+  - "triage tasks"
+  - "initialize productivity"
+  - "memory system"
+- Note: System initializes a Google Drive workspace or updates an existing one with current tasks and memory system.
+
+---
 <!-- END GENERATED SKILLS -->
 
 # Libraries
