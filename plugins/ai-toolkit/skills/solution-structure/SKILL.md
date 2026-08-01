@@ -39,6 +39,7 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
 | `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
 | `mssql-table-scaffolder` | `/Resources/SQL/` placement when SQL is embedded in a service |
+| `mssql-bulk-data-operations` | `/docs/tickets/.../attachments/` or `/docs/runbooks/.../attachments/` placement for operational SQL scripts |
 
 ---
 
