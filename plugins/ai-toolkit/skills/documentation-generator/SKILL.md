@@ -67,6 +67,31 @@ summary: Document templates for ADRs, RFCs, design docs, runbooks, post incident
 
 Provides standardized templates for all documentation types used in the repository.
 
+## Before you write: read the template file
+
+**The section lists in this document are an index, not a substitute for the templates.** Every
+document type below points at a file under `templates/`. Open that file and author from it.
+
+Composing a document from the headings listed in this skill produces something that looks
+conformant and is not. The sections it drops are usually the ones that matter most — Cross-Cutting
+Concerns, Rollback, Verify Completion, Revision History — because those are the sections an author
+does not think to invent. The result reads as complete while silently lacking exactly what a future
+reader needs.
+
+The order:
+
+1. Identify the document type and its target directory from **File Placement & Naming** below.
+2. **Read `templates/{type}.md` in full** before writing a line.
+3. Author using that file's headings, in that order.
+4. Include sections you will leave thin. Where one genuinely does not apply, say so in a line —
+   `Not applicable: single-operator system, no rotation` — rather than deleting the heading. An
+   explicit absence is information; a missing heading is indistinguishable from an oversight.
+
+**Existing documents are different.** Do not retrofit template sections into an already-accepted
+ADR or a historical record by inventing content for them. Restructure and rename freely; author
+new prose never. A missing section in an accepted decision is honest, whereas a fabricated
+Assumptions or Risks section corrupts the record.
+
 ## When to Use
 
 | Phase | Document Type | When to Use | Created By | Reviewed By |
