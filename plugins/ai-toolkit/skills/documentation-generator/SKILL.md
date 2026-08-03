@@ -137,15 +137,16 @@ PHASE                          ARTIFACTS
                                and during Implementation
 5. Build Contract              Test Plan (project-level, optional;
                                  parallel to Design Doc)
-                               Test Cases (per-feature, derived from
+                               Test Cases (living; per-feature, from
                                  acceptance criteria; pre-code)
 6. Implementation              Code gated by Test Cases
-7. Operate                     Runbook (living) + SOP (repeatable)
+7. Operate                     Runbook (living) + SOP (living)
 8. Report Progress             Project Status Update (recurring)
 9. Closure                     Handover (same template as Phase 3,
                                  used outgoing here)
                                Project Retrospective
-10. Always-Living Reference    Tech Stack Overview (updated when an
+10. Always-Living Reference    all four are living
+                               Tech Stack Overview (updated when an
                                  ADR changes a tech choice)
                                Architecture Overview (updated when
                                  system behavior or structure shifts)
