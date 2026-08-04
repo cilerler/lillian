@@ -94,7 +94,7 @@ User Request
 |------|-----------|--------------|----------|------------------|
 | Planner | `workflow-planner` | Always | Plan with acceptance criteria | - |
 | Architect | `workflow-architect` | Always | Technical design, observability requirements | Approves Designer/DBA output |
-| Designer | `workflow-designer` | If UI involved | HTML/Tailwind mockups | Architect approves |
+| Designer | `workflow-designer` | If UI involved | HTML mockups | Architect approves |
 | DBA | `workflow-dba` | If DB changes | Schema design, migrations, index strategy | Architect approves |
 | Documenter (proposal) | `workflow-documenter` | If RFC needed (pre-impl) | RFC from Architect's design | - |
 | Documenter (design) | `workflow-documenter` | If Design Doc needed (post-RFC) | Design Doc — build-ready detail | - |

@@ -433,7 +433,7 @@ See [.github/skills/documentation-generator/SKILL.md](.github/skills/documentati
 |-------|---------|--------|
 | **Planner** | Analyzes requests and creates actionable plans | Plan with acceptance criteria |
 | **Architect** | Designs system architecture and technical specifications | Technical design, observability requirements |
-| **Designer** | Creates UI/UX mockups and component designs | HTML/Tailwind mockups |
+| **Designer** | Creates UI/UX mockups and component designs | HTML mockups |
 | **DBA** | Designs database schemas and migration strategies | Schema design, migrations, indexes |
 | **Developer** | Implements code, infrastructure, and observability | Code, Docker, K8s, dashboards, runbooks |
 | **Reviewer** | Reviews implementation against standards | PASS/FAIL verdict with feedback |
