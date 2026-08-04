@@ -3,7 +3,7 @@
 ## File Structure
 
 ```
-Services/{ServiceName}/
+{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/
 ├── Abstractions/                    # Public contract — crosses module boundary
 │   ├── Events/
 │   │   └── {Name}Event.cs
@@ -57,7 +57,7 @@ Services/{ServiceName}/
 > **Placement rule**: `I{ServiceName}.cs` defaults to `Contracts/` (internal). Move to `Abstractions/` only when other modules or external consumers need to reference it.
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Contracts;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public interface I{ServiceName}
 {
@@ -68,7 +68,7 @@ public interface I{ServiceName}
 ## Abstractions/Requests/{Name}Request.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Requests;
 
 public record Process{ServiceName}Request(string Id, string Data);
 ```
@@ -76,7 +76,7 @@ public record Process{ServiceName}Request(string Id, string Data);
 ## Abstractions/Responses/{Name}Response.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
 
 public record {ServiceName}Response(string Id, string Result, DateTime ProcessedAt);
 ```
@@ -84,7 +84,7 @@ public record {ServiceName}Response(string Id, string Result, DateTime Processed
 ## Abstractions/Events/{Name}Event.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Abstractions.Events;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Events;
 
 public record {ServiceName}CompletedEvent(string Id, DateTime CompletedAt);
 ```
@@ -92,7 +92,7 @@ public record {ServiceName}CompletedEvent(string Id, DateTime CompletedAt);
 ## Constants.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
 public static class Constants
 {
@@ -117,7 +117,7 @@ public static class Constants
 > - **Connection strings follow the `ConnectionString`/`ConnectionStringKey` pattern:** the Settings property holds the *key* (e.g. `"MsSqlConnection"`), not the URL itself. The actual URL lives under the top-level `ConnectionStrings` section in `appsettings.json` and is resolved at use-site via `IConfiguration.GetConnectionString(settings.ConnectionStringKey)`. This keeps the connection-string catalog consistent across services and makes environment-specific overrides straightforward. Apply the same `*ConnectionStringKey` pattern for any URL or endpoint (management URLs, cache endpoints, SMTP servers, etc.), not just databases.
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
 
 public class {ServiceName}Settings
 {
@@ -148,7 +148,7 @@ public class {ServiceName}Settings
 Custom validation attributes for Settings properties:
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Validators;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Validators;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public sealed class NoNumericCharactersAttribute : ValidationAttribute
@@ -187,7 +187,7 @@ Common validators for Settings:
 Internal entities and domain objects. Public DTOs (requests, responses) belong in `Abstractions/`.
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Models;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
 
 public record {ServiceName}Item
 {
@@ -200,7 +200,7 @@ public record {ServiceName}Item
 ## Exceptions/{Name}Exception.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
 
 public class {ServiceName}Exception : Exception
 {
@@ -242,10 +242,10 @@ public class {ServiceName}ValidationException : {ServiceName}Exception
 ## Mappers/{Name}Mapper.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Mappers;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Mappers;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Models;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
 
 public static class {ServiceName}Mapper
 {
@@ -267,14 +267,14 @@ public static class {ServiceName}Mapper
 ## {ServiceName}Service.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
-using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
-using {Organization}.{Product}.Services.{ServiceName}.Mappers;
-using {Organization}.{Product}.Services.{ServiceName}.Models;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Mappers;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
 
 public class {ServiceName}Service : I{ServiceName}
 {
@@ -374,7 +374,7 @@ See `dependencies.md` for the typed HTTP client pattern (interface, implementati
 Internal helper implementations such as Repository, UnitOfWork, Decorator, Observer, and similar patterns. Their interfaces go in `Contracts/`.
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Internals;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Internals;
 
 internal class DataSanitizer : IDataSanitizer
 {
@@ -401,7 +401,7 @@ SQL files must be set as **Embedded Resource** in the `.csproj`:
 ### Resources/SQL/Constants.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
 
 public static class Constants
 {
@@ -412,7 +412,7 @@ public static class Constants
 ### Resources/SQL/ResourceLoader.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
 
 public static class ResourceLoader
 {
@@ -428,7 +428,7 @@ public static class ResourceLoader
 Usage in `Service.cs`:
 
 ```csharp
-using {Organization}.{Product}.Services.{ServiceName}.Resources.SQL;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
 
 var sql = ResourceLoader.SelectForUpdate;
 ```
@@ -445,10 +445,10 @@ Resources/
 ## Extensions/StartupExtensions.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Extensions;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Extensions;
 
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class StartupExtensions
 {

@@ -14,7 +14,7 @@ Clients/
 
 ```csharp
 // Clients/I{ExternalApi}Client.cs
-namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Clients;
 
 public interface I{ExternalApi}Client
 {
@@ -25,7 +25,7 @@ public interface I{ExternalApi}Client
 
 ```csharp
 // Clients/{ExternalApi}Client.cs
-namespace {Organization}.{Product}.Services.{ServiceName}.Clients;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Clients;
 
 public class {ExternalApi}Client : I{ExternalApi}Client
 {

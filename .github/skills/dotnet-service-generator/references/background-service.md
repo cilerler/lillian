@@ -5,7 +5,7 @@ Extends `WorkerBackgroundService<TSettings>` for scheduled/continuous background
 ## File Structure
 
 ```
-Services/{ServiceName}/
+{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/
 ├── Abstractions/                    # Public contract
 │   ├── Events/
 │   ├── Interfaces/
@@ -543,7 +543,7 @@ public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleServi
 ## Settings.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Configuration;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
 
 public class {ServiceName}Settings : WorkerBackgroundServiceSettings
 {
@@ -557,7 +557,7 @@ public class {ServiceName}Settings : WorkerBackgroundServiceSettings
 ## HealthCheck.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
 public class {ServiceName}HealthCheck : IHealthCheck
 {
@@ -611,9 +611,9 @@ public class {ServiceName}HealthCheck : IHealthCheck
 ### {ServiceName}Service.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public class {ServiceName}Service : I{ServiceName}
 {
@@ -688,10 +688,10 @@ public class {ServiceName}Service : I{ServiceName}
 ### {ServiceName}Worker.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings>
 {
@@ -723,9 +723,9 @@ public class {ServiceName}Worker : WorkerBackgroundService<{ServiceName}Settings
 ## StartupExtensions.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Extensions;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Extensions;
 
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class StartupExtensions
 {

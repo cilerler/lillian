@@ -21,7 +21,7 @@ Api/
 Route group definition and endpoint registration:
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
 public static class {ServiceName}Api
 {
@@ -43,10 +43,10 @@ public static class {ServiceName}Api
 ## Api/GetAllEndpoint.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class GetAllEndpoint
 {
@@ -71,10 +71,10 @@ public static class GetAllEndpoint
 ## Api/GetByIdEndpoint.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class GetByIdEndpoint
 {
@@ -103,12 +103,12 @@ public static class GetByIdEndpoint
 ## Api/CreateEndpoint.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
-using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
 
 public static class CreateEndpoint
 {
@@ -142,12 +142,12 @@ public static class CreateEndpoint
 ## Api/UpdateEndpoint.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
-using {Organization}.{Product}.Services.{ServiceName}.Exceptions;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
 
 public static class UpdateEndpoint
 {
@@ -185,9 +185,9 @@ public static class UpdateEndpoint
 ## Api/DeleteEndpoint.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class DeleteEndpoint
 {
@@ -286,7 +286,7 @@ Api/
 ```
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
 public static class {ServiceName}Api
 {
@@ -302,11 +302,11 @@ public static class {ServiceName}Api
 ```
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName}.Api;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Api;
 
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Requests;
-using {Organization}.{Product}.Services.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Requests;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public static class ExecuteEndpoint
 {

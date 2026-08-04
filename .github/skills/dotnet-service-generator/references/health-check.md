@@ -5,10 +5,10 @@ Custom health checks for services using `IHealthCheck`.
 ## {ServiceName}HealthCheck.cs
 
 ```csharp
-namespace {Organization}.{Product}.Services.{ServiceName};
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
 
-using {Organization}.{Product}.Services.{ServiceName}.Configuration;
-using {Organization}.{Product}.Services.{ServiceName}.Contracts;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
+using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
 
 public class {ServiceName}HealthCheck : IHealthCheck
 {
