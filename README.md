@@ -500,6 +500,7 @@ root/
 The repository includes production-ready skills for engineering, documentation, and decision-making tasks. The list below is **generated** by the sync script from each skill's `summary:` frontmatter:
 
 <!-- BEGIN GENERATED SKILLS LIST (sync-ai-platforms.ps1) -->
+- **cross-vendor-examine**: Convenes the AI assistants installed on the machine, each from a different vendor, as independent reviewers; relays their output verbatim and synthesizes agreement, disagreement, and error. Symmetric — any assistant can host.
 - **documentation-generator**: Document templates for ADRs, RFCs, design docs, runbooks, post incident reviews, SOPs, handovers, business cases, test plans, test cases, role briefs, and more.
 - **dotnet-service-generator**: Interactive scaffolder for .NET service modules with observability and DI conventions.
 - **excalidraw-diagram-generator**: Excalidraw diagram JSON files that make visual arguments, with automatic PNG rendering via a bundled renderer.

@@ -7,6 +7,25 @@ If multiple skills match a task, apply all applicable skills.
 
 <!-- BEGIN GENERATED SKILLS (edit SKILL.md frontmatter, not this block) -->
 
+## cross-vendor-examine
+- Path: `.github/skills/cross-vendor-examine/SKILL.md`
+- Applies to: All agents
+- Mandatory when:
+  - The user wants a document, plan, or decision reviewed by an AI other than the one they are talking to
+  - The user wants cross-vendor disagreement surfaced before committing to something
+- Triggers:
+  - "cross-vendor-examine"
+  - "second opinion"
+  - "discuss with codex"
+  - "ask gemini"
+  - "run it past claude"
+  - "check with the other model"
+  - "cross-model review"
+  - "cross-vendor review"
+- Note: cross-vendor peer review over local CLIs; each round is a paid API call on the user's own account for that vendor. Not for factual questions or single-answer problems.
+
+---
+
 ## documentation-generator
 - Path: `.github/skills/documentation-generator/SKILL.md`
 - Applies to: Documenter, Planner, Architect, Developer, Tester

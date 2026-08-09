@@ -6,14 +6,14 @@ Each module is a separate `.csproj` with a sibling `.Abstractions` project for c
 
 ```
 src/
-├── Company.Project.Abstractions/                   # App-wide cross-module contracts
+├── {Organization}.{Product}.Abstractions/                   # App-wide cross-module contracts
 │   ├── Events/
 │   ├── Interfaces/
 │   ├── Models/
 │   ├── Requests/
 │   └── Responses/
 │
-├── Company.Project.Host/                           # Single deployable composition root
+├── {Organization}.{Product}.Host/                           # Single deployable composition root
 │   ├── Program.cs                                  # Feature flags choose which modules to register
 │   ├── Dockerfile
 │   ├── appsettings.*.json
@@ -25,14 +25,14 @@ src/
 │   ├── Observability/Grafana/                      # Platform overview dashboard
 │   └── Constants.cs
 │
-├── Company.Project.Modules.{ModuleName}.Abstractions/   # Separate csproj — module's public contract
+├── {Organization}.{Product}.Modules.{ModuleName}.Abstractions/   # Separate csproj — module's public contract
 │   ├── Events/
 │   ├── Interfaces/
 │   ├── Models/
 │   ├── Requests/
 │   └── Responses/
 │
-├── Company.Project.Modules.{ModuleName}/                # Module project — components and services live here as folders
+├── {Organization}.{Product}.Modules.{ModuleName}/                # Module project — components and services live here as folders
 │   ├── Constants.cs                                # Module-wide constants
 │   ├── Contracts/                                  # Module-wide internal interfaces
 │   ├── Exceptions/                                 # Module-level base exceptions
@@ -79,8 +79,8 @@ src/
 │   │
 │   └── {ComponentName2}/
 │
-├── Company.Project.Modules.{ModuleName2}.Abstractions/
-└── Company.Project.Modules.{ModuleName2}/
+├── {Organization}.{Product}.Modules.{ModuleName2}.Abstractions/
+└── {Organization}.{Product}.Modules.{ModuleName2}/
 ```
 
 ## Why Polylith, Not Monolith
@@ -99,10 +99,10 @@ You get the operational simplicity of a monolith (one Dockerfile, one CI pipelin
 
 | Project | Scope | Why separate? |
 |---|---|---|
-| `Company.Project.Abstractions` | App-wide cross-module contracts | Types depended on by multiple modules without forcing a module-to-module dependency |
-| `Company.Project.Host` | Composition root, configuration, hosting | One deployable per repo |
-| `Company.Project.Modules.{Module}.Abstractions` | Module's public contract | Other modules reference contracts without pulling in implementation |
-| `Company.Project.Modules.{Module}` | Module implementation (components, services) | One module = one project, one feature-flag toggle |
+| `{Organization}.{Product}.Abstractions` | App-wide cross-module contracts | Types depended on by multiple modules without forcing a module-to-module dependency |
+| `{Organization}.{Product}.Host` | Composition root, configuration, hosting | One deployable per repo |
+| `{Organization}.{Product}.Modules.{Module}.Abstractions` | Module's public contract | Other modules reference contracts without pulling in implementation |
+| `{Organization}.{Product}.Modules.{Module}` | Module implementation (components, services) | One module = one project, one feature-flag toggle |
 
 Components and services stay as **folders** inside the module project — they're internal implementation that ships and changes together. Only contracts that cross the **module** boundary get their own `.csproj`. Component-level and service-level `Abstractions/` are folders within the module project, not separate projects, since they only need to be visible inside the module.
 
@@ -110,7 +110,7 @@ Components and services stay as **folders** inside the module project — they'r
 
 | Level | Boundary | Visibility | Example |
 |---|---|---|---|
-| Host | Composition root (.csproj) | Picks modules at startup via feature flags | `Company.Project.Host` |
+| Host | Composition root (.csproj) | Picks modules at startup via feature flags | `{Organization}.{Product}.Host` |
 | Module | Separate project (.csproj) | Cross-module contracts in `.Abstractions` sibling project | `RecipeManagement`, `MealPlanning` |
 | Component | Folder inside module | Cross-component within module via component `Abstractions/` folder | `Authoring`, `Discovery` |
 | Service | Folder inside component | Cross-service within component via service `Abstractions/` folder | `RecipeEditor`, `RecipeSearch` |
@@ -125,15 +125,15 @@ Exceptions cascade through the hierarchy. Module-level base exceptions let you c
 
 ```csharp
 // Module level (in module project)
-namespace Company.Project.Modules.RecipeManagement.Exceptions;
+namespace {Organization}.{Product}.Modules.RecipeManagement.Exceptions;
 public class RecipeManagementException : Exception { ... }
 
 // Component level — inherits from module
-namespace Company.Project.Modules.RecipeManagement.Authoring.Exceptions;
+namespace {Organization}.{Product}.Modules.RecipeManagement.Authoring.Exceptions;
 public class AuthoringException : RecipeManagementException { ... }
 
 // Service level — inherits from component
-namespace Company.Project.Modules.RecipeManagement.Authoring.RecipeEditor.Exceptions;
+namespace {Organization}.{Product}.Modules.RecipeManagement.Authoring.RecipeEditor.Exceptions;
 public class RecipeEditorException : AuthoringException { ... }
 ```
 
@@ -142,14 +142,14 @@ public class RecipeEditorException : AuthoringException { ... }
 Namespaces follow the project name plus folder hierarchy:
 
 ```
-Company.Project.Modules.{ModuleName}.Abstractions                  # separate project
-Company.Project.Modules.{ModuleName}.Abstractions.Events           # folder in Abstractions project
-Company.Project.Modules.{ModuleName}                               # module project root
-Company.Project.Modules.{ModuleName}.{ComponentName}               # folder in module project
-Company.Project.Modules.{ModuleName}.{ComponentName}.Abstractions  # folder — cross-component, NOT a separate project
-Company.Project.Modules.{ModuleName}.{ComponentName}.{ServiceName} # folder
-Company.Project.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts
-Company.Project.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration
+{Organization}.{Product}.Modules.{ModuleName}.Abstractions                  # separate project
+{Organization}.{Product}.Modules.{ModuleName}.Abstractions.Events           # folder in Abstractions project
+{Organization}.{Product}.Modules.{ModuleName}                               # module project root
+{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}               # folder in module project
+{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.Abstractions  # folder — cross-component, NOT a separate project
+{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName} # folder
+{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts
+{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration
 ```
 
 Component- and service-level `Abstractions/` folders share the same parent namespace — they're inside the module's csproj. Only **module-level** `Abstractions` is a separate project (default), so other modules can reference contracts without dragging in the implementation assembly.
@@ -159,8 +159,8 @@ Component- and service-level `Abstractions/` folders share the same parent names
 For services that don't belong to a module (e.g., infrastructure services, single-purpose utilities), drop the `Modules.{Module}` segment and place them inside the Host:
 
 ```
-Company.Project.Services.{ServiceName}
-Company.Project.Services.{ServiceName}.Contracts
+{Organization}.{Product}.Services.{ServiceName}
+{Organization}.{Product}.Services.{ServiceName}.Contracts
 ```
 
 ## Cross-Module Communication
@@ -170,7 +170,7 @@ Company.Project.Services.{ServiceName}.Contracts
 | `CookingExperience.Social.ReviewManager` | `ReviewCreatedEvent` | `RecipeManagement.Discovery.Recommender` |
 | `MealPlanning.Shopping.ListGenerator` | `ListGeneratedEvent` | `MealPlanning.Shopping.PriceTracker` (intra-module) |
 
-Cross-module: the consumer's project references the producing module's `.Abstractions` project (e.g., `Company.Project.Modules.CookingExperience.Abstractions`) — never the implementation project. Cross-component within a module: reference the producing component's `Abstractions/` folder. Cross-service within a component: reference the producing service's `Abstractions/` folder. Never reference internal types across boundaries.
+Cross-module: the consumer's project references the producing module's `.Abstractions` project (e.g., `{Organization}.{Product}.Modules.CookingExperience.Abstractions`) — never the implementation project. Cross-component within a module: reference the producing component's `Abstractions/` folder. Cross-service within a component: reference the producing service's `Abstractions/` folder. Never reference internal types across boundaries.
 
 ```
 Module A (.csproj)                          Module B (.csproj)
@@ -197,7 +197,7 @@ Registration cascades: Host → Module → Component → Service. The Host decid
 ### Host Program.cs / Extensions/StartupExtensions.cs
 
 ```csharp
-namespace Company.Project.Host.Extensions;
+namespace {Organization}.{Product}.Host.Extensions;
 
 public static class StartupExtensions
 {
@@ -222,7 +222,7 @@ public static class StartupExtensions
 ### Module Extensions/StartupExtensions.cs
 
 ```csharp
-namespace Company.Project.Modules.{ModuleName}.Extensions;
+namespace {Organization}.{Product}.Modules.{ModuleName}.Extensions;
 
 public static class StartupExtensions
 {
@@ -239,7 +239,7 @@ public static class StartupExtensions
 ### Component Extensions/StartupExtensions.cs
 
 ```csharp
-namespace Company.Project.Modules.{ModuleName}.{ComponentName}.Extensions;
+namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.Extensions;
 
 public static class StartupExtensions
 {
@@ -260,20 +260,20 @@ See [standard-service.md](standard-service.md) for the service-level registratio
 ## Project References
 
 ```
-Company.Project.Host.csproj
-├── ProjectReference: Company.Project.Abstractions
-├── ProjectReference: Company.Project.Modules.RecipeManagement
-├── ProjectReference: Company.Project.Modules.RecipeManagement.Abstractions
-├── ProjectReference: Company.Project.Modules.MealPlanning
-└── ProjectReference: Company.Project.Modules.MealPlanning.Abstractions
+{Organization}.{Product}.Host.csproj
+├── ProjectReference: {Organization}.{Product}.Abstractions
+├── ProjectReference: {Organization}.{Product}.Modules.RecipeManagement
+├── ProjectReference: {Organization}.{Product}.Modules.RecipeManagement.Abstractions
+├── ProjectReference: {Organization}.{Product}.Modules.MealPlanning
+└── ProjectReference: {Organization}.{Product}.Modules.MealPlanning.Abstractions
 
-Company.Project.Modules.RecipeManagement.csproj
-├── ProjectReference: Company.Project.Abstractions
-├── ProjectReference: Company.Project.Modules.RecipeManagement.Abstractions
-└── ProjectReference: Company.Project.Modules.CookingExperience.Abstractions   # only when consuming CookingExperience contracts
+{Organization}.{Product}.Modules.RecipeManagement.csproj
+├── ProjectReference: {Organization}.{Product}.Abstractions
+├── ProjectReference: {Organization}.{Product}.Modules.RecipeManagement.Abstractions
+└── ProjectReference: {Organization}.{Product}.Modules.CookingExperience.Abstractions   # only when consuming CookingExperience contracts
 
-Company.Project.Modules.RecipeManagement.Abstractions.csproj
-└── ProjectReference: Company.Project.Abstractions   # only if app-wide types are used in the contracts
+{Organization}.{Product}.Modules.RecipeManagement.Abstractions.csproj
+└── ProjectReference: {Organization}.{Product}.Abstractions   # only if app-wide types are used in the contracts
 ```
 
 A module project never references another module's **implementation** — only its `.Abstractions` sibling. This keeps the dependency graph DAG-shaped (no module-to-module implementation coupling) and makes feature-flagged exclusions safe at runtime.
@@ -284,11 +284,11 @@ Recipe/cooking platform demonstrating multiple modules, components, and services
 
 ```
 src/
-├── Company.Project.Abstractions/
-├── Company.Project.Host/
+├── {Organization}.{Product}.Abstractions/
+├── {Organization}.{Product}.Host/
 │
-├── Company.Project.Modules.RecipeManagement.Abstractions/
-├── Company.Project.Modules.RecipeManagement/
+├── {Organization}.{Product}.Modules.RecipeManagement.Abstractions/
+├── {Organization}.{Product}.Modules.RecipeManagement/
 │   ├── Authoring/                                  # Write path
 │   │   ├── RecipeEditor/                           # CRUD for recipes
 │   │   ├── IngredientParser/                       # "2 cups flour" → structured data
@@ -298,8 +298,8 @@ src/
 │       ├── Recommender/                            # "You might like" suggestions
 │       └── CollectionManager/                      # User-curated collections
 │
-├── Company.Project.Modules.MealPlanning.Abstractions/
-├── Company.Project.Modules.MealPlanning/
+├── {Organization}.{Product}.Modules.MealPlanning.Abstractions/
+├── {Organization}.{Product}.Modules.MealPlanning/
 │   ├── Planning/                                   # Weekly meal plans
 │   │   ├── PlanBuilder/                            # Drag-drop meal calendar
 │   │   └── NutritionCalculator/                    # Aggregate macros
@@ -308,8 +308,8 @@ src/
 │       ├── StoreLocator/                           # Find stores, aisle mapping
 │       └── PriceTracker/                           # Compare prices
 │
-├── Company.Project.Modules.CookingExperience.Abstractions/
-├── Company.Project.Modules.CookingExperience/
+├── {Organization}.{Product}.Modules.CookingExperience.Abstractions/
+├── {Organization}.{Product}.Modules.CookingExperience/
 │   ├── StepByStep/                                 # Guided cooking
 │   │   ├── CookingSession/                         # Real-time step tracking
 │   │   ├── Timer/                                  # Multi-timer management
@@ -319,8 +319,8 @@ src/
 │       ├── CookingLog/                             # "I made this" history
 │       └── ShareManager/                           # Social media sharing
 │
-├── Company.Project.Modules.UserProfile.Abstractions/
-└── Company.Project.Modules.UserProfile/
+├── {Organization}.{Product}.Modules.UserProfile.Abstractions/
+└── {Organization}.{Product}.Modules.UserProfile/
     └── Identity/                                   # Single component
         ├── ProfileManager/                         # Preferences, dietary restrictions
         ├── SkillTracker/                           # Beginner → expert progression

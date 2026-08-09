@@ -45,7 +45,7 @@ Ask these questions (one or two at a time):
 1. **Service name** - PascalCase (e.g., `PaymentProcessor`, `UserNotification`)
 2. **Namespace** - `{Organization}.{Product}` (e.g., `Microsoft.Windows`)
 3. **Purpose** - Brief description (used to identify dependencies)
-4. **Output location** - Where to generate files (standalone: `Services/{ServiceName}/`, modular polylith: `Company.Project.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`)
+4. **Output location** - Where to generate files (standalone: `Services/{ServiceName}/`, modular polylith: `{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`)
 5. **Interface visibility** - Is `I{ServiceName}` consumed by other modules? (default: **no** → placed in `Contracts/`)
 
 ## Step 2: Identify Dependencies
