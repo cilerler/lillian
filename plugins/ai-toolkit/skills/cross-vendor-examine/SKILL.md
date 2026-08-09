@@ -25,7 +25,7 @@ summary: Convenes the AI assistants installed on the machine, each from a differ
 
 Every assistant on this machine ships a command-line interface with a headless mode: a prompt goes in, an answer comes out. That makes them reachable by each other. This skill uses that to get a real second opinion instead of a self-review.
 
-**The value is disagreement, not consensus.** Two models agreeing proves very little — they are all trained toward agreeableness, and the characteristic failure is fast false convergence, not deadlock. When peers agree, say so briefly. When they split, that is the finding: report both positions, say which is right, and say why.
+**The value is independent scrutiny, including both convergence and disagreement.** Treat convergence as supporting evidence, not proof. When reviewers split, report each position and identify which is better supported; if the evidence does not resolve the issue, say so plainly.
 
 It is also the fastest way to find your own errors. A peer given your analysis and asked what you got wrong will tell you, and it will frequently be correct.
 
@@ -49,6 +49,8 @@ Do not assume which assistants are installed. Probe, and use what answers.
 
 Check each with a `which` / `Get-Command`. Report which peers are available before starting, and never silently drop one that failed — a review that quietly became a monologue is a misleading result.
 
+**Drop your own CLI from the discovery results before presenting them.** You are the host, not a peer; an assistant convening its own command produces the same-vendor self-review this skill exists to avoid. Note: `agy` (Antigravity) is the host CLI for Gemini models when running under Antigravity.
+
 **Then ask the user which peers to convene. Do not default to all of them.** Present what's installed, note that each peer is a separate paid call on their account with that vendor, and let them choose. Reasons they will often want fewer than all:
 
 - One strong peer plus the host finds most of what is findable; the third mostly agrees, and agreement is the one thing this exercise cannot use.
@@ -57,10 +59,10 @@ Check each with a `which` / `Get-Command`. Report which peers are available befo
 
 Once chosen, keep that roster for the whole session unless the user changes it — swapping peers mid-review makes rounds incomparable.
 
-**Pick the peer's model at run time**, strongest reasoning tier available:
+**Use the peer CLI's configured default model** unless the user explicitly chooses a specific model or reasoning tier. If model selection matters, present the available choices and cost/latency trade-offs before proceeding; never silently select the highest-cost reasoning tier.
 
-- `agy models` lists them.
-- Claude takes `--model <alias>`.
+- `agy models` lists Antigravity models.
+- Claude takes `--model <alias>` (e.g., `opus`, `sonnet`).
 - Codex takes `-m <model>`; the user's `config.toml` holds their default.
 
 **Never route a peer to a model from the host's own family.** A second opinion from the same vendor is not a second opinion. Most of these CLIs expose competitors' models — check, and skip them for this purpose.
@@ -69,29 +71,35 @@ Once chosen, keep that roster for the whole session unless the user changes it �
 
 Before you read any peer output, write your own and save it. Once you have read theirs you cannot un-read it, and every later "independent" judgement of yours is contaminated.
 
-## Step 3 — send the brief
+## Step 3 — deliver the brief
+
+Compose the brief per Step 4 first before delivering it; this section details the mechanics for delivering the prompt to each CLI once written.
 
 Each CLI has its own arrangement of prompt, model, and permission flags. The traps below are real and each one fails *silently* — you get a plausible answer to the wrong question.
 
+**Default to inlining only the material the user approved and disabling peer tools.** Grant file-reading tools only when necessary, after stating the readable scope and verifying it excludes secrets or unrelated repository files. Read-only access does not mean disclosure-safe.
+
 ### Antigravity
 
-```
-agy --model <model> -p "<PROMPT>" --print-timeout 5m
+```powershell
+$prompt = Get-Content prompt.md -Raw
+agy --model <model> -p $prompt --print-timeout 5m
 ```
 
 - **`--model` must come before `-p`**, or it is ignored and the default model answers.
 - **The prompt is an argument, not stdin.** Piping fails silently — it will answer something you never asked.
 - **Headless mode auto-denies every tool permission**, so it cannot read files. **Inline the document into the prompt.** Do not reach for the skip-permissions flag: it auto-approves *all* tools including command execution and file edits.
+- **On PowerShell**, pass single-quoted here-strings (`@'...'@`) or string variables so `$` and backticks stay literal. Windows caps command lines near 32,767 characters — if the inlined document approaches that limit, split the review into smaller topic rounds rather than truncating.
 - Reasoning effort is part of the model name.
 - Resume with `--conversation <id>`, or `-c` for the most recent.
 
 ### Claude Code
 
 ```
-claude -p "<PROMPT>" --model <model> --allowed-tools "Read,Grep,Glob"
+claude -p "<PROMPT>" --model <model> --tools "Read,Grep,Glob"
 ```
 
-- Scope tools explicitly. A reviewer needs to read, not to write.
+- Scope tools explicitly with `--tools` (or `--allowed-tools`). A reviewer needs to read, not to write.
 - `--output-format text` for prose; `stream-json` if you need to parse.
 - Resume with `--resume <session-id>`, or `-c` to continue the most recent.
 
@@ -104,7 +112,7 @@ codex exec -C "<workdir>" -s read-only -m <model> -c 'model_reasoning_effort="<e
 - Prompt arrives on **stdin**. Note that PowerShell has no `<` redirect — pipe instead (`Get-Content prompt.md -Raw | codex exec ...`).
 - **Capture the session id from the startup banner.** You need it to continue the conversation.
 - Resume: `codex exec resume [FLAGS] <SESSION_ID> -` — the trailing `-` reads stdin. Flags go *before* the id, and `resume` rejects `-C`/`-s` because it inherits the original session's workdir and sandbox; override with `-c sandbox_mode="read-only"` instead.
-- `-o <file>` writes only the final message; without it the transcript repeats the whole answer.
+- `-o <file>` writes only the final message to stdout; without it progress outputs to stderr and final text to stdout.
 - `--strict-config` errors on unrecognized `-c` keys — use it to verify an override actually took effect.
 - If the user's config generates persistent memories, `-c memories.generate_memories=false` stops writing while still reading. Do not disable the memories *feature* wholesale unless the user asks — that stops reading too.
 
@@ -124,13 +132,14 @@ Prompt quality decides whether this is useful or theatre.
 ## Step 5 — relay and synthesize
 
 - **Quote peers verbatim.** Never paraphrase a reviewer you are also arguing with — you are an interested party.
-- Report in this order: what converged (high confidence), what they caught that you missed, where you disagree and who is right, what is still open.
+- Report in this order: what converged, what peers caught that the host missed, where positions differ, which position is better supported (or why the issue remains unresolved), and what is still open.
+- **When peers split against each other**, report both positions verbatim, rule on it yourself with a reasoned argument, and never resolve peer splits by simple majority vote.
 - **Concede plainly when a peer is right.** State the correction and move on; do not narrate the mistake.
 - When you disagree, defend the position with an argument, not with deference. Peers are often wrong, particularly about a user's deliberate stylistic choices and about anything they treat as a deviation from a published standard.
 
 ## Step 6 — confirmation pass
 
-**After applying changes, send the result back.** In practice a confirmation pass finds a defect the fixes themselves introduced more often than not — including defects in text the peer itself proposed. Skipping this is the single most likely way to end worse than you started.
+After applying changes, run at most one confirmation pass with the same roster. Stop when no material finding remains or after two total rounds (initial review plus confirmation). Obtain explicit user consent before any additional round, stating its expected benefit and cost.
 
 ## Constraints
 
