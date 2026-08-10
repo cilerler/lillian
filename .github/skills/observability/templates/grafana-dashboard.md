@@ -44,19 +44,16 @@ Every dashboard **must** include these three Grafana template variables. Place t
 ```json
 {
   "name": "env",
-  "type": "custom",
-  "query": "Integration,Testing,Staging,Production",
-  "current": { "text": "Production", "value": "Production" },
-  "options": [
-    { "text": "Integration", "value": "Integration", "selected": false },
-    { "text": "Testing", "value": "Testing", "selected": false },
-    { "text": "Staging", "value": "Staging", "selected": false },
-    { "text": "Production", "value": "Production", "selected": true }
-  ],
+  "type": "query",
+  "datasource": { "type": "prometheus", "uid": "$datasource" },
+  "query": "label_values(http_server_request_duration_seconds_count, env)",
+  "current": {},
   "hide": 0,
   "label": "Environment",
   "includeAll": false,
-  "multi": false
+  "multi": false,
+  "refresh": 2,
+  "sort": 1
 }
 ```
 
@@ -247,19 +244,16 @@ Full template. Replace `$(SERVICE_NAME)` with the actual service name.
       },
       {
         "name": "env",
-        "type": "custom",
-        "query": "Integration,Testing,Staging,Production",
-        "current": { "text": "Production", "value": "Production" },
-        "options": [
-          { "text": "Integration", "value": "Integration", "selected": false },
-          { "text": "Testing", "value": "Testing", "selected": false },
-          { "text": "Staging", "value": "Staging", "selected": false },
-          { "text": "Production", "value": "Production", "selected": true }
-        ],
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(http_server_request_duration_seconds_count, env)",
+        "current": {},
         "hide": 0,
         "label": "Environment",
         "includeAll": false,
-        "multi": false
+        "multi": false,
+        "refresh": 2,
+        "sort": 1
       },
       {
         "name": "service",
@@ -756,19 +750,16 @@ For services extending `WorkerBackgroundService<TSettings>`. Replace `$(SERVICE_
       },
       {
         "name": "env",
-        "type": "custom",
-        "query": "Integration,Testing,Staging,Production",
-        "current": { "text": "Production", "value": "Production" },
-        "options": [
-          { "text": "Integration", "value": "Integration", "selected": false },
-          { "text": "Testing", "value": "Testing", "selected": false },
-          { "text": "Staging", "value": "Staging", "selected": false },
-          { "text": "Production", "value": "Production", "selected": true }
-        ],
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "$datasource" },
+        "query": "label_values(app_$(WORKER)_total, env)",
+        "current": {},
         "hide": 0,
         "label": "Environment",
         "includeAll": false,
-        "multi": false
+        "multi": false,
+        "refresh": 2,
+        "sort": 1
       },
       {
         "name": "service",

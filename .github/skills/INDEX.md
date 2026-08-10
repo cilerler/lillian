@@ -277,30 +277,6 @@ If multiple skills match a task, apply all applicable skills.
 
 # Libraries
 
-Workspace libraries in `common-libraries/`. Use these instead of custom implementations.
-Each library has a README with usage instructions.
+[Ruya](https://github.com/cilerler/ruya) is the reference library implementation and owns the complete package catalog and package documentation.
 
-| Library | Purpose | README |
-|---------|---------|--------|
-| MyOrganization.OpenTelemetry | OpenTelemetry configuration and instrumentation | [README](common-libraries/MyOrganization.OpenTelemetry/README.md) |
-| MyOrganization.Diagnostics | Diagnostic utilities, distributed tracing helpers | [README](common-libraries/MyOrganization.Diagnostics/README.md) |
-| MyOrganization.Diagnostics.Abstractions | Diagnostic abstractions | [README](common-libraries/MyOrganization.Diagnostics.Abstractions/README.md) |
-| MyOrganization.Services.DistributedLock | Distributed locking with heartbeat support | [README](common-libraries/MyOrganization.Services.DistributedLock/README.md) |
-| MyOrganization.Services.DistributedLock.Abstractions | Distributed lock abstractions | [README](common-libraries/MyOrganization.Services.DistributedLock.Abstractions/README.md) |
-| MyOrganization.Services.DistributedLock.Redis | Redis-based distributed lock implementation | [README](common-libraries/MyOrganization.Services.DistributedLock.Redis/README.md) |
-| MyOrganization.Services.LockManager | Application-level lock management | [README](common-libraries/MyOrganization.Services.LockManager/README.md) |
-| MyOrganization.Services.MessageQueue | Provider-agnostic messaging infrastructure | [README](common-libraries/MyOrganization.Services.MessageQueue/README.md) |
-| MyOrganization.Services.MessageQueue.RabbitMq | RabbitMQ messaging implementation | [README](common-libraries/MyOrganization.Services.MessageQueue.RabbitMq/README.md) |
-| MyOrganization.Services.CloudStorage.Abstractions | Provider-agnostic cloud storage | [README](common-libraries/MyOrganization.Services.CloudStorage.Abstractions/README.md) |
-| MyOrganization.Services.TokenBroker | JWT service-to-service authentication | [README](common-libraries/MyOrganization.Services.TokenBroker/README.md) |
-| MyOrganization.EntityFrameworkCore.SqlServer | EF Core bulk operations via SqlBulkCopy | [README](common-libraries/MyOrganization.EntityFrameworkCore.SqlServer/README.md) |
-| MyOrganization.Extensions.Configuration | Configuration extensions | [README](common-libraries/MyOrganization.Extensions.Configuration/README.md) |
-| MyOrganization.Extensions.DependencyInjection | DI extensions | [README](common-libraries/MyOrganization.Extensions.DependencyInjection/README.md) |
-| MyOrganization.Extensions.Hosting | Hosting extensions | [README](common-libraries/MyOrganization.Extensions.Hosting/README.md) |
-| MyOrganization.AspNetCore.Middleware | ASP.NET Core middleware | [README](common-libraries/MyOrganization.AspNetCore.Middleware/README.md) |
-| MyOrganization.Primitives | Common primitives | [README](common-libraries/MyOrganization.Primitives/README.md) |
-| MyOrganization.Testing.Primitives | Testing utilities | [README](common-libraries/MyOrganization.Testing.Primitives/README.md) |
-| MyOrganization.System.Xml.Serialization | XML serialization utilities | [README](common-libraries/MyOrganization.System.Xml.Serialization/README.md) |
-| MyOrganization.Text.Json | JSON serialization utilities | [README](common-libraries/MyOrganization.Text.Json/README.md) |
-| MyOrganization.Kiota.Client | Kiota HTTP client | [README](common-libraries/MyOrganization.Kiota.Client/README.md) |
-| MyOrganization.OData.Client | OData client | [README](common-libraries/MyOrganization.OData.Client/README.md) |
+A solution may use Ruya or compatible organization-owned libraries, including libraries maintained in a `common-libraries/` workspace. Ruya is not a required dependency.

@@ -47,7 +47,7 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 | Saturation | CPU/Memory utilization | < 80% | Resource metrics |
 | Throughput | Requests per second | Service-specific | Counter rate |
 
-### Background Workers
+### Scheduled / Polling Workers
 
 | SLI | Description | Target | Measurement |
 |-----|-------------|--------|-------------|
@@ -58,6 +58,20 @@ Defines observability standards for .NET services including SLIs, dashboards, al
 | Retry Rate | Retries / total executions | < 5% | Counter ratio |
 | Availability | Successful health checks / total | > 99.9% | Uptime probe |
 | Saturation | CPU/Memory utilization | < 80% | Resource metrics |
+
+### Message Consumers
+
+Long-lived broker subscribers use delivery-oriented signals rather than scheduled-worker skip/overlap signals.
+
+| SLI | Description | Target | Measurement |
+|-----|-------------|--------|-------------|
+| Processing Duration p95 | 95th percentile handler duration | Service-specific | Histogram quantile |
+| Failure Rate | Failed deliveries / total deliveries | < 1% | Counter ratio |
+| Retry Rate | Retried deliveries / total deliveries | < 5% | Counter ratio |
+| Reject / DLQ Rate | Rejected or dead-lettered deliveries / total | < 0.1% | Counter ratio |
+| Queue Age | Age of the oldest available message | Service-specific | Broker/exporter gauge |
+| Queue Depth | Messages waiting to be processed | Service-specific | Broker/exporter gauge |
+| Subscription Availability | Healthy active subscriptions / expected subscriptions | > 99.9% | Health check or provider gauge |
 
 ---
 
@@ -104,7 +118,7 @@ This section is the single canonical home of all dashboard generation rules.
    - Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
    - Module: `{ModulePath}/Observability/Grafana/dashboard.json`
    - App-wide: `src/Observability/Grafana/dashboard.json`
-2. **Environment variable**: Every dashboard must include the `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`.
+2. **Environment variable**: Every dashboard must include an `env` query variable populated from the Prometheus `env` label. Do not enumerate environment names in the dashboard; deployments own the available `ASPNETCORE_ENVIRONMENT` values.
 3. **Datasource variable**: Every dashboard must include the `$datasource` template variable.
 4. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"` selectors.
 5. **Placeholder**: Use `$(SERVICE_NAME)` for dashboard uid and title — replaced during deployment.
@@ -140,6 +154,16 @@ Required panels for services extending `WorkerBackgroundService<TSettings>`:
 5. **Retry Rate** - Retry attempts over time
 6. **Execution Duration** - p50, p95, p99 percentiles from histogram
 
+### Message Consumer Dashboard
+
+Required panels for long-lived broker subscribers:
+1. **Consume Rate** - Deliveries processed per second
+2. **Success / Retry / Reject Ratio** - Delivery outcomes over time
+3. **Processing Duration** - p50, p95, p99 handler duration
+4. **Queue Depth and Oldest Message Age** - Backlog volume and staleness
+5. **DLQ Depth** - Dead-lettered messages awaiting action
+6. **Subscription Health** - Expected versus active/healthy subscriptions
+
 ### Resource Usage Dashboard
 
 Required panels:
@@ -154,7 +178,7 @@ Required panels:
 
 ## OpenTelemetry Patterns
 
-Use the `MyOrganization.OpenTelemetry` workspace library (see the library table in `.github/skills/INDEX.md`).
+Use [Ruya.OpenTelemetry](https://github.com/cilerler/ruya/blob/main/src/Ruya.OpenTelemetry/README.md) as the reference implementation for the patterns below.
 
 ### Observability Triad
 
@@ -217,7 +241,9 @@ builder.ConfigureOpenTelemetry();
 
 ### Environment Attribution
 
-The OpenTelemetry library is expected to automatically set `deployment.environment` as a resource attribute on all telemetry (metrics, traces, logs) using `builder.Environment.EnvironmentName`. This value comes from `ASPNETCORE_ENVIRONMENT` (set per environment in K8s overlays) and is what Grafana dashboards filter on via the `$env` template variable.
+The OpenTelemetry library is expected to automatically set `deployment.environment` as a resource attribute on all telemetry (metrics, traces, logs) using `builder.Environment.EnvironmentName`. This value comes from `ASPNETCORE_ENVIRONMENT`, which is supplied by the deployment.
+
+For Prometheus-backed dashboards, the telemetry pipeline must copy `deployment.environment` to the metric data-point attribute `env`. The Prometheus exporter exposes that attribute as the `env` label used by the `$env` template variable. This mapping is explicit because resource attributes are not automatically attached to every Prometheus metric.
 
 For traces, an activity processor should also stamp each span with `deployment.environment` as a tag.
 
@@ -242,6 +268,8 @@ For traces, an activity processor should also stamp each span with `deployment.e
   "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317"
 }
 ```
+
+The value shown for `OTEL_EXPORTER_OTLP_ENDPOINT` is the documented default and a reminder of the expected OTLP gRPC endpoint shape. Deployments whose collector uses a different hostname or port must override it.
 
 ### Middleware (Optional)
 

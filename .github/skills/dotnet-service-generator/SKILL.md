@@ -28,7 +28,7 @@ summary: Interactive scaffolder for .NET service modules with observability and 
 
 Interactive scaffolder for .NET services with full observability support.
 
-> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-polylith service path (`/src/{Namespace}.Modules.{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
+> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-polylith service path (`/src/{Organization}.{Product}.Modules.{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
 
 ## Workflow
 

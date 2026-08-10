@@ -28,7 +28,7 @@ summary: Interactive scaffolder for .NET service modules with observability and 
 
 Interactive scaffolder for .NET services with full observability support.
 
-> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-polylith service path (`/src/{Namespace}.Modules.{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
+> **Folder layout source of truth:** [`solution-structure`](../solution-structure/SKILL.md) defines the modular-polylith service path (`/src/{Organization}.{Product}.Modules.{Module}/{Component}/{Service}/`) and the per-service folder shape. The patterns below mirror that skill — when they diverge, `solution-structure` wins.
 
 ## Workflow
 
@@ -61,7 +61,8 @@ Based on service purpose:
 | Uploads/downloads files | ICloudStorageFactory |
 | Sends/receives messages | IMessageQueueFactory |
 | Needs coordination/locking | IDistributedLock |
-| Runs on schedule/background | `{ServiceName}Worker.cs` (extends WorkerBackgroundService) |
+| Runs discrete work on a schedule or polling loop | `{ServiceName}Worker.cs` (extends `WorkerBackgroundService`) |
+| Holds a long-lived broker subscription | A descriptively named `BackgroundService` subscriber adapter |
 | Exposes HTTP endpoints | `Api/` folder |
 
 ## Step 3: Confirm Dependencies
@@ -80,8 +81,9 @@ Additional options:
 [ ] 6. Repository/UoW pattern (in Internals/)
 [ ] 7. ICloudStorageFactory
 [ ] 8. IMessageQueueFactory
-[ ] 9. {ServiceName}Worker.cs (background service)
-[ ] 10. Api/ folder (HTTP endpoints)
+[ ] 9. {ServiceName}Worker.cs (scheduled/polling background service)
+[ ] 10. Broker subscriber adapter (long-lived BackgroundService)
+[ ] 11. Api/ folder (HTTP endpoints)
 
 Confirm or adjust (e.g., "add 4, remove 2"):
 ```
@@ -128,7 +130,8 @@ Folders are created only when they have content. Do not create empty folders.
 | Grafana dashboard | `Observability/Grafana/` |
 | Embedded resources (SQL, templates, etc.) | `Resources/` with subfolders by type |
 | Custom validation attributes | `Validators/` |
-| Background/cron service | `{ServiceName}Worker.cs` |
+| Scheduled/polling background service | `{ServiceName}Worker.cs` |
+| Long-lived broker subscription | `{EventName}Subscriber.cs` (thin `BackgroundService` adapter) |
 | Health monitoring | `{ServiceName}HealthCheck.cs` |
 | API exposure | `tests/{ServiceName}.http` — HTTP test file for the service's endpoints |
 
@@ -151,9 +154,10 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 
 ### Architecture Rule: Service.cs Owns All Business Logic
 - `{ServiceName}Service.cs` is the single home for business logic, accessed through `I{ServiceName}`
-- `{ServiceName}Worker.cs` and `Api/` endpoints are **thin adapters** — they translate between their protocol (HTTP, cron) and `I{ServiceName}`, never containing business logic themselves
+- `{ServiceName}Worker.cs`, broker subscribers, and `Api/` endpoints are **thin adapters** — they translate between their trigger/protocol and `I{ServiceName}` or a scoped handler, never containing business logic themselves
 - API endpoints call `I{ServiceName}` methods and map results to HTTP responses — nothing more
-- Worker calls `I{ServiceName}` methods and manages scheduling/lifecycle — nothing more
+- Scheduled workers call `I{ServiceName}` methods and manage scheduling/lifecycle — nothing more
+- Broker subscribers own subscription lifecycle and delegate each message to `I{ServiceName}` or a scoped handler — nothing more
 
 ### Folder Organization
 - Folders are created only when they have content — do not create empty folders

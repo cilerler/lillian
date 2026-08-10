@@ -19,6 +19,7 @@ You are restructuring an existing service to match the folder structure and nami
 Before starting, load and follow:
 - `.github/skills/dotnet-service-generator/SKILL.md`
 - `.github/skills/dotnet-service-generator/references/standard-service.md` — canonical folder structure
+- `.github/skills/dotnet-service-generator/references/dependencies.md` — dependency and long-lived subscriber patterns
 - `.github/skills/dotnet-service-generator/references/modular-polylith.md` — module/component hierarchy (if module name provided)
 
 ## Phase 1: Analyze Current Structure
@@ -43,6 +44,7 @@ Scan `{{Service path}}` and produce a report:
 | Validator attributes | `Validators/` | Keep existing |
 | `Api.cs` (single file) | `Api/{ServiceName}Api.cs` + split endpoints | One file per endpoint |
 | Background service extending `WorkerBackgroundService` | `{ServiceName}Worker.cs` | Business logic stays in `{ServiceName}Service.cs` |
+| `BackgroundService` holding a broker subscription | Descriptive `{EventName}Subscriber.cs` | Subscription lifecycle stays in the adapter; business logic moves to the service or a scoped handler |
 | Health check | `{ServiceName}HealthCheck.cs` | File and class name match |
 | HTTP client wrappers | `Clients/` | Interface + implementation |
 | Internal helpers | `Internals/` | Interfaces go to `Contracts/` |
@@ -59,11 +61,11 @@ Scan `{{Service path}}` and produce a report:
 Present the plan as a table showing every file move, rename, and namespace change. Include:
 
 1. **File moves** — source → destination path
-2. **Class renames** — align to the `{ServiceName}` prefix convention from solution-structure (`{ServiceName}Service`, `{ServiceName}Worker`, `{ServiceName}Settings`, `{ServiceName}HealthCheck`); file name must match class name
+2. **Class renames** — align core files to the `{ServiceName}` prefix convention from solution-structure (`{ServiceName}Service`, `{ServiceName}Worker`, `{ServiceName}Settings`, `{ServiceName}HealthCheck`); subscriber adapters use a descriptive `{EventName}Subscriber` name; every file name must match its class name
 3. **Namespace changes** — old → new for each file
 4. **New folders** — empty folders to create
 5. **Module/Component scaffolding** — if creating module/component levels, list what gets created
-6. **Worker/Service split** — if the current service extends `WorkerBackgroundService`, explain the split: business logic moves to `Service.cs`, lifecycle stays in `Worker.cs`
+6. **Hosted adapter/Service split** — explain whether the trigger is scheduled/polling or a long-lived broker subscription, what business logic moves to `Service.cs` or a scoped handler, and what lifecycle remains in the thin hosted adapter
 7. **API split** — if a single `Api.cs` has multiple endpoints, list the new endpoint files
 
 **Wait for user approval before proceeding.**
@@ -77,13 +79,13 @@ After approval, execute the restructuring:
 3. Move files to their new locations
 4. Update namespaces in all moved files
 5. Update `using` statements across all files to reflect new namespaces
-6. Rename files and classes per convention: core service files use `{ServiceName}` prefix — `{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`, `I{ServiceName}.cs`, and exception classes. File name must match class name.
+6. Rename files and classes per convention: core service files use `{ServiceName}` prefix — `{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`, `I{ServiceName}.cs`, and exception classes. Subscriber adapters use a descriptive `{EventName}Subscriber.cs` name. File name must match class name.
 7. **After each rename, grep for the old class name across the entire service folder** and update every reference — generic type parameters, field declarations, constructor parameters, DI registrations, logger types, static member access, `nameof()`, etc. Zero occurrences of the old name must remain.
 8. Split `Api.cs` into `Api/Api.cs` + individual endpoint files if applicable
-9. Split Worker/Service if the service extends `WorkerBackgroundService`:
-   - Business logic (checking for data, processing) → `{ServiceName}Service.cs` implementing `I{ServiceName}`
-   - Lifecycle/scheduling (DoWorkAsync override, IdleCycle) → `{ServiceName}Worker.cs` extending `WorkerBackgroundService<{ServiceName}Settings>`
-   - Worker takes `I{ServiceName}` as constructor dependency and delegates to it
+9. Split hosted-adapter logic by trigger type:
+   - Scheduled or polling work: business logic → `{ServiceName}Service.cs`; lifecycle/scheduling → `{ServiceName}Worker.cs` extending `WorkerBackgroundService<{ServiceName}Settings>`
+   - Long-lived broker subscription: business logic → `{ServiceName}Service.cs` or a scoped handler; subscription ownership → descriptive `{EventName}Subscriber.cs` extending `BackgroundService`
+   - Keep either hosted adapter thin and delegate each execution or delivery; follow the canonical patterns loaded above
 10. Update `StartupExtensions.cs` registrations to reference new class names and namespaces
 11. If metric names are inline strings, extract to `Constants.Metrics` nested class
 12. Update any `appsettings.json` references if configuration section names changed
@@ -98,7 +100,7 @@ After restructuring the service itself:
 ## Phase 4: Verify
 
 1. Confirm all files are in correct locations matching `standard-service.md` structure
-2. Confirm core service files use the `{ServiceName}` prefix per solution-structure (`{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`) and every file name matches its class name
+2. Confirm core service files use the `{ServiceName}` prefix per solution-structure (`{ServiceName}Service.cs`, `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `{ServiceName}Settings.cs`), subscriber adapters use descriptive names, and every file name matches its class name
 3. **Grep for old class names** (`{ServiceName}Settings`, `{ServiceName}HealthCheck`, etc.) — zero matches must remain
 4. Confirm namespaces match folder paths
 5. Confirm no empty folders exist
@@ -109,4 +111,4 @@ After restructuring the service itself:
 ## Constraints
 - **Preserve all business logic** — only restructure, never change behavior
 - **Do not touch other services** — only modify the target service and its parent module/component scaffolding
-- **Ask before splitting** — if a Worker/Service split or API split is needed, confirm the approach before executing
+- **Ask before splitting** — if a hosted-adapter/Service split or API split is needed, confirm the approach before executing

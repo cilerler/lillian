@@ -34,7 +34,7 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 
 | Skill | Reads from this skill |
 |-------|-----------------------|
-| `dotnet-service-generator` | `/src/{Namespace}.Modules.{Module}/{Component}/{Service}/...` paths and per-service folder shape |
+| `dotnet-service-generator` | `/src/{Organization}.{Product}.Modules.{Module}/{Component}/{Service}/...` paths and per-service folder shape |
 | `documentation-generator` | `/docs/...` placement and ticket/project folder shapes (that skill owns filename, identifier, and attachments conventions) |
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
 | `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
@@ -198,23 +198,23 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
   - {ModuleName}.http                                   // Cross-component tests within a module
   - {ComponentName}.http                                // Cross-service tests within a component
   - {ServiceName}.http                                  // Tests for one service's API endpoints
-  /Company.Project.Domain.Integration.Tests
-    - Company.Project.Domain.Integration.Tests.csproj
+  /{Organization}.{Product}.Domain.Integration.Tests
+    - {Organization}.{Product}.Domain.Integration.Tests.csproj
     - EnterpriseServiceTests.cs
-  /Company.Project.Domain.Unit.Tests
-    - Company.Project.Domain.Unit.Tests.csproj
+  /{Organization}.{Product}.Domain.Unit.Tests
+    - {Organization}.{Product}.Domain.Unit.Tests.csproj
     - EnterpriseServiceTests.cs
-  /Company.Project.Host.E2E.Tests
-    - Company.Project.Host.E2E.Tests.csproj
+  /{Organization}.{Product}.Host.E2E.Tests
+    - {Organization}.{Product}.Host.E2E.Tests.csproj
     - HealthCheckTests.cs
-  /Company.Project.Host.Integration.Tests
-    - Company.Project.Host.Integration.Tests.csproj
+  /{Organization}.{Product}.Host.Integration.Tests
+    - {Organization}.{Product}.Host.Integration.Tests.csproj
     - HealthCheckTests.cs
-  /Company.Project.Host.Unit.Tests
-    - Company.Project.Host.Unit.Tests.csproj
+  /{Organization}.{Product}.Host.Unit.Tests
+    - {Organization}.{Product}.Host.Unit.Tests.csproj
     - HealthCheckTests.cs
-  /Company.Project.Tests.Common                         // Shared test utilities, fixtures, mocks
-    - Company.Project.Tests.Common.csproj
+  /{Organization}.{Product}.Tests.Common                         // Shared test utilities, fixtures, mocks
+    - {Organization}.{Product}.Tests.Common.csproj
   /...
 .dockerignore                               // Docker ignore file
 .editorconfig                               // Editor configuration file
@@ -227,10 +227,10 @@ azure-pipelines.yml                         // Azure DevOps pipeline configurati
 Directory.Build.props                       // Common properties for all projects in the solution
 Company.Solution.sln                        // Visual Studio solution file
 /src
-  /Company.Project.Abstractions
-  /Company.Project.Extensions
-  /Company.Project.Domain
-  /Company.Project.Host
+  /{Organization}.{Product}.Abstractions
+  /{Organization}.{Product}.Extensions
+  /{Organization}.{Product}.Domain
+  /{Organization}.{Product}.Host
     - Program.cs                            // Entry point for the application
     - ProgramExtensions.cs                  // Extension methods for the program
     - StartupBackgroundService.cs           // Initial background service for the application
@@ -243,7 +243,7 @@ Company.Solution.sln                        // Visual Studio solution file
     - appsettings.Staging.json              // Configuration settings for the staging environment
     - appsettings.Production.json           // Configuration settings for the production environment
     - Dockerfile                            // Docker configuration for containerization
-    - Company.Project.Host.csproj           // Project file
+    - {Organization}.{Product}.Host.csproj           // Project file
     - Buildinfo.txt                         // Build information to show when the app starts
     - App.razor                             // Main application component
     - Routes.razor                          // Route configuration for the application
@@ -297,16 +297,16 @@ Company.Solution.sln                        // Visual Studio solution file
       /Grafana                                 // Platform overview dashboard
         - dashboard.json
 
-  /Company.Project.Modules.{Module1}.Abstractions    // Separate csproj — module's public contract (cross-module)
-    - Company.Project.Modules.{Module1}.Abstractions.csproj
+  /{Organization}.{Product}.Modules.{Module1}.Abstractions    // Separate csproj — module's public contract (cross-module)
+    - {Organization}.{Product}.Modules.{Module1}.Abstractions.csproj
     /Events
     /Interfaces
     /Models                                          // Enums, value objects, shared DTOs
     /Requests
     /Responses
 
-  /Company.Project.Modules.{Module1}                 // Module project — owns components and services as folders
-    - Company.Project.Modules.{Module1}.csproj       // References its .Abstractions sibling; references other modules' .Abstractions when consuming their contracts
+  /{Organization}.{Product}.Modules.{Module1}                 // Module project — owns components and services as folders
+    - {Organization}.{Product}.Modules.{Module1}.csproj       // References its .Abstractions sibling; references other modules' .Abstractions when consuming their contracts
     - Constants.cs                                   // Module-wide constants
     /Contracts                                       // Module-wide internal interfaces for shared helpers
     /Docs                                            // Module-scoped documentation (optional)
@@ -387,8 +387,8 @@ Company.Solution.sln                        // Visual Studio solution file
     /{Component2}
       /...
 
-  /Company.Project.Modules.{Module2}.Abstractions
+  /{Organization}.{Product}.Modules.{Module2}.Abstractions
     /...
-  /Company.Project.Modules.{Module2}
+  /{Organization}.{Product}.Modules.{Module2}
     /...
 ```

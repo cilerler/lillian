@@ -1,6 +1,6 @@
 # Background Service Pattern
 
-Extends `WorkerBackgroundService<TSettings>` for scheduled/continuous background work.
+Extends `WorkerBackgroundService<TSettings>` for discrete scheduled or polling executions. A long-lived broker subscription is event-driven rather than continuous polling; use the [`IMessageQueueFactory` subscriber pattern](dependencies.md#imessagequeuefactory) instead.
 
 ## File Structure
 
@@ -40,7 +40,7 @@ Extends `WorkerBackgroundService<TSettings>` for scheduled/continuous background
 
 | Feature | Behavior |
 |---------|----------|
-| Schedule | Cron, continuous, or one-shot |
+| Schedule | Six-field Cronos expression (including seconds), continuous polling, or one-shot |
 | Idle Backoff | Configurable delay when `IdleCycle = true` (no data), `TimeSpan.Zero` = disabled |
 | Delay Between Executions | Fixed delay between consecutive executions, `TimeSpan.Zero` = disabled |
 | Health | `IHealthCheck` - unhealthy if degraded or no completion in X time |
@@ -54,13 +54,16 @@ Extends `WorkerBackgroundService<TSettings>` for scheduled/continuous background
 
 ## Required Extensions
 
+The shared types below are provided by [Ruya.Extensions.Hosting](https://github.com/cilerler/ruya/blob/main/src/Ruya.Extensions.Hosting/README.md), the reference hosting library. A compatible organization-owned library may provide the same contracts under its own namespace.
+
 ### ScheduleValidationAttribute.cs
 
 ```csharp
 using System;
 using System.ComponentModel.DataAnnotations;
 using Cronos;
-namespace MyOrganization.Extensions.Hosting.Validators;
+
+namespace Ruya.Extensions.Hosting.Validators;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public sealed class ScheduleValidationAttribute : ValidationAttribute
@@ -98,9 +101,9 @@ using System;
 using System.Text.Json.Serialization;
 using System.Threading;
 using Cronos;
-using MyOrganization.Extensions.Hosting.Validators;
+using Ruya.Extensions.Hosting.Validators;
 
-namespace MyOrganization.Extensions.Hosting;
+namespace Ruya.Extensions.Hosting;
 
 public class WorkerBackgroundServiceSettings
 {
@@ -155,7 +158,22 @@ public class WorkerBackgroundServiceSettings
 ## WorkerBackgroundService Base Class
 
 ```csharp
-namespace MyOrganization.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ruya.Diagnostics.DistributedTracing;
+using Ruya.Primitives;
+
+namespace Ruya.Extensions.Hosting;
 
 public abstract class WorkerBackgroundService<TSettings> : IHostedLifecycleService, IDisposable
     where TSettings : WorkerBackgroundServiceSettings
@@ -786,7 +804,7 @@ public static class StartupExtensions
   "{ServiceName}": {
     "RunOnce": false,
     "RunImmediately": true,
-    "ScheduleCronExpression": "*/5 * * * *",
+    "ScheduleCronExpression": "0 */5 * * * *",
     "RetryEnabled": true,
     "RetryCount": 3,
     "RetryBaseDelaySeconds": 1,
@@ -802,11 +820,11 @@ public static class StartupExtensions
 
 | Setting | Description |
 |---------|-------------|
-| `ScheduleCronExpression` | Cron expression, null/empty = continuous |
+| `ScheduleCronExpression` | Six-field Cronos expression including seconds; null/empty = continuous polling |
 | `RunOnce` | Execute once then stop |
 | `RunImmediately` | Execute on startup |
 | `RetryEnabled` | Enable exponential backoff + jitter |
-| `RetryCount` | Max retry attempts (default 3) |
+| `RetryCount` | Retries after the initial attempt (default 3) |
 | `RetryBaseDelaySeconds` | Base delay for backoff (default 1) |
 | `DelayBetweenExecutions` | Fixed delay between executions, `00:00:00` = disabled |
 | `IdleBackoffDuration` | Delay when `IdleCycle = true`, `00:00:00` = disabled |

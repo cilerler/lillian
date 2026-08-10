@@ -45,7 +45,7 @@ This allows unit tests or debugging sessions to see generated SQL without execut
 
 ### Reference Implementation
 
-The `MyOrganization.EntityFrameworkCore.SqlServer` workspace library (BatchLock feature) is the canonical end-to-end example — embedded SQL script with debug mode, lazy resource loading, and constants. See the library table in `.github/skills/INDEX.md`.
+[Ruya.EntityFrameworkCore.SqlServer's BatchLock implementation](https://github.com/cilerler/ruya/tree/main/src/Ruya.EntityFrameworkCore.SqlServer/BatchLock) is the reference end-to-end example — embedded SQL, debug mode, lazy resource loading, and constants.
 
 ### Benefits
 

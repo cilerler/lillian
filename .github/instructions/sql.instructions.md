@@ -95,4 +95,4 @@ END
 
 ### Reference Implementation
 
-The `MyOrganization.EntityFrameworkCore.SqlServer` workspace library (BatchLock feature) contains canonical examples — see the library table in `.github/skills/INDEX.md`.
+[Ruya.EntityFrameworkCore.SqlServer's BatchLock implementation](https://github.com/cilerler/ruya/tree/main/src/Ruya.EntityFrameworkCore.SqlServer/BatchLock) contains the reference SQL examples for this pattern.

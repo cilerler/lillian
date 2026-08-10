@@ -104,7 +104,7 @@ This section is the single canonical home of all dashboard generation rules.
    - Component: `{ComponentPath}/Observability/Grafana/dashboard.json`
    - Module: `{ModulePath}/Observability/Grafana/dashboard.json`
    - App-wide: `src/Observability/Grafana/dashboard.json`
-2. **Environment variable**: Every dashboard must include the `env` template variable with values matching `ASPNETCORE_ENVIRONMENT`: `Integration`, `Testing`, `Staging`, `Production`.
+2. **Environment variable**: Every dashboard must include an `env` query variable populated from the Prometheus `env` label. Do not enumerate environment names in the dashboard; deployments own the available `ASPNETCORE_ENVIRONMENT` values.
 3. **Datasource variable**: Every dashboard must include the `$datasource` template variable.
 4. **Query filtering**: Every PromQL query must include `env="$env"` and `service_name="$service"` selectors.
 5. **Placeholder**: Use `$(SERVICE_NAME)` for dashboard uid and title — replaced during deployment.
@@ -154,7 +154,7 @@ Required panels:
 
 ## OpenTelemetry Patterns
 
-Use the `MyOrganization.OpenTelemetry` workspace library (see the library table in `.github/skills/INDEX.md`).
+Use [Ruya.OpenTelemetry](https://github.com/cilerler/ruya/blob/main/src/Ruya.OpenTelemetry/README.md) as the reference implementation for the patterns below.
 
 ### Observability Triad
 
@@ -217,7 +217,9 @@ builder.ConfigureOpenTelemetry();
 
 ### Environment Attribution
 
-The OpenTelemetry library is expected to automatically set `deployment.environment` as a resource attribute on all telemetry (metrics, traces, logs) using `builder.Environment.EnvironmentName`. This value comes from `ASPNETCORE_ENVIRONMENT` (set per environment in K8s overlays) and is what Grafana dashboards filter on via the `$env` template variable.
+The OpenTelemetry library is expected to automatically set `deployment.environment` as a resource attribute on all telemetry (metrics, traces, logs) using `builder.Environment.EnvironmentName`. This value comes from `ASPNETCORE_ENVIRONMENT`, which is supplied by the deployment.
+
+For Prometheus-backed dashboards, the telemetry pipeline must copy `deployment.environment` to the metric data-point attribute `env`. The Prometheus exporter exposes that attribute as the `env` label used by the `$env` template variable. This mapping is explicit because resource attributes are not automatically attached to every Prometheus metric.
 
 For traces, an activity processor should also stamp each span with `deployment.environment` as a tag.
 
@@ -242,6 +244,8 @@ For traces, an activity processor should also stamp each span with `deployment.e
   "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317"
 }
 ```
+
+The value shown for `OTEL_EXPORTER_OTLP_ENDPOINT` is the documented default and a reminder of the expected OTLP gRPC endpoint shape. Deployments whose collector uses a different hostname or port must override it.
 
 ### Middleware (Optional)
 

@@ -218,6 +218,8 @@ await storage.UploadAsync(stream, path, cancellationToken);
 
 ## IMessageQueueFactory
 
+[Ruya.Services.MessageQueue](https://github.com/cilerler/ruya#message-queue) is the reference implementation for the API shape below.
+
 ```csharp
 // Field
 private readonly IMessageQueueFactory _messageQueueFactory;
@@ -231,10 +233,72 @@ _messageQueueFactory = messageQueueFactory;
 // StartupExtensions - add to required services
 typeof(IMessageQueueFactory)
 
-// Usage
-var queue = _messageQueueFactory.Create(_settings.QueueName);
-await queue.PublishAsync(message, cancellationToken);
+// Publish usage
+var queue = await _messageQueueFactory.CreateQueueAsync(
+    _settings.MessageQueueProviderName,
+    cancellationToken);
+await queue.PublishAsync(
+    Constants.Topics.{EventName},
+    message,
+    cancellationToken: cancellationToken);
 ```
+
+The factory owns the named queue instance. Code that calls `CreateQueueAsync` does not dispose that shared queue.
+
+### Long-lived subscriptions
+
+A broker subscriber is a thin, event-driven `BackgroundService` adapter. Do not derive it from `WorkerBackgroundService`: a subscription remains open and the broker owns delivery timing, concurrency, and redelivery rather than the cron/polling loop.
+
+```csharp
+public sealed class {EventName}Subscriber : BackgroundService
+{
+    private readonly IMessageQueueFactory _messageQueueFactory;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly {ServiceName}Settings _settings;
+
+    public {EventName}Subscriber(
+        IMessageQueueFactory messageQueueFactory,
+        IServiceScopeFactory scopeFactory,
+        IOptions<{ServiceName}Settings> options)
+    {
+        _messageQueueFactory = messageQueueFactory;
+        _scopeFactory = scopeFactory;
+        _settings = options.Value;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var queue = await _messageQueueFactory.CreateQueueAsync(
+            _settings.MessageQueueProviderName,
+            stoppingToken);
+
+        await using var subscription = await queue.SubscribeAsync<{EventName}>(
+            Constants.Topics.{EventName},
+            HandleAsync,
+            cancellationToken: stoppingToken);
+
+        try
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Normal host shutdown. Exiting the scope disposes the live subscription.
+        }
+    }
+
+    private async Task<MessageResult> HandleAsync(MessageContext<{EventName}> context)
+    {
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<I{ServiceName}>();
+
+        await service.ProcessAsync(context.Envelope.Payload, context.CancellationToken);
+        return MessageResult.Success();
+    }
+}
+```
+
+The subscriber owns and asynchronously disposes the returned `IMessageSubscription`; the cancellation token alone does not replace that ownership. Keep business logic in `I{ServiceName}` or a scoped handler. Map known transient failures to `MessageResult.Retry` and invalid/permanent messages to `MessageResult.Reject` according to the service's delivery policy. Instrument message processing with [`ActivityKind.Consumer`](../../observability/SKILL.md#activity-kinds); queue age/depth, retry/reject rate, DLQ depth, and subscription health are owned by the observability model.
 
 ## DbContext (Direct)
 

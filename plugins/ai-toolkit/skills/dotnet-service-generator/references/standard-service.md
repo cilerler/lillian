@@ -49,6 +49,7 @@
 ├── Constants.cs                     # Includes Metrics nested class
 ├── {ServiceName}Service.cs          # Core business logic
 ├── {ServiceName}Worker.cs           # optional — if background/cron
+├── {EventName}Subscriber.cs         # optional — if holding a long-lived broker subscription
 └── {ServiceName}HealthCheck.cs      # optional — if health monitoring needed
 ```
 
@@ -360,6 +361,10 @@ public class {ServiceName}Service : I{ServiceName}
 ## {ServiceName}Worker.cs
 
 See `background-service.md` for the Worker pattern and the `WorkerBackgroundService` base class. Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse.
+
+## {EventName}Subscriber.cs
+
+See `dependencies.md#imessagequeuefactory` for the long-lived broker subscriber pattern. The subscriber owns subscription lifecycle and delegates each delivery to the service or a scoped handler; it does not contain business logic or use the scheduled-worker base class.
 
 ## {ServiceName}HealthCheck.cs
 

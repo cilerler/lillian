@@ -212,7 +212,7 @@ References:
 ## Dependency Management
 
 * **Third-party library approval required** – any new external dependency is subject to approval before being added
-* **Prefer workspace libraries** – use existing shared libraries in `common-libraries/` instead of writing custom implementations. The canonical library table (name, purpose, README) lives in `.github/skills/INDEX.md` — check it before adding any dependency
+* **Prefer workspace libraries** – use existing shared libraries in `common-libraries/` instead of writing custom implementations. Reference library guidance lives in `.github/skills/INDEX.md` — check it before adding any dependency
 * Minimize dependencies, especially in Domain layer
 * Vet licenses and maintenance status before adding dependencies
 
