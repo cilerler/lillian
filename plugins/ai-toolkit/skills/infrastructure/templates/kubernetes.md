@@ -2,38 +2,33 @@
 
 Kustomize-based Kubernetes manifests for .NET services.
 
+The [canonical Kubernetes directory structure](../../solution-structure/SKILL.md#canonical-kubernetes-directory-structure)
+owns every directory and filename. This template supplies manifest content for that exact layout; it does not
+introduce another layer or path alias.
+
 ---
 
 ## Directory Structure
 
-```
-tools/Kubernetes/
-├── kustomization.yaml      # References all overlays
-├── base/
-│   ├── kustomization.yaml
-│   ├── deployment.yaml
-│   └── service.yaml
-├── repo/
-│   └── kustomization.yaml  # Image transform layer — CI rewrites the tag via `kustomize edit set image`
-└── overlays/
-    ├── integration/
-    │   ├── kustomization.yaml
-    │   ├── base/
-    │   │   ├── kustomization.yaml
-    │   │   └── deployment.yaml
-    │   └── default/            # Default variant — kustomization.yaml + patches
-    ├── testing/
-    ├── staging/
-    └── production/
-```
+Use the complete tree in
+[Canonical Kubernetes directory structure](../../solution-structure/SKILL.md#canonical-kubernetes-directory-structure).
+It explicitly enumerates the shared `/tools/Kubernetes/base/` and literal
+`overlays/{integration,testing,staging,production}/{base,default,alternative}/` locations. There is no separate
+image-transform layer and no environment-level kustomization between an environment directory and its three
+components. The manifest bodies below map to those exact files.
 
-Per `solution-structure`, each environment overlay contains `{base,default,alternative}` variants. `default/` holds the default variant's kustomization and patches.
+## Resolve deployable identity once
+
+Resolve the full `{DeployableProcessName}` from `solution-structure`, then derive
+`{DeployableProcessKebabName}` exactly once using the rule in
+[the infrastructure skill](../SKILL.md#deployable-identity-and-image-tokens). Every DNS-label field below uses
+the derived token; do not shorten the source identity to a service or application nickname.
 
 ---
 
 ## Base Templates
 
-### base/kustomization.yaml
+### /tools/Kubernetes/base/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -43,22 +38,22 @@ resources:
 - service.yaml
 ```
 
-### base/deployment.yaml
+### /tools/Kubernetes/base/deployment.yaml
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {APPLICATION_NAME}
+  name: {DeployableProcessKebabName}
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: {APPLICATION_NAME}
+      app: {DeployableProcessKebabName}
   template:
     metadata:
       labels:
-        app: {APPLICATION_NAME}
+        app: {DeployableProcessKebabName}
     spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: standard
@@ -66,7 +61,7 @@ spec:
       imagePullSecrets:
       - name: github-dockerconfigjson
       containers:
-      - name: {APPLICATION_NAME}
+      - name: {DeployableProcessKebabName}
         image: app-image:latest
         imagePullPolicy: IfNotPresent
         ports:
@@ -129,10 +124,10 @@ spec:
       volumes:
       - name: secret-volume
         secret:
-          secretName: {APPLICATION_NAME}
+          secretName: {DeployableProcessKebabName}
       - name: configmap-volume
         configMap:
-          name: {APPLICATION_NAME}
+          name: {DeployableProcessKebabName}
       terminationGracePeriodSeconds: 60
   strategy:
     type: RollingUpdate
@@ -141,17 +136,17 @@ spec:
       maxUnavailable: 100%
 ```
 
-### base/service.yaml
+### /tools/Kubernetes/base/service.yaml
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: {APPLICATION_NAME}
+  name: {DeployableProcessKebabName}
 spec:
   type: ClusterIP
   selector:
-    app: {APPLICATION_NAME}
+    app: {DeployableProcessKebabName}
   ports:
   - name: http
     port: 80
@@ -167,33 +162,27 @@ spec:
 
 ## Root Kustomization
 
-### kustomization.yaml
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ./overlays/integration
-- ./overlays/testing
-- ./overlays/staging
-- ./overlays/production
-```
-
----
-
-## Environment Overlays
-
-### overlays/{environment}/kustomization.yaml
+### /tools/Kubernetes/kustomization.yaml
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - ./base
-- ./default
 ```
 
-### overlays/{environment}/base/kustomization.yaml
+---
+
+## Environment Overlays
+
+### Environment base kustomization files
+
+These four exact files share the same composition:
+
+- `/tools/Kubernetes/overlays/integration/base/kustomization.yaml`
+- `/tools/Kubernetes/overlays/testing/base/kustomization.yaml`
+- `/tools/Kubernetes/overlays/staging/base/kustomization.yaml`
+- `/tools/Kubernetes/overlays/production/base/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -202,25 +191,114 @@ resources:
 - ../../../base
 patches:
 - path: deployment.yaml
+- path: service.yaml
 ```
 
-### overlays/{environment}/base/deployment.yaml
+### Environment base patches
 
-Environment-specific patches:
+Generate each literal environment's `base/deployment.yaml` and `base/service.yaml` from the complete patch
+shapes below. Resolve the content-only tokens with this closed table; they do not change any directory name:
+
+| Directory | `{KubernetesEnvironmentName}` | `{KubernetesEnvironmentLabel}` |
+|---|---|---|
+| `integration` | `Integration` | `integration` |
+| `testing` | `Testing` | `testing` |
+| `staging` | `Staging` | `staging` |
+| `production` | `Production` | `production` |
+
+#### Environment `base/deployment.yaml`
+
+The deployment patch targets the full deployable process, sets its matching ASP.NET Core environment, and
+includes the matching resource block from [Environment-Specific Resource Limits](#environment-specific-resource-limits)
+under the container. Do not leave either environment token unresolved in a committed file.
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {APPLICATION_NAME}
+  name: {DeployableProcessKebabName}
+  labels:
+    deployment-environment: {KubernetesEnvironmentLabel}
 spec:
   template:
+    metadata:
+      labels:
+        deployment-environment: {KubernetesEnvironmentLabel}
     spec:
       containers:
-      - name: {APPLICATION_NAME}
+      - name: {DeployableProcessKebabName}
         env:
         - name: ASPNETCORE_ENVIRONMENT
-          value: Integration  # or Testing, Staging, Production
+          value: {KubernetesEnvironmentName}
+        # Insert this environment's complete resources block from the section below.
+```
+
+#### Environment `base/service.yaml`
+
+The service patch targets the same full deployable process and records the literal environment without
+renaming the Service:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {DeployableProcessKebabName}
+  labels:
+    deployment-environment: {KubernetesEnvironmentLabel}
+```
+
+### Selectable component kustomization files
+
+The selected component is one of these exact directories, each layered on its sibling `base`:
+
+- `/tools/Kubernetes/overlays/integration/default/`
+- `/tools/Kubernetes/overlays/integration/alternative/`
+- `/tools/Kubernetes/overlays/testing/default/`
+- `/tools/Kubernetes/overlays/testing/alternative/`
+- `/tools/Kubernetes/overlays/staging/default/`
+- `/tools/Kubernetes/overlays/staging/alternative/`
+- `/tools/Kubernetes/overlays/production/default/`
+- `/tools/Kubernetes/overlays/production/alternative/`
+
+Each component's `kustomization.yaml` uses this shape. Its local `deployment.yaml` and `service.yaml` use the
+complete patch shapes below. Resolve `{KubernetesVariantName}` to the literal directory name, `default` or
+`alternative`; do not leave it unresolved in a committed file.
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+patches:
+- path: deployment.yaml
+- path: service.yaml
+```
+
+#### Selectable component `deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {DeployableProcessKebabName}
+  labels:
+    deployment-variant: {KubernetesVariantName}
+spec:
+  template:
+    metadata:
+      labels:
+        deployment-variant: {KubernetesVariantName}
+```
+
+#### Selectable component `service.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {DeployableProcessKebabName}
+  labels:
+    deployment-variant: {KubernetesVariantName}
 ```
 
 ---
@@ -277,50 +355,58 @@ resources:
 
 ---
 
-## Variable Substitution
+## Scaffold-time identity and deploy-time image pinning
 
-Variables are substituted during deployment (typically in CI/CD):
-
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `{APPLICATION_NAME}` | Service identifier — **scaffold-time token**, replaced with the real name when the manifest is generated; nothing substitutes it at deploy time | `my-service` |
-| `app-image:latest` | Image placeholder — **deploy-time**, rewritten by `kustomize edit set image` in the `repo/` layer | `ghcr.io/org/my-service:abc123` |
+Resolve `{DeployableProcessName}` and `{DeployableProcessKebabName}` while scaffolding; committed manifests
+contain their literal resolved values. At deployment time, CI changes only deploy-time state: it pins
+`app-image:latest` and sets the namespace in the actual selected component kustomization.
 
 ### GitHub Actions Example
 
-Deployment is pure Kustomize — no template substitution at deploy time. CI pins the image in the `repo/` layer, sets the namespace per component, and applies each component of the target environment:
+Deployment is pure Kustomize—no identity-template substitution occurs at deploy time. The workflow validates
+the exact environment and component names, edits that selected component's `kustomization.yaml`, and applies
+that same component:
 
 ```yaml
 - name: Deploy
   shell: pwsh
   run: |
-    $environment = "${{ inputs.environment }}";
-    $k8sDir = "./tools/Kubernetes";
+    $environmentName = "${{ inputs.environment }}"
+    $componentName = "${{ inputs.component }}"
+    $allowedEnvironmentNames = @("integration", "testing", "staging", "production")
+    $allowedComponentNames = @("default", "alternative")
 
-    # Set image tag in the repo layer
-    Push-Location "$k8sDir/repo"
-    kustomize edit set image "app-image:latest=${{ env.IMAGE }}:${{ github.sha }}"
-    Pop-Location
+    if ($environmentName -notin $allowedEnvironmentNames) {
+      throw "Unsupported Kubernetes environment: $environmentName"
+    }
+    if ($componentName -notin $allowedComponentNames) {
+      throw "Unsupported Kubernetes component: $componentName"
+    }
 
-    # Read components from kustomization.yaml and deploy each one
-    $envDir = "$k8sDir/overlays/$environment"
-    $components = (Get-Content "$envDir/kustomization.yaml" | Select-String '^\s*-\s+(?!.*://)(.+)' | ForEach-Object { $_.Matches.Groups[1].Value.Trim() }) | Where-Object { $_ -ne 'base' }
-    foreach ($componentName in $components) {
-      $componentDir = Join-Path $envDir $componentName
-      Push-Location $componentDir
-      kustomize edit set namespace "${{ env.NAMESPACE_PREFIX }}-$environment"
+    $kubernetesRoot = "./tools/Kubernetes"
+    $selectedComponentDirectory = Join-Path $kubernetesRoot "overlays/$environmentName/$componentName"
+    $selectedKustomization = Join-Path $selectedComponentDirectory "kustomization.yaml"
+    if (-not (Test-Path -LiteralPath $selectedKustomization -PathType Leaf)) {
+      throw "Selected Kubernetes kustomization does not exist: $selectedKustomization"
+    }
+
+    Push-Location $selectedComponentDirectory
+    try {
+      kustomize edit set image "app-image:latest=${{ env.IMAGE }}:${{ github.sha }}"
+      kustomize edit set namespace "${{ env.NAMESPACE_PREFIX }}-$environmentName"
+      kubectl kustomize . | kubectl apply -f -
+    }
+    finally {
       Pop-Location
-
-      kubectl kustomize $componentDir | kubectl apply -f -
     }
 ```
 
 ---
 
-## Adding New Environments
+## Maintaining supported overlays
 
-1. Create `overlays/{new-env}/` directory
-2. Copy structure from existing environment
-3. Update `ASPNETCORE_ENVIRONMENT` value
-4. Adjust resource limits as needed
-5. Add to root `kustomization.yaml`
+- Keep `integration`, `testing`, `staging`, and `production` aligned with the exact structure in
+  `solution-structure`.
+- Keep both `default` and `alternative` selectable beneath every environment's `base`.
+- If the canonical environment set ever changes, update `solution-structure` first; this content template
+  follows that authority.

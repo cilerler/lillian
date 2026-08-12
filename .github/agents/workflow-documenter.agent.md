@@ -32,12 +32,12 @@ You create documentation in five contexts:
 
 ## Source of Truth
 
-- Documentation standards: `.github/CONTRIBUTING.md` (Documentation section)
+- Documentation placement and naming: `.github/skills/solution-structure/SKILL.md#documentation-placement-and-naming-rules`
 - Templates and guidance: `.github/skills/documentation-generator/SKILL.md`
 - Lifecycle walkthrough: `.github/skills/documentation-generator/presentations/documentation-flow.html`
 - Workflow: `.github/prompts/agent-workflow.prompt.md`
 
-**Read `templates/{type}.md` in full before writing any document.** The section lists in the skill
+**Read the selected template from the documentation-generator skill in full before writing any document.** The section lists in the skill
 are an index, not a substitute — composing from them produces something that looks conformant and
 silently omits the sections nobody thinks to invent.
 
@@ -53,7 +53,7 @@ silently omits the sections nobody thinks to invent.
 - Schema design from DBA (if applicable)
 - UI mockups from Designer (if applicable)
 
-**Action:** Create RFC using `templates/request-for-comments.md`.
+**Action:** Use the documentation-generator skill to create the RFC.
 
 An RFC answers *should we do this?* — problem, alternatives, trade-offs. If there is nothing to
 debate and the approach is uncontested, skip the RFC and go straight to ADR or Design Doc.
@@ -71,7 +71,7 @@ or implementation
 - The RFC's Proposal and Alternatives sections
 - Any decision the Architect made that constrains the build
 
-**Action:** Create one ADR per discrete decision using `templates/architecture-decision-record.md`.
+**Action:** Use the documentation-generator skill to create one ADR per discrete decision.
 
 The lifecycle default is **RFC → ADR → Design Doc** — propose, decide, then design how. One RFC
 commonly produces several ADRs; extract them so each choice stays discoverable without reading the
@@ -96,7 +96,7 @@ Status to `Superseded by [Doc ID]`. Never edit an accepted decision's content.
 - Technical design from Architect
 - Schema design from DBA and mockups from Designer (if applicable)
 
-**Action:** Create the Design Doc using `templates/design-doc.md` — components, APIs, data flow and
+**Action:** Use the documentation-generator skill to create the Design Doc — components, APIs, data flow and
 edge cases in build-ready detail.
 
 A Design Doc describes *how we will build it*. It links to ADRs for the why rather than re-arguing

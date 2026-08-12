@@ -26,6 +26,12 @@ summary: Docker and Kubernetes patterns for .NET 10 services including health pr
 
 Defines containerization and orchestration standards for .NET services.
 
+Dockerfile and deployable-project placement comes from
+[`Canonical deployable-runner identities`](../solution-structure/SKILL.md#canonical-deployable-runner-identities),
+and Kubernetes placement comes from
+[`Canonical Kubernetes directory structure`](../solution-structure/SKILL.md#canonical-kubernetes-directory-structure).
+This skill owns the contents of Dockerfiles and Kubernetes manifests, not a second repository layout.
+
 ## Roles
 
 - **Developer**: Creates and maintains Dockerfile and Kubernetes manifests
@@ -37,13 +43,17 @@ Defines containerization and orchestration standards for .NET services.
 
 See [templates/dockerfile.md](templates/dockerfile.md) for complete template.
 
+The Dockerfile's `{DeployableProcessName}` is the full canonical deployable runner project name resolved from
+`solution-structure` (for example, the value matching its `{Organization}.{Product}.Host` form). Do not shorten
+it to a service name or invent app/core/infrastructure project identities.
+
 ### Required Structure
 
 1. **Multi-stage build**: base → build → publish → final
 2. **.NET 10 base images**: `mcr.microsoft.com/dotnet/aspnet:10.0` and `sdk:10.0`
 3. **Non-root user**: `USER app`
 4. **Standard ports**: 8080 (HTTP), 8081 (HTTPS)
-5. **Build files**: Copy `Directory.*.props`, `global.json` for proper restore
+5. **Build files**: Copy the four root build files required by `solution-structure`: `Directory.Packages.props`, `Directory.Build.props`, `Directory.Build.targets`, and `global.json`
 
 ### Build Arguments
 
@@ -66,37 +76,29 @@ See [templates/dockerfile.md](templates/dockerfile.md) for complete template.
 
 See [templates/kubernetes.md](templates/kubernetes.md) for complete templates.
 
-### Required Manifests
+### Placement contract
 
-| File | Purpose |
-|------|---------|
-| `base/deployment.yaml` | Pod specification |
-| `base/service.yaml` | Service exposure |
-| `base/kustomization.yaml` | Kustomize configuration |
-| `overlays/{env}/` | Environment-specific patches |
+Use the [canonical Kubernetes directory structure](../solution-structure/SKILL.md#canonical-kubernetes-directory-structure)
+before creating or moving a manifest. It alone owns the complete `/tools/Kubernetes/` tree. This skill supplies
+content for its shared `base` and for its literal
+`overlays/{integration,testing,staging,production}/{base,default,alternative}` directories; it does not add an
+environment-level or image-transform layer. `default` and `alternative` are selectable components layered
+over the environment's `base`, not shorter forms of the deployable process.
 
-### Kustomize Structure
+### Deployable identity and image tokens
 
-Source of truth: [`solution-structure`](../solution-structure/SKILL.md) § *.NET Solution* — `/tools/Kubernetes/` subtree (full `base/` + `overlays/{integration,testing,staging,production}/{base,default,alternative}/` shape).
-
-Quick reference:
-```
-tools/Kubernetes/
-├── base/
-│   ├── kustomization.yaml
-│   ├── deployment.yaml
-│   └── service.yaml
-└── overlays/
-    ├── integration/
-    ├── testing/
-    ├── staging/
-    └── production/
-```
-
-### Placeholders (two mechanisms — do not mix them up)
-
-- `{APPLICATION_NAME}` — **scaffold-time token.** Replaced with the real service name when the manifests are generated; committed manifests contain the literal name. Nothing substitutes variables at deploy time.
-- `app-image:latest` — **deploy-time image placeholder.** The committed manifests reference this literal image; CI pins the real image via `kustomize edit set image "app-image:latest=<image>:<tag>"` in the `repo/` layer, and sets the namespace via `kustomize edit set namespace`. See the GitHub Actions example in `templates/kubernetes.md`.
+- `{DeployableProcessName}` is the full canonical deployable runner/project identity resolved from
+  `solution-structure`. It is a scaffold-time input, not a shortened service or application name.
+- `{DeployableProcessKebabName}` is the only derived identity token. Derive it once from
+  `{DeployableProcessName}` for Kubernetes DNS-label fields: lowercase the full identity, replace dots and
+  other non-alphanumeric runs with one hyphen, and trim leading/trailing hyphens. If that result exceeds
+  Kubernetes' 63-character label limit, take its first 54 characters, trim any trailing hyphen, then append a
+  hyphen and the first eight lowercase hexadecimal characters of the SHA-256 of the unshortened kebab value.
+  Committed manifests contain the resulting literal value.
+- `app-image:latest` is the deploy-time image placeholder. CI rewrites it with
+  `kustomize edit set image "app-image:latest=<image>:<tag>"` in the selected
+  `/tools/Kubernetes/overlays/<selected-environment>/<selected-component>/kustomization.yaml`; there is no
+  separate image-transform layer. CI may set the namespace in that same selected component.
 
 ---
 
@@ -219,9 +221,11 @@ app.Lifetime.ApplicationStopping.Register(() =>
 ### Configuration Loading
 
 ```csharp
+var environmentName = builder.Environment.EnvironmentName;
+
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{env}.json", optional: true)
+    .AddJsonFile($"appsettings.{environmentName}.json", optional: true)
     .AddJsonFile("/app/configuration/configmap/appsettings.json", optional: true)
     .AddJsonFile("/app/configuration/secret/appsettings.json", optional: true)
     .AddEnvironmentVariables();
@@ -273,5 +277,8 @@ When reviewing infrastructure changes:
 - [ ] Graceful shutdown period set
 - [ ] Secrets mounted from Kubernetes Secrets (not ConfigMaps)
 - [ ] Image pull secrets configured
-- [ ] Environment-specific overlays for all environments
-- [ ] No hardcoded values (use Kustomize substitution)
+- [ ] The canonical integration, testing, staging, and production overlay components are present as required by `solution-structure`
+- [ ] The full deployable identity was resolved once and only DNS-label fields use its canonical kebab derivation
+- [ ] CI pins the image and namespace in the actual selected `default` or `alternative` component kustomization
+- [ ] The change was exercised locally with the repository's applicable container/orchestration harness; use
+      Docker Compose or Minikube when that is the repository's established local runtime

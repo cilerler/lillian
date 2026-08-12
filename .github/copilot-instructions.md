@@ -3,7 +3,11 @@ applyTo: "**"
 ---
 
 > [!TIP]
-> Engineering standards live in `.github/CONTRIBUTING.md`. If anything conflicts with it, CONTRIBUTING.md wins.
+> Cross-cutting engineering principles live in `.github/CONTRIBUTING.md`. For a technology or artifact scope,
+> load every matching `.github/instructions/*.instructions.md`; those files own the specialized implementation
+> rules for their scope. Use `.github/skills/INDEX.md` to route reusable workflows. Resolve physical placement,
+> project names, and filenames through `.github/skills/solution-structure/SKILL.md`.
+> If two applicable authorities conflict, stop and reconcile the source documents instead of silently choosing one.
 
 # Workflow Orchestration
 

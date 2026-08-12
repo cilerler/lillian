@@ -5,19 +5,63 @@ globs: **/*.cs
 
 # C# Instructions
 
-Follow `.github/CONTRIBUTING.md` for all C# standards including:
-- Async patterns and CancellationToken requirements
-- Logging and configuration patterns
-- Error handling and exceptions
-- Concurrency and performance
+This file is the canonical authority for C# implementation conventions.
 
-For observability patterns, see `.github/skills/observability/SKILL.md`.
+## Concurrency and async
+
+- Assume multithreaded execution.
+- Use async I/O end-to-end and do not block asynchronous paths.
+- Require `CancellationToken` on every public asynchronous API and propagate requested cancellation.
+
+## Exceptions and API errors
+
+- Define domain, transient, and fatal exception categories.
+- Never swallow exceptions or use a catch-all without rethrowing.
+- Map HTTP API errors to `ProblemDetails`.
+
+## Performance, nullability, and immutable data
+
+- Profile before optimizing, remove synchronous I/O, and reduce measured allocations.
+- Avoid LINQ in hot paths unless measurement supports it.
+- Enable nullable reference types.
+- Prefer immutable records for DTOs and value objects.
+
+## Persistence and caching
+
+- Use EF Core with an explicit tracking strategy.
+- Use `IDistributedCache` for caches shared across process instances.
+
+## Configuration and dependency injection
+
+- Application-owned registration and mapping extension APIs (`Add*` and `Map*`) do not accept
+  `IConfiguration` or `IConfigurationSection`.
+- Bind runtime options with `BindConfiguration`.
+- When feature selection shapes the DI graph before the provider exists, bind one strongly typed composition
+  snapshot at the deployable runner's composition root and pass that snapshot through registration and mapping.
+- A deployable runner's composition root may pass configuration to a framework or third-party composition API
+  whose contract requires it, but must not relay raw configuration through an application-owned cascade.
+- Never build a temporary service provider.
+
+## APIs, time, money, and serialization
+
+- Document HTTP APIs with OpenAPI and version their routes.
+- Use idempotency keys for applicable POST operations.
+- Use `DateTimeOffset` at application boundaries and UTC for storage.
+- Use `decimal` for money and culture-invariant parsing.
+- Use System.Text.Json source generation, stable serialized field names, and backward-compatible DTO changes.
+
+For observability implementation, see
+[`OpenTelemetry Patterns`](../skills/observability/SKILL.md#opentelemetry-patterns).
 
 ## SQL in C# Code
 
 **Do not generate dynamic SQL strings in C# code.** Use embedded SQL resources instead.
 
-The canonical layout and loader pattern (`Resources/SQL/*.sql`, `Constants.cs`, `ResourceLoader.cs`, the `.csproj` `<EmbeddedResource>` entry) is defined in `.github/skills/dotnet-service-generator/references/standard-service.md` — follow it exactly. On the C# side additionally:
+Embedded SQL placement and filenames come from
+[`Canonical embedded SQL structure`](../skills/solution-structure/SKILL.md#canonical-embedded-sql-structure).
+Follow
+[`Resources/SQL/`](../skills/dotnet-service-generator/references/standard-service.md#resourcessql)
+for the C# loader and project-file embedding implementation. On the C# side additionally:
 
 1. Use parameterized execution with `sp_executesql` or `SqlParameter`
 2. Include a `bool debug = false` parameter in `SqlParameterBuilder` methods (the SQL-side debug pattern is defined in the SQL instructions)

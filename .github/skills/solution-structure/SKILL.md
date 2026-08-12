@@ -1,11 +1,12 @@
 ---
 name: solution-structure
-description: Source of truth for the opinionated .NET solution folder structure (root scaffolding, /docs, /src/Modules/Component/Service hierarchy, /tools/Kubernetes, /tests) and the documentation placement rules that govern items inside it. Use when deciding folder structure, directory layout, repo layout, or where a file belongs.
+description: Source of truth for the opinionated .NET solution folder structure, including in-repo documentation paths and filenames, test-project paths and names, root scaffolding, sibling Host and contract projects, modular or standalone services under /src, /tools/Kubernetes, and /tests. Use when deciding folder structure, directory layout, repo layout, or where a file belongs.
 type: guidance
 applies_to:
   - Developer
   - Architect
   - Documenter
+  - Tester
   - DBA
   - Reviewer
 mandatory: conditional
@@ -21,40 +22,170 @@ triggers:
   - file placement
   - opinionated folder
 references: []
-summary: Source of truth for the opinionated .NET solution folder structure (root scaffolding, /docs, /src/Modules/Component/Service hierarchy, /tools/Kubernetes, /tests) and the documentation placement rules that govern items inside it.
+summary: Source of truth for the opinionated .NET solution folder structure, including in-repo documentation paths and filenames, test-project paths and names, root scaffolding, sibling Host and contract projects, modular or standalone services under /src, /tools/Kubernetes, and /tests.
 ---
 
 # Solution Structure
 
-Source of truth for the opinionated **.NET solution** folder structure. When any skill places a file inside this repo, the rules come from here.
+Source of truth for the opinionated **.NET solution** folder structure. When any skill places a file inside this repo, its project, directory, and structural filename rules come from here. The one explicit capability-level exception is the `dotnet-service-generator`: after this skill resolves the complete service root, that skill owns the service implementation artifact filenames generated inside it. That delegation does not create a short naming form.
 
-> Scope: this skill defines **only** the in-repo `.NET Solution` layout. It does **not** cover workspace structure (`%USERPROFILE%\Source\...`), company-wide document taxonomy, email aliases, RBAC / queue / artifact / test-project / repository naming — those are separate concerns owned elsewhere.
+> Scope: this skill defines **only** the in-repo `.NET Solution` layout. It does **not** cover workspace structure (`%USERPROFILE%\Source\...`), company-wide document taxonomy, email aliases, RBAC / queue / artifact / repository naming — those are separate concerns owned elsewhere.
 
 ## Consumers
 
 | Skill | Reads from this skill |
 |-------|-----------------------|
-| `dotnet-service-generator` | `/src/{Organization}.{Product}.Modules.{Module}/{Component}/{Service}/...` paths and per-service folder shape |
-| `documentation-generator` | `/docs/...` placement and ticket/project folder shapes (that skill owns filename, identifier, and attachments conventions) |
+| `dotnet-service-generator` | Complete modular and standalone service roots plus the folder shape defined here; after the root is resolved, the generator owns capability-specific service implementation artifact filenames inside it |
+| `documentation-generator` | Every in-repo documentation directory, filename, scoped placement, and attachment folder shape; that skill owns document purpose, content, lifecycle, metadata, and identifiers |
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
 | `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
 | `mssql-table-scaffolder` | `/Resources/SQL/` placement when SQL is embedded in a service |
 | `mssql-bulk-data-operations` | `/docs/tickets/.../attachments/` or `/docs/runbooks/.../attachments/` placement for operational SQL scripts |
+| `pressure-test` | Repository/product Pressure-test result directory and timestamped Markdown/HTML basename |
+| `storm-research` | Repository/product Research briefing directory and timestamped HTML filename |
 
 ---
 
-## Documentation Placement Rules
+## Documentation Placement and Naming Rules
 
-These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of the solution. Attachments, filename, and identifier conventions are owned by the [`documentation-generator`](../documentation-generator/SKILL.md) skill.
+This skill is the sole source of truth for every in-repo documentation directory and filename. The
+[`documentation-generator`](../documentation-generator/SKILL.md) skill owns document purpose, content,
+lifecycle, metadata, and identifiers; it does not redefine physical placement or names.
 
-### Tickets and Projects
+### Canonical documentation scope roots
 
-- One folder per ticket: `/docs/tickets/GITHUB-{N}/` with required `Handoff.md` + `attachments/Handoff/`.
-- One folder per project: `/docs/projects/P{N}/` with required `BusinessCase.md`, optional `BusinessCaseFinancialModel.md`, `Retrospective.md`, `TestPlan.md`, `StatusUpdates/{yyyyMMddHHmm}-{slug}.md`, `attachments/{BasenameMatchingDoc}/`.
+Select the narrowest owning scope allowed by the document catalog. These are the complete physical roots; do
+not invent shorter module, component, service, ticket, or project variants.
+
+| Scope | Canonical root | Structural rule |
+|---|---|---|
+| **Repository / Product** | `/docs/` | Lowercase `docs`; owns repository-wide and product-wide documentation. |
+| **Module** | `/src/{Organization}.{Product}.Modules.{ModuleName}/Docs/` | PascalCase `Docs` beneath the complete module project name. |
+| **Component** | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/Docs/` | PascalCase `Docs` beneath the complete module and component hierarchy. |
+| **Service** | Modular: `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Docs/`<br>Standalone: `/src/{Organization}.{Product}.Services.{ServiceName}/Docs/` | One documentation scope and form. The service's established placement selects the owning-project root; both use PascalCase `Docs`. |
+| **Ticket** | `/docs/tickets/{TicketId}/` | One folder per external ticket. `{TicketId}` is the complete external tracker identifier, including its tracker prefix; for GitHub issue 42 it is `GITHUB-42`, never `42`. |
+| **Project** | `/docs/projects/P{N}/` | One folder per sequential internal project identifier. |
+
+For a catalog row, the full path is its allowed canonical scope root, followed by its relative directory, then
+its exact filename. A relative directory of `.` means directly inside the selected scope root. A typed relative
+directory such as `runbooks/` is mandatory at every allowed scope: a modular service runbook is
+`/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Docs/runbooks/{slug}.md`,
+never a shortened `Docs/runbook.md`. Existing repositories may update an established contextual basename in
+place, but every new document uses the full canonical form below.
+
+### Canonical document catalog
+
+Each documentation-generator template appears exactly once. The catalog owns physical scope, relative
+directory, filename, and attachment applicability. Document purpose, lifecycle, metadata, and identifiers
+remain owned by [`documentation-generator`](../documentation-generator/SKILL.md).
+
+| Document type (template) | Allowed scopes | Relative directory | Exact filename | Attachments | Structural special case |
+|---|---|---|---|---|---|
+| Architecture Decision Record (`architecture-decision-record.md`) | Repository / Product; Module; Component; Service | `adrs/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | Keep the full timestamp and slug in both document and attachment basenames. |
+| Request for Comments (`request-for-comments.md`) | Repository / Product; Module; Component; Service | `rfcs/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | Keep the full timestamp and slug in both document and attachment basenames. |
+| Design Doc (`design-doc.md`) | Repository / Product | `designs/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | Repository/product placement only. |
+| Runbook (`runbook.md`) | Repository / Product; Module; Component; Service | `runbooks/` | `{slug}.md` | Yes | No date or type prefix in the physical filename. |
+| Standard Operating Procedure (`standard-operating-procedure.md`) | Repository / Product | `sops/` | `{slug}.md` | Yes | No date or identifier prefix in the physical filename. |
+| Post Incident Review (`post-incident-review.md`) | Repository / Product | `pirs/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | Repository/product placement only. |
+| Takeover and Handover (`takeover-handover.md`) | Ticket | `.` | `Handoff.md` | Yes | Required fixed noun-form output name; the same template covers incoming Takeover and outgoing Handover. |
+| Data Dictionary (`data-dictionary.md`) | Repository / Product | `.` | `data-dictionary.md` | No | Fixed root singleton; no shared root attachment directory. |
+| Business Glossary (`business-glossary.md`) | Repository / Product | `.` | `business-glossary.md` | No | Fixed root singleton; no shared root attachment directory. |
+| Tech Stack Overview (`tech-stack-overview.md`) | Repository / Product | `.` | `tech-stack-overview.md` | No | Fixed root singleton; no shared root attachment directory. |
+| Architecture Overview (`architecture-overview.md`) | Repository / Product; Module; Component; Service | `architectures/` | `{slug}.md` | Yes | Multiple files are allowed per scope; the slug states the covered system or area. |
+| Business Case (`business-case.md`) | Project | `.` | `BusinessCase.md` | Yes | Required fixed project-local name. |
+| Business Case Financial Model (`business-case-financial-model.md`) | Project | `.` | `BusinessCaseFinancialModel.md` | Yes | Fixed optional project-local name. |
+| Project Status Update (`project-status-update.md`) | Project | `StatusUpdates/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | Preserve PascalCase `StatusUpdates`. |
+| Retrospective (`retrospective.md`) | Project | `.` | `Retrospective.md` | Yes | Fixed project-local name. |
+| Test Plan (`test-plan.md`) | Repository / Product; Module; Component; Service | `test-plans/` | `{yyyyMMddHHmm}-{slug}.md` | Yes | One physical form only. Project and Release are semantic scopes, not additional physical roots: both remain under the Repository / Product root and record `Project P{N}` or `Release v[X.Y]` in metadata. |
+| Test Cases (`test-cases.md`) | Repository / Product; Module; Component; Service | `test-cases/` | `{slug}.md` | Yes | No date or type prefix in the physical filename. |
+| Brag Document (`brag-document.md`) | Outside repository | — | — | N/A | Personal artifact; this solution layout does not assign its storage or filename. |
+| Performance Improvement Plan (`performance-improvement-plan.md`) | Outside repository | — | — | N/A | HR artifact; this solution layout does not assign its storage or filename. |
+| Role Brief (`role-brief.md`) | Outside repository | — | — | N/A | HR-adjacent intake artifact; this solution layout does not assign its storage or filename. |
+
+### Non-template documentation artifacts
+
+These structural items do not correspond to a documentation-generator template.
+
+| Artifact | Allowed scopes | Relative directory | Exact filename | Attachments | Structural special case |
+|---|---|---|---|---|---|
+| Documentation index | Repository / Product | `.` | `README.md` | No | Master index for the repository/product documentation tree. |
+| Service overview | Service | `.` | `README.md` | No | Service-local overview; not a second form of another document type. |
+| Machine-readable specifications | Repository / Product | `specs/` | `{slug}.yaml` or `{slug}.json` | No | The files are the artifacts. |
+| Shared diagrams | Repository / Product | `diagrams/` | `{slug}.puml`, `{slug}.excalidraw`, or `{slug}.mermaid`; a generated render keeps the same basename, for example `{slug}.svg` | No | Source and generated render are sibling artifacts in `diagrams/`; neither uses an attachment directory. |
+| Analysis notebooks | Repository / Product | `notebooks/` | `{slug}.ipynb` | No | The files are the artifacts. |
+| Pressure-test result | Repository / Product | `pressure-tests/` | `{yyyyMMddHHmm}-{slug}.md`; an optional visual uses the same basename with `.html` | No | Generated advisory output; leave uncommitted unless the user explicitly requests repository inclusion. |
+| Research briefing | Repository / Product | `research/` | `{yyyyMMddHHmm}-{slug}.html` | No | Generated, citation-verified output; leave uncommitted unless the user explicitly requests repository inclusion. |
+
+### Structural attachment convention
+
+Non-Markdown supporting material—diagram sources and renders, screenshots, spreadsheets, raw data, benchmark
+output, and recordings—lives in the document's typed directory under
+`attachments/{DocumentBasename}/`. `DocumentBasename` is the exact physical filename without `.md`, preserving
+timestamp, slug, spelling, and case.
+
+The directory is literally `attachments`. Do not substitute `artifacts`, which collides with build and CI
+artifact vocabulary, or `assets`, which commonly means rendered-site static files. Attachments are evidence
+owned by one document.
+
+```text
+{TypedDirectory}/
+├── {DocumentFilename}
+└── attachments/
+    └── {DocumentBasename}/
+        ├── diagram.puml
+        ├── diagram.svg
+        ├── benchmark.json
+        └── screenshot.png
+```
+
+Rules:
+
+- The attachment subfolder matches the document basename exactly, including timestamp, slug, spelling, and case.
+- Every `Yes` row uses its own attachment subfolder. Ticket and project containers are not shared attachment bags.
+- Ticket and project scope roots are folders even when they contain only their required fixed document.
+- Link from the document to supporting material with a relative path.
+- Create the attachment subfolder only when material exists; do not create empty directories.
+- Keep editable sources and generated renders together when both are committed.
+- The non-template `specs`, `diagrams`, and `notebooks` rows do not use attachments because their files are the artifacts.
+- Root singletons and README files do not use a generic root attachment directory. Embed small support inline or create an appropriate typed document instead.
+- Commit only shareable support. Personal scratch, raw recordings, and sensitive data belong outside the repository.
+
+Full examples:
+
+| Document | Attachment directory |
+|---|---|
+| `/docs/adrs/202604240930-queue-choice.md` | `/docs/adrs/attachments/202604240930-queue-choice/` |
+| `/docs/runbooks/deploy-worker.md` | `/docs/runbooks/attachments/deploy-worker/` |
+| `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Docs/runbooks/replay-messages.md` | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Docs/runbooks/attachments/replay-messages/` |
+| `/src/{Organization}.{Product}.Services.{ServiceName}/Docs/test-plans/202604241200-resilience.md` | `/src/{Organization}.{Product}.Services.{ServiceName}/Docs/test-plans/attachments/202604241200-resilience/` |
+| `/docs/tickets/GITHUB-42/Handoff.md` | `/docs/tickets/GITHUB-42/attachments/Handoff/` |
+| `/docs/projects/P3/BusinessCase.md` | `/docs/projects/P3/attachments/BusinessCase/` |
+| `/docs/projects/P3/StatusUpdates/202604241100-week18.md` | `/docs/projects/P3/StatusUpdates/attachments/202604241100-week18/` |
+| `/docs/test-plans/202604241200-p3-release-validation.md` with project scope in metadata | `/docs/test-plans/attachments/202604241200-p3-release-validation/` |
 
 ---
 
 ## .NET Solution Folder Structure
+
+> **Deployable-runner boundary:** `{Organization}.{Product}.Host` is a composition/app-runner wrapper only.
+> Any additional deployable runner, such as `{Organization}.{Product}.Gateway` or an orchestration AppHost,
+> follows the same boundary. A runner may reference and register sibling projects, but application contracts,
+> domain/business logic, data access, clients, and service implementations never live beneath its directory.
+
+### Canonical deployable-runner identities
+
+Runner roles are genuinely different process responsibilities, but every runner keeps the complete
+organization/product identity. Do not abbreviate these project names.
+
+| Runner role | Canonical project root | Canonical project file | Responsibility |
+|---|---|---|---|
+| Application host | `/src/{Organization}.{Product}.Host/` | `{Organization}.{Product}.Host.csproj` | Application process entry point and composition. |
+| Edge gateway | `/src/{Organization}.{Product}.Gateway/` | `{Organization}.{Product}.Gateway.csproj` | Edge/proxy process entry point and route/cluster composition. |
+| Orchestration AppHost | `/src/{Organization}.{Product}.AppHost/` | `{Organization}.{Product}.AppHost.csproj` | Local/distributed application orchestration declarations. |
+
+`{DeployableProcessName}` is the exact complete project stem selected from this table, such as
+`{Organization}.{Product}.Host`. Reuse it for the runner directory, project file, assembly, process identity,
+and deployment resource identity. Do not introduce a second token for the same value.
 
 ```
 /.vscode                                    // Visual Studio Code settings
@@ -75,21 +206,21 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
     - ci.yml                                // CI/CD pipeline for continuous integration
     - checks.yml                            // CI/CD pipeline for running checks and tests
 
-/docs                                       // App-level documentation
+/docs                                       // Repository/product-level documentation
   - README.md                               // Master index — pointers to sections below
   - business-glossary.md                    // SINGLETON — no /attachments/ (promote to its own typed folder if support material is needed)
   - data-dictionary.md                      // SINGLETON — no /attachments/
   - tech-stack-overview.md                  // SINGLETON — no /attachments/
 
-  /adrs                                     // Architecture Decision Records — why we chose X over Y (immutable once accepted)
-    - {yyyyMMddHHmm}-{slug}.md              // One decision per file (e.g. 202504141430-use-event-sourcing.md)
+  /adrs                                     // Typed document directory
+    - {yyyyMMddHHmm}-{slug}.md
     /attachments
       /{yyyyMMddHHmm}-{slug}                // Per-doc supporting files (diagrams, screenshots, data, recordings)
-  /rfcs                                     // Request for Comments — proposals under discussion, may or may not be accepted
+  /rfcs                                     // Typed document directory
     - {yyyyMMddHHmm}-{slug}.md
     /attachments
       /{yyyyMMddHHmm}-{slug}
-  /designs                                  // Technical Design Documents — narrative explanation of how a feature/system works
+  /designs                                  // Typed document directory
     - {yyyyMMddHHmm}-{slug}.md
     /attachments
       /{yyyyMMddHHmm}-{slug}
@@ -100,47 +231,52 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
     - {slug}.puml                           // PlantUML source
     - {slug}.excalidraw                     // Excalidraw source
     - {slug}.mermaid                        // Mermaid source
+    - {slug}.svg                            // Optional generated render; same basename as its editable source
   /notebooks                                // Jupyter notebooks for analysis or runnable examples (no /attachments/ — these ARE the artifacts)
     - {slug}.ipynb
+  /pressure-tests                           // Generated pressure-test archives; uncommitted unless explicitly requested
+    - {yyyyMMddHHmm}-{slug}.md
+    - {yyyyMMddHHmm}-{slug}.html            // Optional visual form with the same basename
+  /research                                 // Generated citation-verified research briefings; uncommitted unless explicitly requested
+    - {yyyyMMddHHmm}-{slug}.html
 
-  /architectures                            // Architecture overviews — Diátaxis "Explanation" docs describing how existing systems / modules / components / areas work
-    - {slug}.md                             // Living documents — no date prefix. Multiple per scope (e.g., system.md, auth-flow.md, billing-pricing-engine.md)
+  /architectures                            // Typed document directory
+    - {slug}.md                             // Multiple files allowed
     /attachments
       /{slug}
-  /runbooks                                 // App-wide operational procedures (deploy, backup, restore, etc.)
-    - {slug}.md                             // Living documents — no date prefix (updated as systems evolve)
+  /runbooks                                 // Typed document directory
+    - {slug}.md
     /attachments
       /{slug}
-  /sops                                     // Standard Operating Procedures — formalized org processes
-    - {slug}.md                             // Living documents — no date prefix (revised in place as procedures change)
+  /sops                                     // Typed document directory
+    - {slug}.md
     /attachments
       /{slug}
-  /pirs                                     // Post Incident Reviews — what broke, why, how we fixed it
+  /pirs                                     // Typed document directory
     - {yyyyMMddHHmm}-{slug}.md
     /attachments
       /{yyyyMMddHHmm}-{slug}
-  /test-plans                               // App / release-level test strategy (opt-in; required in regulated contexts)
-    - {yyyyMMddHHmm}-{slug}.md              // Use when scope is a release or initiative not tied to a P{N} project
+  /test-plans                               // Typed document directory
+    - {yyyyMMddHHmm}-{slug}.md              // One canonical physical form
     /attachments
       /{yyyyMMddHHmm}-{slug}
-  /test-cases                               // QA verification of acceptance criteria
-    - {slug}.md                             // Living documents — no date prefix (updated as features change)
+  /test-cases                               // Typed document directory
+    - {slug}.md
     /attachments
       /{slug}
 
-  /tickets                                  // Per-ticket working artifacts and handoffs
-    /GITHUB-{N}                             // Always a folder; one per ticket (identifier from external tracker, e.g. GITHUB-{N})
-      - Handoff.md                          // REQUIRED — final handoff summary at ticket resolution
+  /tickets                                  // Ticket scope roots
+    /{TicketId}                             // Complete external tracker ID; for example GITHUB-42
+      - Handoff.md                          // Required fixed document
       /attachments
         /Handoff                            // Subfolder name matches doc basename — holds scripts, screenshots, investigation notes, raw data, recordings
 
-  /projects                                 // Per-project working artifacts and documentation
-    /P{N}                                   // Always a folder; one per project (sequential internal ID: P1, P2, P3, ...)
-      - BusinessCase.md                     // REQUIRED — initiates the project (scope, rationale, approval)
-      - BusinessCaseFinancialModel.md       // Optional — financial evaluation (OPEX/CAPEX, ROI, payback period)
-      - Retrospective.md                    // End-of-project retrospective
-      - TestPlan.md                         // Optional — project-scoped test strategy (sits alongside BusinessCase)
-      /StatusUpdates                        // Iterative status reports over the life of the project
+  /projects                                 // Project scope roots
+    /P{N}                                   // Always a folder; one per project
+      - BusinessCase.md                     // Required fixed document
+      - BusinessCaseFinancialModel.md       // Optional fixed document
+      - Retrospective.md                    // Fixed document
+      /StatusUpdates                        // Typed project subdirectory
         - {yyyyMMddHHmm}-{slug}.md
         /attachments
           /{yyyyMMddHHmm}-{slug}            // Per-update supporting files
@@ -148,8 +284,15 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
         /BusinessCase                       // Each subfolder matches a doc basename in this folder
         /BusinessCaseFinancialModel
         /Retrospective
-        /TestPlan
+```
 
+### Canonical Kubernetes directory structure
+
+This is the complete structural authority for `/tools/Kubernetes/`. Every supported environment has the same
+three components (`base`, `default`, and `alternative`), and every component explicitly contains its required
+files.
+
+```
 /tools
   /Kubernetes
     - kustomization.yaml                    // Kustomize configuration for Kubernetes
@@ -185,34 +328,48 @@ These rules govern items inside the `/docs/` and `Modules/.../Docs/` subtrees of
           - deployment.yaml
           - service.yaml
       /staging
-        /base
-          - ...
-        /default
-          - ...
-        /alternative
-          - ...
+        /base                               // Base configuration for Staging environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
+        /default                            // Default configuration for Staging environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
+        /alternative                        // Alternative configuration for Staging environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
       /production
-        /...
+        /base                               // Base configuration for Production environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
+        /default                            // Default configuration for Production environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
+        /alternative                        // Alternative configuration for Production environment
+          - kustomization.yaml
+          - deployment.yaml
+          - service.yaml
+```
+
+There is deliberately no separate image-transform directory and no environment-level `kustomization.yaml`.
+Image pinning and namespace selection operate on the selected environment component's `kustomization.yaml`;
+the infrastructure guidance owns that manifest behavior, not another directory.
+
+### Canonical tests, root, and source directory structure
+
+This continues the .NET solution tree after the separately detailed Kubernetes subtree. It is not part of the
+Kubernetes layout.
+
+```
 /tests
-  - App.http                                            // Cross-module HTTP request tests
-  - {ModuleName}.http                                   // Cross-component tests within a module
-  - {ComponentName}.http                                // Cross-service tests within a component
-  - {ServiceName}.http                                  // Tests for one service's API endpoints
-  /{Organization}.{Product}.Domain.Integration.Tests
-    - {Organization}.{Product}.Domain.Integration.Tests.csproj
-    - EnterpriseServiceTests.cs
-  /{Organization}.{Product}.Domain.Unit.Tests
-    - {Organization}.{Product}.Domain.Unit.Tests.csproj
-    - EnterpriseServiceTests.cs
-  /{Organization}.{Product}.Host.E2E.Tests
-    - {Organization}.{Product}.Host.E2E.Tests.csproj
-    - HealthCheckTests.cs
-  /{Organization}.{Product}.Host.Integration.Tests
-    - {Organization}.{Product}.Host.Integration.Tests.csproj
-    - HealthCheckTests.cs
-  /{Organization}.{Product}.Host.Unit.Tests
-    - {Organization}.{Product}.Host.Unit.Tests.csproj
-    - HealthCheckTests.cs
+  - {TestTarget}.http                                   // HTTP requests for one complete canonical target
+  /{TestTarget}.{TestType}.Tests                        // One canonical form; TestTarget is the complete namespace under test
+    - {TestTarget}.{TestType}.Tests.csproj              // TestType is Unit, Integration, or E2E
+    - ...
   /{Organization}.{Product}.Tests.Common                         // Shared test utilities, fixtures, mocks
     - {Organization}.{Product}.Tests.Common.csproj
   /...
@@ -225,94 +382,92 @@ README.md                                   // Readme file explains the project
 CHANGELOG.md                                // Changelog file for the project
 azure-pipelines.yml                         // Azure DevOps pipeline configuration
 Directory.Build.props                       // Common properties for all projects in the solution
-Company.Solution.sln                        // Visual Studio solution file
+Directory.Build.targets                     // Common build targets for all projects in the solution
+Directory.Packages.props                    // Central package-version declarations
+global.json                                 // Pinned .NET SDK selection
+{Organization}.{Product}.slnx              // Visual Studio solution file
 /src
-  /{Organization}.{Product}.Abstractions
-  /{Organization}.{Product}.Extensions
-  /{Organization}.{Product}.Domain
+  /{Organization}.{Product}.Abstractions             // Separate app-wide contract project (when needed)
+    - {Organization}.{Product}.Abstractions.csproj
+    /Events
+    /Interfaces
+    /Models                                           // Enums, value objects, shared DTOs
+    /Requests
+    /Responses
+
+  /{Organization}.{Product}.Extensions                // Optional reusable implementation project
+    - {Organization}.{Product}.Extensions.csproj
+    /Contracts                                        // Internal contracts for helpers owned by this project
+    /Exceptions                                       // Technical exceptions owned by this project
+    /Internals                                        // Reusable technical helper implementations
+  /{Organization}.{Product}.Domain                    // Optional domain project; never nested in Host
+    - {Organization}.{Product}.Domain.csproj
+    /Exceptions                                       // App-wide domain exceptions
+    /Models                                           // App-wide domain types and rules
+
+  /Observability                                      // App-wide operational assets, outside Host
+    /Grafana
+      - dashboard.json                                // Platform overview dashboard
+
   /{Organization}.{Product}.Host
-    - Program.cs                            // Entry point for the application
-    - ProgramExtensions.cs                  // Extension methods for the program
-    - StartupBackgroundService.cs           // Initial background service for the application
-    - StartupHealthCheck.cs                 // Health check for the application
-    - AppConfigurationExtensions.cs         // Configuration extensions for the application
-    - appsettings.json                      // Configuration settings for the application
-    - appsettings.Development.json          // Configuration settings for the development environment
-    - appsettings.Integration.json          // Configuration settings for the integration environment
-    - appsettings.Testing.json              // Configuration settings for the testing environment
-    - appsettings.Staging.json              // Configuration settings for the staging environment
-    - appsettings.Production.json           // Configuration settings for the production environment
-    - Dockerfile                            // Docker configuration for containerization
-    - {Organization}.{Product}.Host.csproj           // Project file
-    - Buildinfo.txt                         // Build information to show when the app starts
-    - App.razor                             // Main application component
-    - Routes.razor                          // Route configuration for the application
+    - Program.cs                                      // Process entry point; invokes composition only
+    - ProgramExtensions.cs                            // Host/app-runner composition
+    - StartupBackgroundService.cs                     // Optional readiness orchestration; no domain work
+    - StartupHealthCheck.cs                           // Optional host readiness check
+    - AppConfigurationExtensions.cs                   // Host configuration composition
+    - appsettings.json                                // Configuration settings for the application
+    - appsettings.Development.json                    // Configuration settings for the development environment
+    - appsettings.Integration.json                    // Configuration settings for the integration environment
+    - appsettings.Testing.json                        // Configuration settings for the testing environment
+    - appsettings.Staging.json                        // Configuration settings for the staging environment
+    - appsettings.Production.json                     // Configuration settings for the production environment
+    - Dockerfile                                      // Deployable-process container definition
+    - {Organization}.{Product}.Host.csproj            // Composition-root project
+    - Buildinfo.txt                                   // Build information shown at startup
 
     /Properties
-      - launchSettings.json                 // Debugging settings for the project, Visual Studio and .NET Core CLI
-
-    /Resources
-      /SQL
-        - Constants.cs
-        - Query1.sql
-        - Query2.sql
-        - ...
-      /...
-
-    /wwwroot
-      - index.html                          // Default HTML file for the application
-      - favicon.ico                         // Favicon for the application
-      - ...
-      /css
-        - app.css
-        - ...
-
-    /Pages
-      - Page1.razor                         // Razor page for the application
-      - Page2.razor
-      - ...
-
-    /PageComponents
-      - PageComponent1.razor                // Page component for the application
-      - PageComponent2.razor
-      - ...
-
-    /Layout
-      - MainLayout.razor                    // Main layout component
-      - NavMenu.razor                       // Navigation menu component
-      - _Imports.razor                      // Import statements for the application
-
-    /Abstractions                              // App-wide shared contracts (cross-module)
-      /Events
-      /Interfaces
-      /Models                                  // Enums, value objects, shared DTOs
-      /Requests
-      /Responses
-    /Contracts                                 // App-wide internal interfaces for shared helpers
-    /Exceptions                                // App-wide base exceptions
+      - launchSettings.json                             // Local process launch settings
+    /Configuration
+      - CapabilitySelection.cs                         // Immutable registration/mapping gate snapshot
     /Extensions
-      - StartupExtensions.cs                   // Registers modules — feature flags decide which are active per deployment
-    /Internals                                 // App-wide shared helper implementations
-    /Observability
-      /Grafana                                 // Platform overview dashboard
-        - dashboard.json
+      - StartupExtensions.cs                           // Registers modules/services selected for this process
+    /Components                                       // Optional process-specific Blazor/UI shell; thin presentation only
+      - App.razor
+      - Routes.razor
+      - _Imports.razor
+      /Layout
+        - MainLayout.razor
+        - NavMenu.razor
+      /Pages                                           // Process shell/composition pages, not reusable feature behavior
+        - ...
+    /wwwroot                                           // Optional static assets owned by this deployable process
+      - ...
 
-  /{Organization}.{Product}.Modules.{Module1}.Abstractions    // Separate csproj — module's public contract (cross-module)
-    - {Organization}.{Product}.Modules.{Module1}.Abstractions.csproj
+  /{Organization}.{Product}.Services.{ServiceName}.Abstractions // Optional standalone-service contract project when another project consumes its contracts
+    - {Organization}.{Product}.Services.{ServiceName}.Abstractions.csproj
+    /Events
+    /Interfaces
+    /Models
+    /Requests
+    /Responses
+
+  /{Organization}.{Product}.Services.{ServiceName}    // Optional standalone implementation; sibling of deployable runners
+    - {Organization}.{Product}.Services.{ServiceName}.csproj
+    - ...                                              // Apply the exact canonical service-root folder shape shown below; generator owns only capability-specific filenames
+
+  /{Organization}.{Product}.Modules.{ModuleName}.Abstractions    // Separate csproj — module's public contract (cross-module)
+    - {Organization}.{Product}.Modules.{ModuleName}.Abstractions.csproj
     /Events
     /Interfaces
     /Models                                          // Enums, value objects, shared DTOs
     /Requests
     /Responses
 
-  /{Organization}.{Product}.Modules.{Module1}                 // Module project — owns components and services as folders
-    - {Organization}.{Product}.Modules.{Module1}.csproj       // References its .Abstractions sibling; references other modules' .Abstractions when consuming their contracts
+  /{Organization}.{Product}.Modules.{ModuleName}                 // Module project — owns components and services as folders
+    - {Organization}.{Product}.Modules.{ModuleName}.csproj       // References its .Abstractions sibling; references other modules' .Abstractions when consuming their contracts
     - Constants.cs                                   // Module-wide constants
     /Contracts                                       // Module-wide internal interfaces for shared helpers
-    /Docs                                            // Module-scoped documentation (optional)
-      /adrs                                          // Module-specific architectural decisions
-      /rfcs                                          // Module-specific proposals
-      /runbooks                                      // Module-level operational procedures
+    /Docs                                            // Optional contextual root; apply the catalog's typed relative directories
     /Exceptions                                      // Module-level base exceptions
     /Extensions
       - StartupExtensions.cs                         // Registers all components in this module
@@ -321,7 +476,7 @@ Company.Solution.sln                        // Visual Studio solution file
       /Grafana                                       // Module-level domain health dashboard
         - dashboard.json
 
-    /{Component1}                                    // Folder inside module project — always required (even single-component modules)
+    /{ComponentName}                                    // Folder inside module project — always required (even single-component modules)
       /Abstractions                                  // Component's public contract (cross-component within module — folder, NOT separate csproj)
         /Events
         /Interfaces
@@ -329,10 +484,7 @@ Company.Solution.sln                        // Visual Studio solution file
         /Requests
         /Responses
       /Contracts                                     // Component-wide internal interfaces for shared helpers
-      /Docs                                          // Component-scoped documentation (optional)
-        /adrs                                        // Component-specific architectural decisions
-        /rfcs                                        // Component-specific proposals
-        /runbooks                                    // Component-level operational procedures
+      /Docs                                          // Optional contextual root; apply the catalog's typed relative directories
       /Exceptions                                    // Component-level base exceptions
       /Extensions
         - StartupExtensions.cs                       // Registers all services in this component
@@ -342,7 +494,7 @@ Company.Solution.sln                        // Visual Studio solution file
           - dashboard.json
       - Constants.cs                                 // Component-wide constants
 
-      /{Service1}                                    // Folder — full service structure
+      /{ServiceName}                                    // Folder — full service structure
         /Abstractions                                // Public contract (cross-service within component — folder)
           /Events                                    // Domain events
           /Interfaces                                // Public interfaces (when externally consumed)
@@ -350,20 +502,13 @@ Company.Solution.sln                        // Visual Studio solution file
           /Requests                                  // Request DTOs
           /Responses                                 // Response DTOs
         /Api                                         // HTTP endpoints (optional)
-          - {ServiceName}Api.cs                      // Route group definition
-          - {Verb}Endpoint.cs                        // One file per endpoint
         /Clients                                     // External HTTP API wrappers
         /Configuration                               // Settings and config binding
-          - {ServiceName}Settings.cs
         /Contracts                                   // Internal interfaces (DI/testing)
-          - I{ServiceName}.cs                        // Default: internal
-        /Docs                                        // Service-scoped documentation (optional)
-          - README.md                                // Service overview
-          - runbook.md                               // Service-specific operational procedures
-          - test-plan.md                             // Service-specific test strategy
+        /Docs                                        // Optional contextual root; apply the catalog's typed relative directories
+          - README.md                                // Service overview singleton
         /Exceptions                                  // Service-specific exceptions
         /Extensions                                  // DI registration, model extensions
-          - StartupExtensions.cs
         /Internals                                   // Internal helper implementations
         /Mappers                                     // Object mapping between types
         /Models                                      // Internal entities/domain objects
@@ -372,23 +517,127 @@ Company.Solution.sln                        // Visual Studio solution file
             - dashboard.json
         /Resources                                   // Embedded resource files — optional (SQL, templates, etc.)
           /SQL
-            - {Name}.sql
+            - {SqlScriptName}.sql                    // Descriptive PascalCase operation name
             - ResourceLoader.cs                      // Lazy loader for embedded resources
             - Constants.cs                           // Resource file name constants
+        /Serialization                               // Service-owned transport/API serializer metadata
         /Validators                                  // Custom validation attributes
-        - Constants.cs                               // Service constants + Metrics nested class
-        - {ServiceName}Service.cs                    // Core business logic
-        - {ServiceName}Worker.cs                     // Background service lifecycle (optional)
-        - {ServiceName}HealthCheck.cs                // Health monitoring (optional)
+        - ...                                        // Service-root files are owned by dotnet-service-generator
 
-      /{Service2}
+      /{OtherServiceName}
         /...
 
-    /{Component2}
+    /{OtherComponentName}
       /...
 
-  /{Organization}.{Product}.Modules.{Module2}.Abstractions
+  /{Organization}.{Product}.Modules.{OtherModuleName}.Abstractions
     /...
-  /{Organization}.{Product}.Modules.{Module2}
+  /{Organization}.{Product}.Modules.{OtherModuleName}
     /...
 ```
+
+### Canonical Grafana dashboard placement
+
+Every generated Grafana dashboard uses the fixed filename `dashboard.json` at the narrowest scope it monitors:
+
+| Monitored scope | Canonical path |
+|---|---|
+| Product / platform | `/src/Observability/Grafana/dashboard.json` |
+| Module | `/src/{Organization}.{Product}.Modules.{ModuleName}/Observability/Grafana/dashboard.json` |
+| Component | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/Observability/Grafana/dashboard.json` |
+| Modular service | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Observability/Grafana/dashboard.json` |
+| Standalone service | `/src/{Organization}.{Product}.Services.{ServiceName}/Observability/Grafana/dashboard.json` |
+
+These are scope placements of one full dashboard form, not long and short filename conventions. Dashboard
+content, variables, queries, and identity semantics belong to the observability guidance.
+
+### Canonical embedded SQL structure
+
+When a modular or standalone service embeds SQL, use the service-root subtree shown above:
+
+```text
+/Resources/SQL
+  - {SqlScriptName}.sql
+  - ResourceLoader.cs
+  - Constants.cs
+```
+
+`{SqlScriptName}` is a descriptive PascalCase operation name. The .NET service guidance owns how the loader,
+constants, and embedded-resource project configuration are implemented.
+
+### Canonical test project and HTTP file naming
+
+In the `/tests` pattern, `{TestTarget}` is never a shortened area token. Both `{TestTarget}.http` and
+`{TestTarget}.{TestType}.Tests` use the complete canonical namespace of the subject under test; for a modular
+service that means
+`{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}`. `{TestType}` is `Unit`,
+`Integration`, or `E2E`. One full modular example is
+`/tests/{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Integration.Tests/`.
+
+#### Test-target applicability
+
+One naming formula does not mean every target/type combination is valid. Generate only these complete HTTP
+targets when that boundary actually exposes HTTP behavior:
+
+| HTTP scope | Complete `{TestTarget}` |
+|---|---|
+| Application host surface | `{Organization}.{Product}.Host` |
+| Gateway surface | `{Organization}.{Product}.Gateway` |
+| Module surface | `{Organization}.{Product}.Modules.{ModuleName}` |
+| Component surface | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}` |
+| Modular service surface | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}` |
+| Standalone service surface | `{Organization}.{Product}.Services.{ServiceName}` |
+
+Test projects use the same complete target identity and only the applicable test types:
+
+| Subject under test | Complete `{TestTarget}` | Allowed `{TestType}` |
+|---|---|---|
+| Domain project | `{Organization}.{Product}.Domain` | `Unit`, `Integration` |
+| Module project | `{Organization}.{Product}.Modules.{ModuleName}` | `Unit`, `Integration` |
+| Component boundary | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}` | `Unit`, `Integration` |
+| Modular service boundary | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}` | `Unit`, `Integration` |
+| Standalone service project | `{Organization}.{Product}.Services.{ServiceName}` | `Unit`, `Integration` |
+| Deployable runner (`Host`, `Gateway`, or `AppHost`) | Its exact canonical runner project name from the table above | `Unit`, `Integration`, `E2E` |
+
+`{Organization}.{Product}.Tests.Common` remains the one explicit non-target exception: it owns shared test
+utilities and is not itself a production subject under test.
+
+The service-root folder shape shown under the modular `{ServiceName}` node applies unchanged beneath both the
+modular and standalone roots. This skill owns the project, containing path, folders, and the cross-skill
+structural filename conventions explicitly shown in the tree. After that root is resolved, the
+`dotnet-service-generator` owns all other service implementation artifact filenames and decides which
+capability-specific files exist. That single delegation is not permission to invent shortened filenames,
+redefine a shown structural filename, or omit a folder required by a selected capability.
+
+The Host—and any additional deployable runner such as a Gateway or orchestration AppHost—is a
+composition/app-runner wrapper, not an application layer. A runner owns only its process entry point,
+configuration and dependency composition, deployable-process assets, startup/readiness adapters, and
+process-specific edge, proxy, or orchestration wiring. It must not own reusable application contracts, domain
+or business logic, data access, embedded business SQL, clients, or service implementations. Those belong in
+the sibling app-wide abstractions/domain projects, module projects, or sibling standalone service projects.
+Modules and services never reference a deployable runner.
+
+The former Host-local `Contracts/`, `Exceptions/`, and `Internals/` buckets are deliberately retired rather
+than moved as app-wide catch-alls. Resolve each artifact by responsibility:
+
+- cross-project contracts belong in the sibling `{Organization}.{Product}.Abstractions` project;
+- domain rules, domain models, and domain exceptions belong in the sibling `{Organization}.{Product}.Domain`
+  project when that project is present;
+- reusable technical helpers, together with contracts and technical exceptions owned only by those helpers,
+  belong in the sibling `{Organization}.{Product}.Extensions` project when that project is present; and
+- capability-specific internal contracts, exceptions, and helpers remain with their owning module, component,
+  or service.
+
+A runner may own only process-specific UI shell/composition files and static assets. Reusable feature UI and
+all business behavior remain with the owning sibling capability.
+
+A Gateway runner may own YARP route/cluster composition and its process-level proxy mapping. A reusable
+ingress capability—such as a webhook service with its own settings, contracts, clients, handlers, and thin
+API endpoints—is a sibling standalone service that the Gateway registers and maps. Likewise, an AppHost may
+own orchestration declarations, but it does not become the home of the services it orchestrates.
+
+A standalone service keeps contracts used only by its implementation inside that implementation project.
+When another project consumes its public contracts, place them in the sibling
+`{Organization}.{Product}.Services.{ServiceName}.Abstractions` project so the consumer does not reference the
+service implementation. A deployable runner references the implementation project only to compose it; this
+never makes the runner the owner of those contracts or their behavior.

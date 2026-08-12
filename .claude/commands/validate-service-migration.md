@@ -7,14 +7,17 @@ description: Production-gate validation that a migrated .NET service preserves b
 ## Variables
 If any of these values were not provided in the invocation, ask the user for them before starting:
 
-- **Service name:** [replace with service name]
-- **New service path:** [replace with migrated service path relative to repo root]
-- **Old service path:** [replace with production/original service path relative to repo root]
-- **Project name:** [replace with project/repo name]
+- **Service name:** `{ServiceName}`
+- **Repository name:** `{RepositoryName}` — repository containing the migrated service
+- **Owning project name:** `{OwningProjectName}` — complete canonical project name, not the repository name
+- **Old service path:** `{OldServicePath}` — actual production/original path relative to the repository root
+- **New service path:** `{NewServicePath}` — actual migrated path relative to the repository root
 
 ---
 
-You are validating the migration of the `{{Service name}}` service in `{{Project name}}`. The service has been restructured from `{{Old service path}}` to `{{New service path}}` to match current architecture standards.
+You are validating the migration of `{ServiceName}` in the `{RepositoryName}` repository and
+`{OwningProjectName}` project. The service moved from `{OldServicePath}` to `{NewServicePath}` to match current
+architecture standards.
 
 ## Critical Deployment Rule
 Treat this validation as a **production deployment gate**.
@@ -26,6 +29,8 @@ Treat this validation as a **production deployment gate**.
 
 ## Skills to Apply
 Before starting, load and follow these skill files:
+
+- `.github/skills/solution-structure/SKILL.md`
 - `.github/skills/dotnet-service-generator/SKILL.md`
 - `.github/skills/observability/SKILL.md`
 
@@ -33,7 +38,8 @@ Before starting, load and follow these skill files:
 Analyze from two independent angles — a technical-architecture equivalence pass, and an adversarial pass actively looking for reasons to FAIL — and reconcile both before issuing a verdict. Use parallel subagents for the two angles if your platform supports them.
 
 ## Context
-You are **only validating the migration of `{{Service name}}`** from the old structure to the new structure. This is a structural modernization, not a functional change.
+You are **only validating the migration of `{ServiceName}`** from `{OldServicePath}` to
+`{NewServicePath}`. This is a structural modernization, not a functional change.
 
 ## Validation Standard (Fail-Closed)
 Use a fail-closed model:
@@ -45,7 +51,7 @@ Use a fail-closed model:
 Do not optimize for speed. Optimize for certainty.
 
 ## Task
-Validate that the migration from `{{Old service path}}` to `{{New service path}}` in `{{Project name}}` is correct by:
+Validate that the migration from `{OldServicePath}` to `{NewServicePath}` in `{OwningProjectName}` is correct by:
 
 1. **Compare business logic**: Ensure all domain logic, calculations, workflows, and business rules from the old service are present and unchanged in the new service
 2. **Compare error handling**: Verify that all exception handling, validation logic, and error cases from the old service are preserved in the new service with equivalent behavior
@@ -83,7 +89,9 @@ You must explicitly cover all of the following:
 ## What NOT to validate
 - Code style or formatting differences
 - Performance optimizations beyond the expected improvements
-- Directory structure or file organization (these are intentional changes)
+- Re-litigating the approved directory structure or file organization. Use solution-structure and
+  dotnet-service-generator only to resolve the supplied paths, projects, filenames, and namespaces; this
+  production gate focuses on behavioral equivalence.
 
 ## What TO validate about logging/observability
 - **Existing logging** from the old service is preserved in the new service
@@ -150,4 +158,3 @@ Provide:
 	- if non-empty, verdict cannot be PASS
 9. **Production Sign-off Statement**:
 	- explicit statement whether deployment is safe now
-

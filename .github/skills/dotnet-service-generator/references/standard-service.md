@@ -2,97 +2,94 @@
 
 ## File Structure
 
-```
-{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/
-├── Abstractions/                    # Public contract — crosses module boundary
-│   ├── Events/
-│   │   └── {Name}Event.cs
-│   ├── Interfaces/
-│   │   └── I{ServiceName}.cs        # Only when externally consumed
-│   ├── Models/
-│   │   └── {Name}.cs                # Enums, value objects, shared DTOs
-│   ├── Requests/
-│   │   └── {Name}Request.cs
-│   └── Responses/
-│       └── {Name}Response.cs
-├── Api/                             # optional — if HTTP endpoints exposed
-│   ├── {ServiceName}Api.cs          # Route group definition
-│   └── {Verb}Endpoint.cs            # One file per endpoint
-├── Clients/                         # External HTTP dependencies
-│   ├── I{ExternalApi}Client.cs
-│   └── {ExternalApi}Client.cs
-├── Configuration/
-│   └── {ServiceName}Settings.cs
-├── Contracts/                       # Internal interfaces
-│   └── I{ServiceName}.cs           # Default: internal (move to Abstractions/Interfaces/ if externally consumed)
-├── Docs/                            # Service-scoped documentation (optional)
-├── Exceptions/
-│   └── {Name}Exception.cs
-├── Extensions/
-│   └── StartupExtensions.cs
-├── Internals/                       # Internal helper implementations
-│   └── {Name}.cs                    # Repository, UnitOfWork, Decorator, etc.
-├── Mappers/
-│   └── {Name}Mapper.cs
-├── Models/                          # Internal entities/DTOs only
-│   └── {Name}.cs
-├── Observability/
-│   └── Grafana/
-│       └── dashboard.json
-├── Resources/                       # optional — embedded resource files (SQL, templates, etc.)
-│   └── SQL/
-│       ├── {Name}.sql
-│       ├── ResourceLoader.cs        # Lazy loader for embedded resources
-│       └── Constants.cs             # Resource file name constants
-├── Validators/
-│   └── {Name}Attribute.cs
-├── Constants.cs                     # Includes Metrics nested class
-├── {ServiceName}Service.cs          # Core business logic
-├── {ServiceName}Worker.cs           # optional — if background/cron
-└── {ServiceName}HealthCheck.cs      # optional — if health monitoring needed
-```
+The canonical service path and folder layout are defined once in [`solution-structure`](../../solution-structure/SKILL.md#net-solution-folder-structure). This reference owns service-root file names plus the code shape and relationships inside generated files. Generate only the capability-specific artifacts selected for the service; folders with no content do not exist.
 
-## Contracts/I{ServiceName}.cs
+## Default service-internal path: Contracts/I{ServiceName}.cs
 
-> **Placement rule**: `I{ServiceName}.cs` defaults to `Contracts/` (internal). Move to `Abstractions/` only when other modules or external consumers need to reference it.
+> **Placement rule**: `I{ServiceName}.cs` defaults to service-internal `Contracts/`. If it crosses a
+> boundary, place it at the producer boundary selected by the
+> [generator contract-routing table](../SKILL.md#create-when-needed)—service folder, component folder,
+> sibling module abstractions project, sibling standalone-service abstractions project, or app-wide
+> abstractions project. A contract consumed by another module never remains inside the implementation
+> project's service-level `Abstractions/` folder.
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
+namespace {ServiceContractNamespace};
+
+using System.Threading;
+using System.Threading.Tasks;
 
 public interface I{ServiceName}
 {
-    Task<TResult> DoWorkAsync(CancellationToken cancellationToken);
+    Task DoWorkAsync(CancellationToken cancellationToken);
 }
 ```
 
-## Abstractions/Requests/{Name}Request.cs
+`DoWorkAsync` is the neutral placeholder operation. Replace it with the service's real business operations during generation; capability references such as [`background-service.md`](background-service.md) and [`dependencies.md`](dependencies.md) define their required signatures. Do not retain an unused placeholder member.
+
+## Default service-boundary path: Abstractions/Requests/Process{ServiceName}Request.cs
+
+Every contract path heading in this section is a default service-boundary path, not a fixed destination.
+Place the file under the selected producer boundary's matching role folder (`Requests`, `Responses`, or
+`Events`) and use the resolved namespace token. When the confirmed boundary changes, move the declaration,
+its contract-owned serialization context, and their namespaces together; do not leave a duplicate under
+`{ServiceRoot}/Abstractions`.
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Requests;
+namespace {RequestContractNamespace};
 
-public record Process{ServiceName}Request(string Id, string Data);
+using System.Text.Json.Serialization;
+
+public record Process{ServiceName}Request(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("data")] string Data);
 ```
 
-## Abstractions/Responses/{Name}Response.cs
+## Default service-boundary path: Abstractions/Responses/{ServiceName}Response.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
+namespace {ResponseContractNamespace};
 
-public record {ServiceName}Response(string Id, string Result, DateTime ProcessedAt);
+using System;
+using System.Text.Json.Serialization;
+
+public record {ServiceName}Response(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("result")] string Result,
+    [property: JsonPropertyName("processedAt")] DateTimeOffset ProcessedAt);
 ```
 
-## Abstractions/Events/{Name}Event.cs
+## Default service-boundary path: Abstractions/Events/{ServiceName}CompletedEvent.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Events;
+namespace {EventContractNamespace};
 
-public record {ServiceName}CompletedEvent(string Id, DateTime CompletedAt);
+using System;
+using System.Text.Json.Serialization;
+
+public record {ServiceName}CompletedEvent(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("completedAt")] DateTimeOffset CompletedAt);
 ```
+
+Every serialized contract uses explicit JSON field names and is included in at least one source-generated
+`JsonSerializerContext`. Context ownership follows its purpose:
+
+- A reusable producer-owned context belongs at the same selected contract boundary as the contracts it
+  describes. Keep it in that boundary's project or folder, under the nearest common namespace that does not
+  introduce a reference to a narrower boundary. When those contracts move, move the context and update its
+  namespace and project references with them.
+- A consumer adapter may own an additional context for its protocol-specific serialization policy. The HTTP
+  context and registration in [`api-patterns.md`](api-patterns.md#serializationservicenamejsonserializercontextcs)
+  are service-owned adapter artifacts: they remain under `{ServiceRoot}/Serialization` and import the resolved
+  request and response namespaces even when the DTO declarations live in another contract project.
+- A selected message transport uses the producer-owned event context. If it cannot accept that
+  source-generated resolver, surface the capability gap instead of silently falling back to reflection.
 
 ## Constants.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
+namespace {ServiceNamespace};
 
 public static class Constants
 {
@@ -100,9 +97,9 @@ public static class Constants
     
     public static class Metrics
     {
-        public const string ActiveRequests = "active_requests";
-        public const string OperationTotal = "operation_total";
-        public const string OperationDuration = "operation_duration_seconds";
+        public const string ActiveRequests = "app_{ServiceSnakeName}_active_requests";
+        public const string OperationTotal = "app_{ServiceSnakeName}_operation_total";
+        public const string OperationDuration = "app_{ServiceSnakeName}_operation_duration_seconds";
     }
 }
 ```
@@ -111,13 +108,19 @@ public static class Constants
 
 > **Rules for default values in Settings classes:**
 >
-> - **Never** set hardcoded defaults for properties of type `string` or `DateTime`. These are **domain values** (URLs, hostnames, credentials, queue/topic/vhost/exchange names, resource names, paths, header names, API keys, schema names, timestamps) and must live in `appsettings.json` (or environment variables / user-secrets). Declare them with `= null!;` and `[Required]`, or make them nullable (`string?` / `DateTime?`) when the missing state is a valid runtime scenario the code explicitly handles.
+> - **Never** set hardcoded defaults for properties of type `string`, `DateTime`, or `DateTimeOffset`. These are **domain values** (URLs, hostnames, credentials, queue/topic/vhost/exchange names, resource names, paths, header names, API keys, schema names, timestamps) and must live in `appsettings.json` (or environment variables / user-secrets). Declare strings with `= null!;` and validate them, or make values nullable when the missing state is a valid runtime scenario the code explicitly handles.
+> - **Feature-gated exception:** when a domain value is required only while `Enabled` is true, do not use unconditional `[Required]`. Keep `= null!;` and add an options validator that accepts the disabled state and requires a nonblank value in the enabled state. Disabled services must not fail startup for unused provider configuration.
 > - **OK** to set defaults for **operational** properties of type `TimeSpan`, `int`, `long`, `byte`, `double`, `decimal`, `float`, `bool`, or `enum` — timeouts, retry counts, batch sizes, polling intervals, feature toggles, log levels. These are tuning knobs with sensible cross-environment defaults, not values that change per deployment.
-> - **Exception for strings/DateTime:** a default is acceptable *only* if the value is a genuine universal constant that is not environment-specific (e.g. a format string used for serialization) — in which case prefer declaring it as a `const` rather than a property default when possible.
-> - **Connection strings follow the `ConnectionString`/`ConnectionStringKey` pattern:** the Settings property holds the *key* (e.g. `"MsSqlConnection"`), not the URL itself. The actual URL lives under the top-level `ConnectionStrings` section in `appsettings.json` and is resolved at use-site via `IConfiguration.GetConnectionString(settings.ConnectionStringKey)`. This keeps the connection-string catalog consistent across services and makes environment-specific overrides straightforward. Apply the same `*ConnectionStringKey` pattern for any URL or endpoint (management URLs, cache endpoints, SMTP servers, etc.), not just databases.
+> - **Exception for strings/timestamps:** a default is acceptable *only* if the value is a genuine universal constant that is not environment-specific (e.g. a format string used for serialization) — in which case prefer declaring it as a `const` rather than a property default when possible.
+> - **Connection-string catalog entries use `ConnectionStringKey` only:** the Settings property holds the catalog key (e.g. `"MsSqlConnection"`), never a duplicate `ConnectionString` value. The actual connection string lives under the top-level `ConnectionStrings` section and is resolved at use-site with `IConfiguration.GetConnectionString(settings.ConnectionStringKey)`. Validate both that the key is nonblank and that it resolves to a configured value while the service is enabled.
+> - **URLs and endpoints are not connection-string keys:** bind each deployment URL or endpoint directly to a clearly named Settings property such as `ApiBaseUrl` or `ManagementEndpoint`. Give it no source-code default and validate its required shape while the capability is enabled.
+
+The base Settings file has no namespace imports. When `ApiBaseUrl` and `[AbsoluteHttpUrl]` are selected,
+merge `using {ServiceNamespace}.Validators;` together with that property; omit the import when the validator
+capability is absent.
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
+namespace {ServiceNamespace}.Configuration;
 
 public class {ServiceName}Settings
 {
@@ -126,46 +129,45 @@ public class {ServiceName}Settings
     
     public bool Enabled { get; internal set; }
     
-    // Connection string pattern (if needed)
-    public string ConnectionString { get; internal set; } = null!;
-    
-    [Required]
+    // Include only when a connection-string catalog entry is selected.
     public string ConnectionStringKey { get; set; } = null!;
-    
-    // Use custom validators for complex validation
-    [Required]
-    [NoNumericCharacters]  // Custom validator example
-    public string ApiKey { get; set; } = null!;
-    
-    [Required]
-    [Range(1, 100)]
-    public int MaxRetries { get; set; } = 3;
+
+    // Include only when a direct HTTP endpoint is selected.
+    [AbsoluteHttpUrl]
+    public string ApiBaseUrl { get; set; } = null!;
 }
 ```
 
-## Validators/{Name}Attribute.cs
+Include only the properties selected by the service's capabilities, together with their matching startup validators.
+
+## Validators/AbsoluteHttpUrlAttribute.cs
 
 Custom validation attributes for Settings properties:
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Validators;
+namespace {ServiceNamespace}.Validators;
+
+using System;
+using System.ComponentModel.DataAnnotations;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-public sealed class NoNumericCharactersAttribute : ValidationAttribute
+public sealed class AbsoluteHttpUrlAttribute : ValidationAttribute
 {
-    public NoNumericCharactersAttribute() 
-        : base("The field {0} must not contain numeric characters.")
+    public AbsoluteHttpUrlAttribute()
+        : base("The field {0} must be an absolute HTTP or HTTPS URL.")
     {
     }
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        if (value is null or "")
+        if (value is null || value is string text && string.IsNullOrWhiteSpace(text))
         {
             return ValidationResult.Success;
         }
 
-        if (value is string stringValue && !stringValue.Any(char.IsDigit))
+        if (value is string stringValue &&
+            Uri.TryCreate(stringValue, UriKind.Absolute, out var uri) &&
+            uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps)
         {
             return ValidationResult.Success;
         }
@@ -177,30 +179,36 @@ public sealed class NoNumericCharactersAttribute : ValidationAttribute
 ```
 
 Common validators for Settings:
-- `[NoNumericCharacters]` - String must not contain digits
-- `[ValidUrl]` - Must be valid URL format
-- `[ValidConnectionString]` - Must parse as connection string
+- `[AbsoluteHttpUrl]` - Must be an absolute HTTP or HTTPS URL
 - `[ScheduleValidation]` - Must be valid cron expression
 
-## Models/{Name}.cs
+Do not apply a connection-string parser attribute to `ConnectionStringKey`; validate the configured value resolved from `IConfiguration` instead.
+
+## Models/{ServiceName}Item.cs
 
 Internal entities and domain objects. Public DTOs (requests, responses) belong in `Abstractions/`.
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
+namespace {ServiceNamespace}.Models;
+
+using System;
 
 public record {ServiceName}Item
 {
     public required string Id { get; init; }
     public required string Name { get; init; }
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 }
 ```
 
-## Exceptions/{Name}Exception.cs
+Use one exception type per file.
+
+## Exceptions/{ServiceName}Exception.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
+namespace {ServiceNamespace}.Exceptions;
+
+using System;
 
 public class {ServiceName}Exception : Exception
 {
@@ -218,6 +226,35 @@ public class {ServiceName}Exception : Exception
         ErrorCode = errorCode;
     }
 }
+```
+
+## Exceptions/{ServiceName}TransientException.cs
+
+Use this concrete type only for failures the selected retry policy has classified as transient.
+
+```csharp
+namespace {ServiceNamespace}.Exceptions;
+
+using System;
+
+public class {ServiceName}TransientException : {ServiceName}Exception
+{
+    public {ServiceName}TransientException(string message)
+        : base(message, "TRANSIENT_ERROR")
+    {
+    }
+
+    public {ServiceName}TransientException(string message, Exception innerException)
+        : base(message, innerException, "TRANSIENT_ERROR")
+    {
+    }
+}
+```
+
+## Exceptions/{ServiceName}NotFoundException.cs
+
+```csharp
+namespace {ServiceNamespace}.Exceptions;
 
 public class {ServiceName}NotFoundException : {ServiceName}Exception
 {
@@ -226,6 +263,15 @@ public class {ServiceName}NotFoundException : {ServiceName}Exception
     {
     }
 }
+```
+
+## Exceptions/{ServiceName}ValidationException.cs
+
+```csharp
+namespace {ServiceNamespace}.Exceptions;
+
+using System.Collections.Generic;
+using System.Linq;
 
 public class {ServiceName}ValidationException : {ServiceName}Exception
 {
@@ -239,13 +285,15 @@ public class {ServiceName}ValidationException : {ServiceName}Exception
 }
 ```
 
-## Mappers/{Name}Mapper.cs
+## Mappers/{ServiceName}Mapper.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Mappers;
+namespace {ServiceNamespace}.Mappers;
 
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
+using System.Collections.Generic;
+using System.Linq;
+using {ResponseContractNamespace};
+using {ServiceNamespace}.Models;
 
 public static class {ServiceName}Mapper
 {
@@ -266,18 +314,37 @@ public static class {ServiceName}Mapper
 
 ## {ServiceName}Service.cs
 
-```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName};
+The base service imports only namespaces required by its unconditional implementation. Merge each optional
+import only when the concrete selected capability makes the service file reference a type from that namespace:
 
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Abstractions.Responses;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Exceptions;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Mappers;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Models;
+| Selected service-file use | Import to merge |
+|---------------------------|-----------------|
+| Public response DTO appears in an implemented operation | `using {ResponseContractNamespace};` |
+| Generated custom exception is thrown or caught | `using {ServiceNamespace}.Exceptions;` |
+| Generated mapper is invoked | `using {ServiceNamespace}.Mappers;` |
+| Internal model is referenced directly | `using {ServiceNamespace}.Models;` |
+
+```csharp
+namespace {ServiceNamespace};
+
+using System;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ruya.Diagnostics.DistributedTracing;
+using Ruya.Primitives;
+using {ServiceNamespace}.Configuration;
+using {ServiceContractNamespace};
 
 public class {ServiceName}Service : I{ServiceName}
 {
+    private static readonly EventId OperationStarting = new(1000, nameof(OperationStarting));
+    private static readonly EventId OperationCompleted = new(1001, nameof(OperationCompleted));
+    private static readonly EventId OperationFailed = new(1002, nameof(OperationFailed));
+
     private readonly ILogger<{ServiceName}Service> _logger;
     private readonly IDistributedTracing _tracer;
     private readonly Meter _meter;
@@ -314,11 +381,12 @@ public class {ServiceName}Service : I{ServiceName}
             Constants.Metrics.OperationDuration, "s", "Operation duration");
     }
 
-    public async Task<TResult> DoWorkAsync(CancellationToken cancellationToken)
+    public async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
         using var activity = _tracer.StartActivity("DoWork", ActivityKind.Internal);
-        activity.SetTag("service.name", nameof({ServiceName}));
+        activity.SetTag("app.service.name", nameof({ServiceName}));
+        activity.SetTag("app.service.enabled", _settings.Enabled);
 
         using (_logger.BeginScope("{TraceId}, {SpanId}", activity.TraceId, activity.SpanId))
         {
@@ -327,15 +395,17 @@ public class {ServiceName}Service : I{ServiceName}
 
             try
             {
-                _logger.LogInformation("Starting operation");
+                _logger.LogInformation(OperationStarting, "Starting operation");
 
                 // Implementation
                 await Task.Delay(1, cancellationToken);
 
                 activity.SetStatus(ActivityStatusCode.Ok);
-                _logger.LogInformation("Operation completed");
-
-                return default!;
+                _logger.LogInformation(OperationCompleted, "Operation completed");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -343,7 +413,7 @@ public class {ServiceName}Service : I{ServiceName}
                 activity.SetTag("exception.type", ex.GetType().FullName);
                 activity.SetTag("exception.message", ex.Message);
                 activity.SetTag("exception.stacktrace", ex.StackTrace);
-                _logger.LogError(ex, "Operation failed");
+                _logger.LogError(OperationFailed, ex, "Operation failed");
                 throw;
             }
             finally
@@ -361,6 +431,10 @@ public class {ServiceName}Service : I{ServiceName}
 
 See `background-service.md` for the Worker pattern and the `WorkerBackgroundService` base class. Worker owns lifecycle/scheduling. Service owns business logic. Worker calls Service, never the reverse.
 
+## {EventName}Subscriber.cs
+
+See `dependencies.md#imessagequeuefactory` for the long-lived broker subscriber pattern and its required event, settings, interface, and registration additions. The subscriber owns subscription lifecycle and resolves `I{ServiceName}` from a new scope per delivery; it does not contain business logic or use the scheduled-worker base class.
+
 ## {ServiceName}HealthCheck.cs
 
 See `health-check.md` for the health check pattern and registration.
@@ -369,12 +443,14 @@ See `health-check.md` for the health check pattern and registration.
 
 See `dependencies.md` for the typed HTTP client pattern (interface, implementation, and registration). Registration stays in `Extensions/StartupExtensions.cs` using `AddHttpClient<>`.
 
-## Internals/{Name}.cs
+## Internals/{HelperName}.cs
 
-Internal helper implementations such as Repository, UnitOfWork, Decorator, Observer, and similar patterns. Their interfaces go in `Contracts/`.
+`{HelperName}` is the descriptive PascalCase helper class name; its file and class names match. Internal helper
+implementations include Repository, UnitOfWork, Decorator, Observer, and similar patterns. Their interfaces go
+in `Contracts/`. The example below resolves `{HelperName}` to `DataSanitizer`.
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Internals;
+namespace {ServiceNamespace}.Internals;
 
 internal class DataSanitizer : IDataSanitizer
 {
@@ -389,6 +465,8 @@ Per-service Grafana dashboard JSON. See observability skill for dashboard templa
 ## Resources/SQL/
 
 Embedded SQL resource files, loaded lazily at runtime. Avoids inline SQL in C# code.
+Resolve `{SqlScriptName}` from the descriptive PascalCase operation name defined by the canonical resource
+entry in `solution-structure`; the coherent example below resolves it to `SelectForUpdate`.
 
 SQL files must be set as **Embedded Resource** in the `.csproj`:
 
@@ -401,7 +479,7 @@ SQL files must be set as **Embedded Resource** in the `.csproj`:
 ### Resources/SQL/Constants.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
+namespace {ServiceNamespace}.Resources.SQL;
 
 public static class Constants
 {
@@ -412,23 +490,39 @@ public static class Constants
 ### Resources/SQL/ResourceLoader.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
+namespace {ServiceNamespace}.Resources.SQL;
+
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
 
 public static class ResourceLoader
 {
-    private const string ResourcePrefix = $"{nameof(Resources)}.SQL";
-    
-    private static readonly Lazy<string> _selectForUpdate = new(() =>
-        AssemblyReference.Assembly.GetEmbeddedResourceContent(Constants.SelectForUpdate, ResourcePrefix));
+    private static readonly Lazy<string> _selectForUpdate = new(
+        () => Load(Constants.SelectForUpdate),
+        LazyThreadSafetyMode.ExecutionAndPublication);
     
     public static string SelectForUpdate => _selectForUpdate.Value;
+
+    private static string Load(string fileName)
+    {
+        var resourceName = $"{typeof(ResourceLoader).Namespace}.{fileName}";
+        using var stream = typeof(ResourceLoader).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Embedded resource '{resourceName}' was not found.");
+        using var reader = new StreamReader(
+            stream,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
+    }
 }
 ```
 
-Usage in `Service.cs`:
+Usage in `{ServiceName}Service.cs`:
 
 ```csharp
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Resources.SQL;
+using {ServiceNamespace}.Resources.SQL;
 
 var sql = ResourceLoader.SelectForUpdate;
 ```
@@ -445,10 +539,21 @@ Resources/
 ## Extensions/StartupExtensions.cs
 
 ```csharp
-namespace {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Extensions;
+namespace {ServiceNamespace}.Extensions;
 
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Configuration;
-using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}.Contracts;
+using System;
+using System.Diagnostics.Metrics;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Ruya.Diagnostics.DistributedTracing;
+using Ruya.Extensions.Configuration;
+using Ruya.Extensions.DependencyInjection;
+using Ruya.Primitives;
+// Include this using only when API exposure is selected.
+using {ServiceNamespace}.Api;
+using {ServiceNamespace}.Configuration;
+using {ServiceContractNamespace};
 
 public static class StartupExtensions
 {
@@ -469,6 +574,17 @@ public static class StartupExtensions
                 settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
             })
             .ValidateDataAnnotations()
+            // Include only when ConnectionStringKey is selected.
+            .Validate<IConfiguration>(
+                (settings, configuration) => !settings.Enabled ||
+                    (!string.IsNullOrWhiteSpace(settings.ConnectionStringKey) &&
+                     !string.IsNullOrWhiteSpace(
+                         configuration.GetConnectionString(settings.ConnectionStringKey))),
+                "ConnectionStringKey must identify a configured connection string when the service is enabled.")
+            // Include only when ApiBaseUrl is selected.
+            .Validate(
+                settings => !settings.Enabled || !string.IsNullOrWhiteSpace(settings.ApiBaseUrl),
+                "ApiBaseUrl is required when the service is enabled.")
             .ValidateOnStart();
 
         if (setupAction is not null)
@@ -476,18 +592,34 @@ public static class StartupExtensions
             services.Configure(setupAction);
         }
 
-        services.AddScoped<I{ServiceName}, {ServiceName}Service>();
+        services.Add{ServiceLifetime}<I{ServiceName}, {ServiceName}Service>();
 
         return services;
     }
 
-    public static WebApplication Map{ServiceName}(this WebApplication app)
+    // Include this method only when API exposure is selected.
+    public static WebApplication Map{ServiceName}(
+        this WebApplication app,
+        bool enabled)
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        if (app.Configuration.GetFeatureFlag<{ServiceName}Settings>())
-            app.Map{ServiceName}Api();
+        if (!enabled)
+        {
+            return app;
+        }
 
+        var serviceProviderIsService =
+            app.Services.GetRequiredService<IServiceProviderIsService>();
+
+        if (!serviceProviderIsService.IsService(typeof(I{ServiceName})))
+        {
+            throw new InvalidOperationException(
+                "Cannot map {ServiceName} endpoints because I{ServiceName} is not registered. " +
+                "Run the parent registration cascade before endpoint mapping.");
+        }
+
+        app.Map{ServiceName}Api();
         return app;
     }
 }

@@ -8,7 +8,7 @@ If multiple skills match a task, apply all applicable skills.
 <!-- BEGIN GENERATED SKILLS (edit SKILL.md frontmatter, not this block) -->
 
 ## cross-vendor-examine
-- Path: `.github/skills/cross-vendor-examine/SKILL.md`
+- Path: `cross-vendor-examine/SKILL.md`
 - Applies to: All agents
 - Mandatory when:
   - The user wants a document, plan, or decision reviewed by an AI other than the one they are talking to
@@ -27,7 +27,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## documentation-generator
-- Path: `.github/skills/documentation-generator/SKILL.md`
+- Path: `documentation-generator/SKILL.md`
 - Applies to: Documenter, Planner, Architect, Developer, Tester
 - Mandatory when:
   - Creating ADRs or RFCs
@@ -63,7 +63,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## dotnet-service-generator
-- Path: `.github/skills/dotnet-service-generator/SKILL.md`
+- Path: `dotnet-service-generator/SKILL.md`
 - Applies to: Developer, Architect
 - Mandatory when:
   - Creating a new .NET service
@@ -77,7 +77,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## excalidraw-diagram-generator
-- Path: `.github/skills/excalidraw-diagram-generator/SKILL.md`
+- Path: `excalidraw-diagram-generator/SKILL.md`
 - Applies to: Developer, Architect, Documenter
 - Mandatory when:
   - Creating visual diagrams of workflows, architectures, or concepts
@@ -92,7 +92,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## infrastructure
-- Path: `.github/skills/infrastructure/SKILL.md`
+- Path: `infrastructure/SKILL.md`
 - Applies to: Developer, Reviewer
 - Mandatory when:
   - Creating or updating Dockerfiles
@@ -108,7 +108,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## mssql-bulk-data-operations
-- Path: `.github/skills/mssql-bulk-data-operations/SKILL.md`
+- Path: `mssql-bulk-data-operations/SKILL.md`
 - Applies to: Developer, DBA
 - Mandatory when:
   - Performing large-scale UPDATE or DELETE operations (millions of rows)
@@ -128,8 +128,8 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## mssql-table-scaffolder
-- Path: `.github/skills/mssql-table-scaffolder/SKILL.md`
-- Applies to: Developer
+- Path: `mssql-table-scaffolder/SKILL.md`
+- Applies to: Developer, DBA
 - Mandatory when:
   - Creating or standardizing MSSQL tables
   - Adding new schema artifacts
@@ -143,7 +143,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## observability
-- Path: `.github/skills/observability/SKILL.md`
+- Path: `observability/SKILL.md`
 - Applies to: Architect, Developer
 - Mandatory when:
   - Defining SLIs or observability requirements
@@ -160,7 +160,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## plantuml-sequence-diagram-generator
-- Path: `.github/skills/plantuml-sequence-diagram-generator/SKILL.md`
+- Path: `plantuml-sequence-diagram-generator/SKILL.md`
 - Applies to: Planner, Architect, Developer
 - Mandatory when:
   - A sequence or interaction diagram is requested
@@ -173,7 +173,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## pressure-test
-- Path: `.github/skills/pressure-test/SKILL.md`
+- Path: `pressure-test/SKILL.md`
 - Applies to: All agents
 - Mandatory when:
   - The user wants an idea or decision adversarially stress-tested before committing (GO / RESHAPE / KILL verdict)
@@ -188,7 +188,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## session-handoff
-- Path: `.github/skills/session-handoff/SKILL.md`
+- Path: `session-handoff/SKILL.md`
 - Applies to: All agents
 - Mandatory when:
   - The user wants to wrap up the session or hand off before clearing context
@@ -203,8 +203,8 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## solution-structure
-- Path: `.github/skills/solution-structure/SKILL.md`
-- Applies to: Developer, Architect, Documenter, DBA, Reviewer
+- Path: `solution-structure/SKILL.md`
+- Applies to: Developer, Architect, Documenter, Tester, DBA, Reviewer
 - Mandatory when:
   - Deciding where a file/folder goes inside the .NET solution
   - Placing a doc, dashboard, Kubernetes manifest, embedded SQL, or service scaffold
@@ -220,7 +220,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## storm-research
-- Path: `.github/skills/storm-research/SKILL.md`
+- Path: `storm-research/SKILL.md`
 - Applies to: All agents
 - Mandatory when:
   - A multi-perspective, citation-verified research briefing is requested
@@ -234,7 +234,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## work-item-generator
-- Path: `.github/skills/work-item-generator/SKILL.md`
+- Path: `work-item-generator/SKILL.md`
 - Applies to: Planner, Developer, Architect
 - Mandatory when:
   - Creating work items (initiatives, epics, features, stories, bugs, spikes, enhancements, tasks)
@@ -258,7 +258,7 @@ If multiple skills match a task, apply all applicable skills.
 ---
 
 ## workspace-productivity
-- Path: `.github/skills/workspace-productivity/SKILL.md`
+- Path: `workspace-productivity/SKILL.md`
 - Applies to: All agents
 - Mandatory when:
   - The user wants to initialize the productivity system in Google Drive for the first time
