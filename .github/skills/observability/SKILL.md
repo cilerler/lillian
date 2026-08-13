@@ -116,10 +116,9 @@ See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for Grafana
 
 This section is the single canonical home of all dashboard generation rules.
 
-1. **Owner scope and placement**: A dashboard may monitor a deployable runner, product, module, component, or
-   service. Use the path for that scope from
+1. **Owner scope and placement**: Use a scope and path permitted by
    [`Canonical Grafana dashboard placement`](../solution-structure/SKILL.md#canonical-grafana-dashboard-placement).
-   This skill does not restate those paths.
+   This skill does not restate the scope list or paths.
 2. **Optional at every scope**: Generate a dashboard only when concrete operational requirements and useful,
    supported panels exist at that scope. Do not create empty dashboards or duplicate a narrower dashboard at
    broader scopes merely to populate every possible location. A single useful panel is sufficient.
@@ -128,8 +127,8 @@ This section is the single canonical home of all dashboard generation rules.
 5. **Service variable**: A dashboard that queries service-emitted telemetry must include a `$service` query variable populated from a guaranteed series for that workload; do not assume an HTTP series. A broker-only dashboard omits `$service` unless an explicit mapping attributes the broker series to a service.
 6. **Query filtering**: Queries over service-emitted telemetry include `env="$env"` and `service_name="$service"`. Broker/exporter queries use the selected provider's documented environment and destination/subscription labels. If those labels cannot map a broker series unambiguously to a service, add an explicit relabeling or recording-rule mapping before generating the panel; do not apply nonexistent service resource labels.
 7. **Dashboard identity placeholders**: Use `$(DASHBOARD_SUBJECT_NAME)` in the title for the complete canonical
-   identity of the monitored scope resolved from `solution-structure` (deployable process, module, component,
-   product, or service). Use `$(DASHBOARD_UID)` only for Grafana's separate stable, provider-safe dashboard identifier.
+   identity of the monitored scope resolved from `solution-structure`. Use `$(DASHBOARD_UID)` only for
+   Grafana's separate stable, provider-safe dashboard identifier.
    The UID is a technical identifier, not a shortened second form of the subject name; deployment tooling must
    replace both placeholders.
 8. **Tags**: Include the `generated` tag on all dashboards.

@@ -73,10 +73,9 @@ public record {ServiceName}CompletedEvent(
 ```
 
 Every contract serialized by a selected System.Text.Json transport uses explicit JSON field names and is
-included in at least one source-generated `JsonSerializerContext`. This requirement applies to the versioned
-Minimal API and JSON message branches shown here. OData controllers use the selected OData formatter and
-composed EDM; do not add System.Text.Json attributes or a source-generation context solely because the type
-appears in OData. Context ownership for a selected System.Text.Json branch follows its purpose:
+included in at least one source-generated `JsonSerializerContext`. Adapter-specific exceptions follow
+[`OData serialization`](api-patterns.md#odata-serialization). Context ownership for a selected System.Text.Json
+branch follows its purpose:
 
 - A reusable producer-owned context belongs at the same selected contract boundary as the contracts it
   describes. Keep it in that boundary's project or folder, under the nearest common namespace that does not
@@ -544,12 +543,8 @@ Resources/
 
 ## Extensions/StartupExtensions.cs
 
-The canonical public service registration name is `Add{ServiceName}Service`. When the versioned Minimal API
-adapter is selected, its matching public route gate is `Map{ServiceName}Service` and the only low-level mapper
-it invokes is the internal `Map{ServiceName}Api`. `{ServiceName}` is the logical service identity without a
-`Service` suffix, so each generated name receives that suffix exactly once. Do not emit `Add{ServiceName}` or
-`Map{ServiceName}` aliases. OData controllers do not receive a per-service map method; they are mapped once by
-the composed controller/OData pipeline described in [`api-patterns.md`](api-patterns.md#odata-controller-adapter-ui-data-and-query-surface).
+Resolve public method names through the generator's [Naming](../SKILL.md#naming) authority and adapter-specific
+mapping through [`API Patterns`](api-patterns.md).
 
 ```csharp
 namespace {ServiceNamespace}.Extensions;

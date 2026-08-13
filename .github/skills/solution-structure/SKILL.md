@@ -185,8 +185,8 @@ organization/product identity. Do not abbreviate these project names.
 
 `{DeployableProcessName}` is the exact complete project stem selected from this table, such as
 `{Organization}.{Product}.Host`. Reuse it for the runner directory, project file, assembly, and process
-identity. `{DeploymentName}` equals that value for a single-role deployment and appends an explicit role only
-when one process binary has multiple deployments; do not introduce another token for either concept.
+identity. Kubernetes deployment identities are resolved once in the
+[canonical Kubernetes directory structure](#canonical-kubernetes-directory-structure).
 
 ### Canonical shared-persistence project placement
 
@@ -338,15 +338,15 @@ the same complete form; it does not introduce a shorter layout.
       /{DeploymentName}                     // One actual complete deployment identity
         - kustomization.yaml                // Required base composition for this deployment
         - deployment.yaml                   // Required complete Deployment baseline
-        - service.yaml                      // Optional; only when the deployment exposes a Service
-        - configmap.yaml                    // Optional; only when real non-secret configuration exists
+        - service.yaml                      // Optional Service manifest
+        - configmap.yaml                    // Optional non-secret configuration manifest
     /overlays
       /{KubernetesEnvironmentKebabName}      // One supported environment; no empty environment directories
         /{DeploymentName}                   // One actual complete deployment identity
           - kustomization.yaml              // Required; composes base/{DeploymentName} and selected patches
           - deployment.yaml                 // Required environment/role/resource patch
-          - service.yaml                    // Optional; only when Service behavior differs from base
-          - configmap.yaml                  // Optional; only when selected non-secret values differ from base
+          - service.yaml                    // Optional Service patch
+          - configmap.yaml                  // Optional non-secret configuration patch
 ```
 
 `{KubernetesEnvironmentName}` is one supported semantic environment value: `Integration`, `Testing`,
@@ -361,10 +361,8 @@ it with positional aliases such as `default` or `alternative`.
 Every base and overlay pair uses the same complete `{DeploymentName}`, so multiple runners such as Host and
 Gateway—and multiple explicit roles of one binary—coexist without sharing or overwriting a manifest identity.
 There is deliberately no root `kustomization.yaml`, environment-level `kustomization.yaml`, `repo/` image
-layer, or mandatory empty environment. Image pinning and namespace selection operate on the selected
-deployment overlay's `kustomization.yaml`, and CI applies that overlay directly. The infrastructure guidance
-owns the manifest content, optional resources and patches, DNS-label rendering, security, probes, resources,
-configuration, and deployment behavior; it does not add another directory layer.
+layer, or mandatory empty environment. The infrastructure guidance owns manifest content and deployment
+behavior; it does not add another directory layer.
 
 ### Canonical tests, root, and source directory structure
 
@@ -583,10 +581,9 @@ Every generated Grafana dashboard uses the fixed filename `dashboard.json` at th
 | Modular service | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Observability/Grafana/dashboard.json` |
 | Standalone service | `/src/{Organization}.{Product}.Services.{ServiceName}/Observability/Grafana/dashboard.json` |
 
-These are optional scope placements of one full dashboard form, not long and short filename conventions.
-Create a dashboard only when that exact scope has useful monitoring requirements and enough meaningful panels;
-do not generate empty or duplicative dashboards merely because parent or child scopes exist. Dashboard content,
-variables, queries, and identity semantics belong to the observability guidance.
+These are optional structural placements of one full dashboard form, not long and short filename conventions.
+The observability guidance exclusively owns whether a dashboard is generated and all dashboard content,
+identity, and nonduplication rules.
 
 ### Canonical embedded SQL structure
 

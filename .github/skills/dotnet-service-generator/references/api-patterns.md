@@ -1,5 +1,7 @@
 # API Patterns
 
+## Select the API Adapter
+
 Select an API adapter from the confirmed consumer boundary; `Api/` is not synonymous with one transport:
 
 | Consumer / interaction | Canonical adapter |
@@ -397,9 +399,7 @@ app.MapConfiguredEndpoints();
 ```
 
 Use the matching registration and mapping cascade from
-[`modular-polylith.md`](modular-polylith.md#registration-chain). For a modular service, Host traverses
-Host → Module → Component → `Map{ServiceName}Service`. For a standalone service, Host traverses Host →
-`Map{ServiceName}Service` directly. Program calls only the Host-owned cascade; it never calls either service mapper.
+[`modular-polylith.md`](modular-polylith.md#registration-chain).
 The public service wrapper receives the captured route decision from that cascade and maps only after
 confirming `I{ServiceName}` is registered. It never re-reads live configuration. The low-level
 `Map{ServiceName}Api` method remains service-owned and internal.
@@ -610,9 +610,9 @@ service contributions; the runner invokes only the selected top-level module con
 skipping directly to descendants. Generate a contribution method only where that boundary actually owns or
 aggregates OData model elements.
 
-Place module, component, and service contributions beside their owners as `Extensions/ODataExtensions.cs`.
-The selected shared `Data` project uses its structure-owned root `ODataExtensions.cs` file (omit it when no
-shared Data project owns entity sets):
+Resolve every contribution file through the
+[canonical solution structure](../../solution-structure/SKILL.md#net-solution-folder-structure). The selected
+shared `Data` contribution uses this implementation shape:
 
 ```csharp
 namespace {Organization}.{Product}.Data;
@@ -652,8 +652,7 @@ from the same immutable snapshot so actions on a disabled child are not candidat
 gate by returning 404 from an already-routable controller, and do not duplicate an entity set in multiple
 contributions.
 
-The runner may own this process-specific controller-selection adapter in
-`Configuration/CapabilityControllerFeatureProvider.cs`; it contains no business behavior:
+The runner's structure-selected controller feature provider contains no business behavior:
 
 ```csharp
 namespace {Organization}.{Product}.Host.Configuration;

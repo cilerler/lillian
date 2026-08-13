@@ -6,7 +6,8 @@ The [canonical Kubernetes directory structure](../../solution-structure/SKILL.md
 owns every directory and filename. This template owns manifest content for that structure; it does not create
 another repository layout. Resolve every identity, environment, and image token through
 [Deployable identity and image tokens](../SKILL.md#deployable-identity-and-image-tokens) before applying the
-manifest bodies below.
+manifest bodies below. Apply optional bodies only under the
+[conditional manifest-content rules](../SKILL.md#conditional-manifest-content).
 
 ## Base manifests
 
@@ -19,8 +20,7 @@ resources:
   - deployment.yaml
 ```
 
-Add `service.yaml` only when the deployment exposes a stable network Service. Add `configmap.yaml` only when
-it has actual non-secret configuration:
+When the optional resources are selected, include their structure-owned filenames:
 
 ```yaml
 resources:
@@ -114,8 +114,7 @@ spec:
 
 ### Optional `/tools/Kubernetes/base/{DeploymentName}/service.yaml`
 
-Create this only when the deployment exposes a stable network Service. Expose only ports the process actually
-listens on. Add an HTTPS port only when TLS terminates in the pod.
+Expose only ports the process actually listens on. Add an HTTPS port only when TLS terminates in the pod.
 
 ```yaml
 apiVersion: v1
@@ -137,8 +136,8 @@ spec:
 
 ### Optional `/tools/Kubernetes/base/{DeploymentName}/configmap.yaml`
 
-Create this file only when there is real non-secret configuration. The example value is a scaffold token, not
-permission to commit an empty object or secret.
+Populate this body with real non-secret configuration. The example value is a scaffold token, not permission
+to commit an empty object or secret.
 
 ```yaml
 apiVersion: v1
@@ -170,15 +169,9 @@ spec:
             name: "{DeploymentKebabName}"
 ```
 
-The base already uses the complete deployment resource identity; overlays never add a role suffix.
-
 ## Deployment leaves
 
-Use the literal environment directory names `integration`, `testing`, `staging`, and `production`, but create
-only those supported by the product. Beneath an environment, create one overlay per actual `{DeploymentName}`
-that also exists under `base/`. Even a single deployment uses this full form.
-
-### `overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/kustomization.yaml`
+### `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -194,15 +187,15 @@ labels:
       app.kubernetes.io/instance: "{DeploymentKebabName}"
 ```
 
-Add `service.yaml` or `configmap.yaml` to `patches` only when the overlay changes a corresponding resource
-that exists in `base/{DeploymentName}`. Do not use `nameSuffix`; the base resource is already named from the
-complete deployment identity.
+Add every selected optional overlay patch to `patches`. Do not use `nameSuffix`; the base resource is already
+named from the complete deployment identity.
 
-### `overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/deployment.yaml`
+### `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/deployment.yaml`
 
 Every deployment overlay sets its literal ASP.NET Core environment and its deployment-specific replicas and
 resources. It may also carry the command, arguments, or feature-selection variables that distinguish roles of
-the same binary.
+the same binary. `{ReplicaCount}` is the confirmed positive integer replica count for this deployment in this
+environment; resolve it before writing the manifest.
 
 ```yaml
 apiVersion: apps/v1
@@ -229,21 +222,12 @@ spec:
               ephemeral-storage: 2Gi
 ```
 
-Resolve environment tokens using this closed table; do not leave them in committed manifests:
+Resolve the resource tokens from the [Resource Limits](../SKILL.md#resource-limits) authority. They are starting
+budgets, not reasons to overwrite measured values.
 
-| `{KubernetesEnvironmentKebabName}` | `{KubernetesEnvironmentName}` | CPU request/limit | Memory request/limit |
-|---|---|---|---|
-| `integration` | `Integration` | `250m` / `500m` | `256Mi` / `512Mi` |
-| `testing` | `Testing` | `500m` / `1000m` | `512Mi` / `1024Mi` |
-| `staging` | `Staging` | `500m` / `1000m` | `512Mi` / `1024Mi` |
-| `production` | `Production` | `500m` / `2000m` | `512Mi` / `2048Mi` |
+### Optional `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/service.yaml`
 
-These are starting budgets, not reasons to overwrite measured values.
-
-### Optional overlay `service.yaml`
-
-Create this patch only when an environment changes Service type, ports, or annotations. The patch targets the
-complete base resource name; no role suffix is applied afterward.
+This patch targets the complete base resource name; no role suffix is applied afterward.
 
 ```yaml
 apiVersion: v1
@@ -254,11 +238,9 @@ spec:
   type: LoadBalancer
 ```
 
-### Optional overlay `configmap.yaml`
+### Optional `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/configmap.yaml`
 
-Create this patch only when `base/{DeploymentName}/configmap.yaml` exists and the selected deployment changes
-non-secret values. It targets the base ConfigMap name; never put credentials, keys, tokens, or certificates
-here.
+This patch targets the base ConfigMap name; never put credentials, keys, tokens, or certificates here.
 
 ```yaml
 apiVersion: v1
@@ -348,10 +330,9 @@ identity, pins the image and namespace in that leaf, and applies the same leaf.
   run: |
     $kubernetesEnvironmentKebabName = "${{ inputs.environment }}"
     $deploymentName = "${{ inputs.deployment }}"
-    $allowedKubernetesEnvironmentKebabNames = @("integration", "testing", "staging", "production")
 
-    if ($kubernetesEnvironmentKebabName -notin $allowedKubernetesEnvironmentKebabNames) {
-      throw "Unsupported Kubernetes environment: $kubernetesEnvironmentKebabName"
+    if ($kubernetesEnvironmentKebabName -notmatch '^[a-z][a-z0-9-]*$') {
+      throw "Invalid Kubernetes environment path segment: $kubernetesEnvironmentKebabName"
     }
     if ($deploymentName -notmatch '^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$') {
       throw "Invalid complete deployment identity: $deploymentName"
@@ -374,5 +355,5 @@ identity, pins the image and namespace in that leaf, and applies the same leaf.
     }
 ```
 
-The workflow may list fewer allowed environments when the product supports fewer. It must not accept a
-shortened deployment alias or synthesize a missing overlay.
+The selected canonical leaf must already exist; the workflow does not synthesize a missing environment or
+deployment.

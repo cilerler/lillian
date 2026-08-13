@@ -9,9 +9,6 @@ The exact paths and folder contents are defined once in [`solution-structure`](.
 | Boundary | Responsibility |
 |----------|----------------|
 | Application abstractions project | Sibling project under `src/` for contracts shared across modules |
-| Shared persistence models project | Optional sibling project for one intentionally shared database model; owns persistence entities, not service DTOs or business behavior |
-| Shared data project | Optional sibling project for the shared `DbContext`, entity configuration, and runtime persistence registration |
-| Shared migrations project | Optional sibling project for migrations, model snapshots, and design-time migration tooling; never a runtime composition dependency |
 | Host or other deployable-runner project | Composition/app-runner wrapper and deployable process; no business logic or service implementation |
 | Standalone service abstractions project | Optional sibling contract project for a standalone service |
 | Standalone service implementation project | Service capability that does not belong to a module |
@@ -49,9 +46,7 @@ You get the operational simplicity of a monolith (one Dockerfile, one CI pipelin
 | Project | Scope | Why separate? |
 |---|---|---|
 | `{Organization}.{Product}.Abstractions` | App-wide cross-module contracts | Types depended on by multiple modules without forcing a module-to-module dependency |
-| `{Organization}.{Product}.Models` | Shared persistence entities and generated/model partials for one intentionally shared database model | Multiple capability projects compile against the same storage representation without moving persistence types into Host or a service's internal `Models/` folder |
-| `{Organization}.{Product}.Data` | Shared `DbContext`, entity configuration, and runtime persistence registration | Centralizes one selected database model and references `{Organization}.{Product}.Models` |
-| `{Organization}.{Product}.Migrations` | EF migrations, model snapshot, and design-time context creation | Keeps schema-evolution and design-time tooling out of Host and out of the runtime dependency graph |
+| Optional shared persistence boundary | Models/Data/Migrations projects selected and owned by [`solution-structure`](../../solution-structure/SKILL.md#canonical-shared-persistence-project-placement) | One canonical shared database-model topology when selected |
 | `{Organization}.{Product}.Host` | Process entry point, configuration composition, module registration, hosting/readiness | One thin Host runner; additional Gateway/AppHost runners remain separate composition-only projects, never homes for contracts or business logic |
 | `{Organization}.{Product}.Services.{ServiceName}.Abstractions` | Public contract for a standalone service, when another project consumes it | Consumers reference contracts without pulling in the standalone implementation |
 | `{Organization}.{Product}.Services.{ServiceName}` | Standalone service implementation | One sibling project for a capability that does not belong to a module |
@@ -60,13 +55,8 @@ You get the operational simplicity of a monolith (one Dockerfile, one CI pipelin
 
 Components and services stay as **folders** inside the module project — they're internal implementation that ships and changes together. Only contracts that cross the **module** boundary get their own `.csproj`. Component-level and service-level `Abstractions/` are folders within the module project, not separate projects, since they only need to be visible inside the module.
 
-The optional shared persistence topology is selected only when one `DbContext` and storage model are
-intentionally shared across multiple modules or services. It is not the default for every database-backed
-service and it does not redefine the service-root layout. A capability-owned database remains with that
-capability. The sibling `{Organization}.{Product}.Models` project is a persistence representation boundary;
-the service-root `Models/` folder remains internal to one service, and public API/message DTOs still belong at
-their producer-owned abstractions boundary. Resolve the three sibling project roots and contents from
-`solution-structure`; this behavioral reference does not reproduce that physical tree.
+Resolve the optional shared persistence boundary exclusively through
+[`solution-structure`](../../solution-structure/SKILL.md#canonical-shared-persistence-project-placement).
 
 ## Concepts
 
@@ -182,9 +172,8 @@ Registration always uses the complete ownership cascade:
 
 Every existing modular boundary owns exactly one canonical registration method. A module method registers
 all of its components, and a component method registers all of its services; neither Host nor a sibling
-boundary skips a level to register a descendant. `{ModuleName}`, `{ComponentName}`, and `{ServiceName}` are
-the logical identities without structural suffixes, and `Module`, `Component`, or `Service` is appended
-exactly once. Do not publish suffix-free aliases such as `Add{ComponentName}` or `Add{ServiceName}`.
+boundary skips a level to register a descendant. Method naming comes from the generator's
+[`Naming`](../SKILL.md#naming) authority.
 
 Endpoint mapping has the same complete names but exists only where explicit mapping is required:
 
@@ -192,10 +181,7 @@ Endpoint mapping has the same complete names but exists only where explicit mapp
 - Standalone: Host → `Map{ServiceName}Service`
 
 Generate a `Map*` method at a boundary only when that boundary has an explicitly mapped endpoint descendant,
-such as a Minimal API. OData controllers are the important adapter-specific distinction: the gated
-registration/application-part and EDM-contribution cascade selects them, then the deployable runner calls
-`MapControllers()` once for the composed application. Do not invent per-service OData mappers and do not call
-`MapControllers()` at module, component, or service level.
+such as a Minimal API. Adapter-specific mapping behavior comes from [`API Patterns`](api-patterns.md).
 
 Host evaluates its module and standalone-service gates once, before registration, and stores that immutable
 selection in DI. Registration and mapping both consume the same snapshot. A disabled parent is therefore not
@@ -452,7 +438,6 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 ```
 {Organization}.{Product}.Host.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only when Host composition directly consumes app-wide contracts
-├── ProjectReference: {Organization}.{Product}.Data   # when this process composes the selected shared runtime DbContext
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}   # modular mode: compose the module implementation
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions   # modular mode only when Host directly consumes its contracts
 ├── ProjectReference: {Organization}.{Product}.Services.{ServiceName}   # standalone mode: compose the service implementation
@@ -460,8 +445,6 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 
 {Organization}.{Product}.Modules.{ModuleName}.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only if app-wide types are used
-├── ProjectReference: {Organization}.{Product}.Models   # when shared persistence entity types are compiled against
-├── ProjectReference: {Organization}.{Product}.Data   # when the shared DbContext/runtime persistence API is compiled against
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions
 └── ProjectReference: {Organization}.{Product}.Modules.{OtherModuleName}.Abstractions   # only when consuming producer-owned contracts from that module
 
@@ -470,8 +453,6 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 
 {Organization}.{Product}.Services.{ServiceName}.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only if app-wide types are used
-├── ProjectReference: {Organization}.{Product}.Models   # when shared persistence entity types are compiled against
-├── ProjectReference: {Organization}.{Product}.Data   # when the shared DbContext/runtime persistence API is compiled against
 ├── ProjectReference: {Organization}.{Product}.Services.{ServiceName}.Abstractions   # when the standalone contract project exists
 └── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions   # only when consuming that module's contracts
 
@@ -483,12 +464,6 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 {Organization}.{Product}.Services.{OtherServiceName}.csproj
 └── ProjectReference: {Organization}.{Product}.Services.{ServiceName}.Abstractions   # when consuming that standalone service's contracts
 
-{Organization}.{Product}.Data.csproj
-└── ProjectReference: {Organization}.{Product}.Models   # owns DbContext over the shared persistence entities
-
-{Organization}.{Product}.Migrations.csproj
-├── ProjectReference: {Organization}.{Product}.Data   # migrations, model snapshot, and design-time context construction
-└── ProjectReference: {Organization}.{Product}.Models   # only when migration source directly compiles against entity types
 ```
 
 A project declares a direct reference to every abstractions assembly whose types it compiles against, including
@@ -500,13 +475,9 @@ need mutually shared signature types, move those types to `{Organization}.{Produ
 both contract projects reference that broader boundary instead. This explicit acyclic check keeps the
 dependency graph DAG-shaped and makes feature-flagged exclusions safe at runtime.
 
-The shared persistence graph is one-way: `Models` ← `Data` ← `Migrations`. `Models` never references
-`Data`, `Migrations`, a deployable runner, or a module/service implementation. A runtime runner may reference
-`Data` to compose the context but never references `Migrations`; design-time context creation and migration
-execution remain in the migrations project or deployment tooling. Every module, service, runner, or migration
-project declares a direct reference to each persistence assembly whose CLR types it compiles against; do not
-rely on `Data` to transitively expose `Models`. A capability using only its own private persistence does not
-create these three sibling projects.
+Add any selected shared-persistence references and apply their dependency/runtime restrictions from
+[`Canonical shared-persistence project placement`](../../solution-structure/SKILL.md#canonical-shared-persistence-project-placement)
+without redefining that graph here.
 
 ## Example
 
@@ -556,15 +527,6 @@ src/
         ├── SkillTracker/                           # Beginner → expert progression
         └── NotificationPreferences/                # Email/push settings
 ```
-
-### Observability Scopes
-
-A useful dashboard may monitor a deployable runner, product/platform, module, component, or service. These are
-independent optional ownership scopes, not a mandatory cascade. Create only dashboards with concrete,
-non-duplicated operational questions and supported panels; one useful panel is enough. A broad dashboard may
-link to a narrower one when both independently add value, but an absent parent dashboard does not invalidate a
-child dashboard, and no scope receives an empty placeholder. Resolve physical placement from
-`solution-structure` and dashboard content/identity from the observability guidance.
 
 ### Abstractions/ Content
 

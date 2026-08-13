@@ -33,6 +33,7 @@ Before starting, load and follow these skill files:
 - `.github/skills/solution-structure/SKILL.md`
 - `.github/skills/dotnet-service-generator/SKILL.md`
 - `.github/skills/observability/SKILL.md`
+- Every dotnet-service-generator reference selected by the migrated service's actual capabilities
 
 ## Validation Approach
 Analyze from two independent angles — a technical-architecture equivalence pass, and an adversarial pass actively looking for reasons to FAIL — and reconcile both before issuing a verdict. Use parallel subagents for the two angles if your platform supports them.
@@ -88,11 +89,10 @@ You must explicitly cover all of the following:
 - Validate retries, timeouts, and fallback behavior where applicable
 
 7. **API adapter and protocol coverage**
-- Identify the old and new adapter for every API surface; do not treat Minimal API and OData as interchangeable
-- For Minimal API, compare routes, HTTP methods, binding, authorization, result/status behavior, and serialization
-- For OData, compare the metadata document and entity sets, routing, supported query behavior, expansions,
-  paging/continuation behavior, concurrency/ETag handling, and batch behavior wherever each existed
-- Treat removal, narrowing, or semantic alteration of any exposed protocol capability as a behavior change
+- Identify the old and new adapter for every API surface and apply the exact required-verification contract from
+  its selected generator reference; do not treat different adapters as interchangeable
+- Treat removal, narrowing, or semantic alteration of any reference-required protocol capability as a behavior
+  change
 
 ## What NOT to validate
 - Code style or formatting differences
@@ -164,7 +164,7 @@ Provide:
 7. **API Adapter/Protocol Equivalence Matrix**:
 	- old entrypoint and adapter/protocol behavior
 	- new equivalent
-	- status and evidence, including OData metadata, query, expansion, paging, ETag, and batch checks where present
+	- status and evidence for every check required by the selected adapter reference
 8. **Issues Found**:
 	- severity: Blocker / Major / Minor
 	- impact if deployed

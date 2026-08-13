@@ -61,8 +61,8 @@ Scan `{ServicePath}` and produce a report:
 3. **Capability inventory** — classify each interaction as in-process, cross-deployment machine communication,
    or UI query/data access; identify its current adapter/protocol (including Minimal API, messaging, or OData),
    plus scheduled or polling work, broker subscriptions, health checks, configuration, clients, contracts,
-   models, persistence, observability, and other selected capabilities. Record the protocol behaviors currently
-   exposed; do not infer an adapter conversion from the target folder structure.
+   models, persistence, observability, and other selected capabilities. Inventory the behaviors required by
+   the selected generator reference; do not infer an adapter conversion from the target folder structure.
 4. **Contract-boundary analysis** — classify each contract independently by producer and consumer boundary.
    Never duplicate a consumed contract or move it merely because another artifact moved.
 5. **Canonical resolution** — use solution-structure to resolve the containing project, service root, folders,
@@ -94,8 +94,7 @@ Present a table covering every intended change:
 7. **Hosted-adapter split** — trigger type, business behavior delegated to the service, and lifecycle behavior
    retained by the thin adapter.
 8. **API-adapter plan** — selected adapter/protocol, generator-resolved artifacts, business behavior delegated
-   to the service, and protocol behavior retained by the thin adapter. For OData, include every existing
-   metadata, query, expansion, paging, concurrency/ETag, and batch behavior that the migration must preserve.
+   to the service, and every protocol behavior required by the selected adapter reference.
 9. **Observability changes** — preserved signals, required additions, operational identity, and dashboard impact.
 10. **Dependent updates** — tests and consumers whose references will become invalid.
 
@@ -145,8 +144,7 @@ After approval:
    mechanically from folders during verification.
 6. Confirm no empty migration-created folders or orphaned imports remain.
 7. Confirm the complete resolved registration chain and project-reference direction.
-8. Confirm every API entrypoint and protocol behavior recorded before migration. For OData, verify metadata,
-   query options, expansions, paging, concurrency/ETag handling, and batch behavior wherever each existed.
+8. Confirm every API entrypoint and execute the selected adapter reference's required verification contract.
 9. Build the affected solution/projects and run the relevant tests. Report exact commands and evidence.
 10. Report any verification that could not run; never infer success from an unexecuted check.
 

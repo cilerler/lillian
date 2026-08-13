@@ -79,39 +79,22 @@ See [templates/kubernetes.md](templates/kubernetes.md) for complete templates.
 ### Placement contract
 
 Use the [canonical Kubernetes directory structure](../solution-structure/SKILL.md#canonical-kubernetes-directory-structure)
-before creating or moving a manifest. It alone owns the complete `/tools/Kubernetes/` tree. This skill supplies
-content for each actual `base/{DeploymentName}/` and matching
-`overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/` pair. Create only deployments and environments
-the product really supports. Do not create empty environment directories, generic `default` or `alternative`
-roles, an environment-level kustomization, a repository/image-transform layer, or a root kustomization.
-
-Every deployment uses the same full form, including a repository with only one deployment. Its overlay
-`kustomization.yaml` composes `base/{DeploymentName}` and only the Deployment, Service, and ConfigMap patches
-that environment needs. CI edits and applies that selected overlay directly.
+before creating or moving a manifest. It exclusively owns the Kubernetes topology, filenames, and structural
+identity tokens. This skill owns the content and deployment behavior of those structure-selected manifests.
 
 ### Deployable identity and image tokens
 
-- `{DeployableProcessName}` is the complete canonical deployable runner/project identity resolved from
-  `solution-structure`; for example, `{Organization}.{Product}.Host`. It identifies the built process and must
-  never be shortened to `app`, `host`, or a product nickname.
-- `{DeploymentName}` is the complete identity of one Kubernetes deployment of that process. Use
-  `{DeployableProcessName}` when the process has one runtime role. When the same binary is deployed in multiple
-  roles, append the explicit role to the complete process identity, for example
-  `{Organization}.{Product}.Host.Api` and `{Organization}.{Product}.Host.Worker`. The overlay directory uses
-  this full scaffold-time value; never use positional names such as `default` or `alternative`.
+- Resolve `{DeployableProcessName}`, `{DeploymentName}`, `{KubernetesEnvironmentName}`, and
+  `{KubernetesEnvironmentKebabName}` from the
+  [canonical Kubernetes authority](../solution-structure/SKILL.md#canonical-kubernetes-directory-structure).
 - `{DeploymentKebabName}` is the only Kubernetes resource-name rendering. Lowercase the complete
   `{DeploymentName}`, replace dots and other non-alphanumeric runs with one hyphen, and trim leading/trailing
   hyphens. If the result exceeds Kubernetes' 63-character label limit, take its first 54 characters, trim any
   trailing hyphen, then append a hyphen and the first eight lowercase hexadecimal characters of the SHA-256
   of the unshortened kebab value. Resolve it at scaffold time; committed manifests contain the literal.
-- `{KubernetesEnvironmentName}` is the selected semantic environment value: `Integration`, `Testing`,
-  `Staging`, or `Production`. `{KubernetesEnvironmentKebabName}` is its lowercase Kubernetes directory and
-  label rendering: `integration`, `testing`, `staging`, or `production`. Use this one derived value in every
-  overlay path, label, namespace suffix, and CI selection; do not introduce an environment alias.
 - `app-image:latest` is the deploy-time image placeholder. CI rewrites it with
-  `kustomize edit set image "app-image:latest=<image>:<tag>"` in the selected
-  `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/kustomization.yaml`; there is no
-  separate image-transform layer. CI may set the namespace in that same selected deployment overlay.
+  `kustomize edit set image "app-image:latest=<image>:<tag>"` in the selected deployment overlay. CI may set
+  the namespace in that same overlay.
 
 ### Conditional manifest content
 

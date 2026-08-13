@@ -640,28 +640,12 @@ First resolve persistence ownership:
 
 - Use capability-local persistence when the context and model belong to only this service. Keep those
   implementation details within the capability and do not create application-wide projects for them.
-- Select the optional sibling `{Organization}.{Product}.Models`, `{Organization}.{Product}.Data`, and
-  `{Organization}.{Product}.Migrations` topology only when one database model is intentionally shared by
-  multiple modules or services. Its physical placement comes from `solution-structure`; do not reproduce or
-  vary that tree here.
-
-In the shared topology, `{Organization}.{Product}.Models` owns persistence entities and their generated or
-partial model code; `{Organization}.{Product}.Data` owns the `DbContext`, entity configuration, and runtime
-registration; `{Organization}.{Product}.Migrations` owns migrations, the model snapshot, and design-time
-context construction. The dependency direction is `Models` ← `Data` ← `Migrations`. Runtime runners may
-compose `Data` but never reference `Migrations`. Modules and services directly reference `Models` when they
-compile against persistence entity types and directly reference `Data` when they compile against its context
-or registration API; transitive references do not close the compile-time dependency.
-
-Do not confuse `{Organization}.{Product}.Models` with `{ServiceRoot}/Models/`. The former is an optional
-shared persistence project. The latter contains internal objects owned by one service and does not become a
-public DTO, shared database model, or alternative abstraction boundary. Public API/message contracts remain
-at their producer-owned abstractions boundary.
+- Select and reference the optional shared topology only through
+  [`Canonical shared-persistence project placement`](../../solution-structure/SKILL.md#canonical-shared-persistence-project-placement).
 
 A service consuming the shared context owns its queries, mutations, and business decisions in
 `{ServiceName}Service`; Minimal API endpoints and OData controllers never inject the `DbContext` directly.
-The deployable runner calls the Data project's runtime registration extension as composition only. Migrations
-and design-time factories never move into Host.
+The deployable runner composes the structure-selected runtime persistence registration.
 
 ```csharp
 // Field

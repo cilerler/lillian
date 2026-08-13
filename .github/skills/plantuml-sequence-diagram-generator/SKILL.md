@@ -178,22 +178,18 @@ db --> wrk: <<recordSet>>
 
 ### HTTP Endpoints
 
-```plantuml
-' UI query/data example — use when OData is the selected adapter/protocol
-wrk -> svc: <<createRecord>> \n""POST /odata/{EntitySetName}""
-wrk -> svc: <<updateRecord>> \n""PATCH /odata/{EntitySetName}(**{id}**)""
-wrk -> svc: <<query>> \n""GET /odata/{EntitySetName}?$top=1""
+Read the selected adapter and exact method/route from the documented implementation or the
+[API adapter authority](../dotnet-service-generator/references/api-patterns.md#select-the-api-adapter). This
+skill visualizes that decision; it does not select or rename the API surface.
 
-' Cross-deployment machine API example — use when Minimal API is the selected adapter
-wrk -> svc: <<request>> \n""POST /api/v1/{ServiceKebabName}/{OperationKebabName}""
+```plantuml
+' Show the actual selected interaction; do not derive a route in the diagram.
+wrk -> svc: <<request>> \n""{ActualHttpMethod} {ActualRoute}""
 ```
 
-Show only the interaction pattern selected by the architecture being documented. Represent a direct database
-interaction only when that participant actually owns it; API adapter selection and persistence access are
-independent architectural decisions. Substitute the actual entity-set, service, operation, and identifier
-values from the documented implementation; the braces above are diagram-authoring tokens, not literal routes.
-`{OperationKebabName}` is the kebab-case rendering of the selected semantic `{OperationName}` from the
-versioned Minimal API contract.
+`{ActualHttpMethod}` and `{ActualRoute}` are diagram inputs copied from the selected implementation, not route
+naming conventions. Represent a direct database interaction only when that participant actually owns it; API
+adapter selection and persistence access are independent architectural decisions.
 
 ### Arrow Types
 

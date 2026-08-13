@@ -937,10 +937,8 @@ public override async Task DoWorkAsync(CancellationToken cancellationToken)
 }
 ```
 
-API mapping is independent of the worker. Generate the conditional `Map{ServiceName}Service` method from
-[`standard-service.md`](standard-service.md#extensionsstartupextensionscs) only when the versioned Minimal API
-adapter is selected. An OData controller adapter is mapped by the application-wide controller/OData
-composition and does not add a service mapper.
+API mapping is independent of the worker. Apply the selected adapter's mapping contract from
+[`API Patterns`](api-patterns.md); the worker does not add or alter an API mapper.
 
 ## Configuration
 
