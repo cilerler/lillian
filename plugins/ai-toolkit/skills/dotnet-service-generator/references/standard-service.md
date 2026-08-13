@@ -110,7 +110,12 @@ public static class Constants
 
 > **Rules for default values in Settings classes:**
 >
-> - **Never** set hardcoded defaults for properties of type `string`, `DateTime`, or `DateTimeOffset`. These are **domain values** (URLs, hostnames, credentials, queue/topic/vhost/exchange names, resource names, paths, header names, API keys, schema names, timestamps) and must live in `appsettings.json` (or environment variables / user-secrets). Declare strings with `= null!;` and validate them, or make values nullable when the missing state is a valid runtime scenario the code explicitly handles.
+> - **Never** set hardcoded defaults for properties of type `string`, `DateTime`, or `DateTimeOffset`. These are
+>   **domain values** (URLs, hostnames, credentials, queue/topic/vhost/exchange names, resource names, paths,
+>   header names, API keys, schema names, timestamps). Non-secret values belong in configuration providers such
+>   as `appsettings.json`; credential-bearing values follow the Development-only rule below. Declare strings with
+>   `= null!;` and validate them, or make values nullable when the missing state is a valid runtime scenario the
+>   code explicitly handles.
 > - **Feature-gated exception:** when a domain value is required only while `Enabled` is true, do not use unconditional `[Required]`. Keep `= null!;` and add an options validator that accepts the disabled state and requires a nonblank value in the enabled state. Disabled services must not fail startup for unused provider configuration.
 > - **OK** to set defaults for **operational** properties of type `TimeSpan`, `int`, `long`, `byte`, `double`, `decimal`, `float`, `bool`, or `enum` — timeouts, retry counts, batch sizes, polling intervals, feature toggles, log levels. These are tuning knobs with sensible cross-environment defaults, not values that change per deployment.
 > - **Exception for strings/timestamps:** a default is acceptable *only* if the value is a genuine universal constant that is not environment-specific (e.g. a format string used for serialization) — in which case prefer declaring it as a `const` rather than a property default when possible.
@@ -127,11 +132,14 @@ public static class Constants
 >   is enabled, validate that the key is nonblank, that it resolves to a configured value, and that the resolved
 >   value has any provider-required shape. Validation messages and logs may identify the property or catalog key,
 >   but must never include the resolved value or embedded credentials.
-> - **`ConnectionStrings` is a configuration catalog, not a secret store:** checked-in settings may contain a
->   safe local-development placeholder when the template requires one. Supply real credentials through the
->   corresponding connection-string environment variable, such as
->   `ConnectionStrings__RabbitMqManagement`, .NET user-secrets, or the deployed
->   secret/vault configuration provider; never commit production credentials.
+> - **Credential-bearing values are allowed only in `appsettings.Development.json`:** checked-in
+>   local-development defaults use the repository's canonical provider credentials. For RabbitMQ, use
+>   `useradmin/passwordadmin`; never fall back to RabbitMQ's `guest` account. Do not add a `null`, empty, or
+>   placeholder connection-string entry to base `appsettings.json`. Every non-development environment creates
+>   the value through secrets using Aspire secret parameters, the corresponding connection-string environment
+>   variable such as `ConnectionStrings__RabbitMqManagement`, or the deployed secret/vault configuration
+>   provider. Treat the Development pair as a known, disposable local default; never reuse it in a shared or
+>   deployed environment, and do not place a credential-bearing value in any other checked-in settings file.
 
 The base Settings file has no namespace imports. When `ApiBaseUrl` and `[AbsoluteHttpUrl]` are selected,
 merge `using {ServiceNamespace}.Validators;` together with that property; omit the import when the validator
@@ -168,23 +176,30 @@ public sealed class RabbitMqSettings
 }
 ```
 
-Keep the credential-bearing value in the top-level connection-string catalog and place only its descriptive
-lookup key in ordinary typed settings:
+Keep only the descriptive lookup key in base `appsettings.json`; do not declare the referenced connection-string
+entry until a configuration source has a value to provide:
 
 ```json
 {
-  "ConnectionStrings": {
-    "RabbitMqManagement": "http://guest:guest@rabbitmq:15672"
-  },
   "RabbitMq": {
     "ManagementConnectionStringKey": "RabbitMqManagement"
   }
 }
 ```
 
-The credential shown above is a local-development example only. Use
-`ConnectionStrings__RabbitMqManagement`, user-secrets, or the deployed secret/vault provider for a real
-credential.
+Place the canonical local-development fallback only in `appsettings.Development.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "RabbitMqManagement": "http://useradmin:passwordadmin@rabbitmq:15672"
+  }
+}
+```
+
+Every non-development environment supplies the value through Aspire secret parameters,
+`ConnectionStrings__RabbitMqManagement`, or the deployed secret/vault provider. Do not substitute RabbitMQ's
+`guest` account as another default.
 
 ## Validators/AbsoluteHttpUrlAttribute.cs
 
