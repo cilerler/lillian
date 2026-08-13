@@ -64,10 +64,13 @@ Scan `{ServicePath}` and produce a report:
    the selected generator reference; do not infer an adapter conversion from the target folder structure.
 4. **Contract-boundary analysis** — classify each contract independently by producer and consumer boundary.
    Never duplicate a consumed contract or move it merely because another artifact moved.
-5. **Canonical resolution** — use solution-structure to resolve the containing project, service root, folders,
-   and explicitly shown structural filenames; then use dotnet-service-generator to resolve every remaining
-   service implementation filename, class name, namespace, and capability-specific artifact. Record the
-   actual resolved values in the report.
+5. **Canonical resolution** — first apply
+   [`Canonical Gateway edge-adapter ownership`](../skills/solution-structure/SKILL.md#canonical-gateway-edge-adapter-ownership)
+   to classify the target responsibility and containing project. Only a target classified there as an
+   application service enters this migration workflow. Resolve its service root, folders, and explicitly shown
+   structural filenames there; then use dotnet-service-generator to resolve every remaining service
+   implementation filename, class name, namespace, and capability-specific artifact. Record the actual
+   resolved values in the report.
 6. **Gap analysis** — list missing projects, folders, files, or registration layers required by the resolved
    structure. Only propose folders that will contain an artifact.
 7. **Behavior split analysis** — identify business logic currently held by process runners, API adapters,

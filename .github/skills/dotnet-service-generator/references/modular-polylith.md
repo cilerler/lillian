@@ -1,6 +1,6 @@
 # Modular Polylith Structure
 
-Each module is a separate `.csproj` with a sibling `.Abstractions` project for cross-module contracts. A single `Host` project wraps the app runner, references the modules, and decides at startup — via feature flags — which modules to register, so the same binary can be deployed as multiple roles. Host is composition-only: it contains no contracts, domain/business logic, data access, or service implementations. Any additional deployable runner, such as a Gateway or orchestration AppHost, follows the same composition-only boundary and composes sibling services. Each service inside a module follows the standard service pattern documented in [standard-service.md](standard-service.md).
+Each module is a separate `.csproj` with a sibling `.Abstractions` project for cross-module contracts. A single `Host` project wraps the app runner, references the modules, and decides at startup — via feature flags — which modules to register, so the same binary can be deployed as multiple roles. Runner responsibilities and their role-specific boundaries come only from [`solution-structure`](../../solution-structure/SKILL.md#canonical-deployable-runner-identities). Each service inside a module follows the standard service pattern documented in [standard-service.md](standard-service.md).
 
 ## Hierarchy
 
@@ -9,7 +9,7 @@ The exact paths and folder contents are defined once in [`solution-structure`](.
 | Boundary | Responsibility |
 |----------|----------------|
 | Application abstractions project | Sibling project under `src/` for contracts shared across modules |
-| Host or other deployable-runner project | Composition/app-runner wrapper and deployable process; no business logic or service implementation |
+| Deployable-runner project | Role-specific process boundary resolved by `solution-structure`; never a home for reusable application/domain behavior |
 | Standalone service abstractions project | Optional sibling contract project for a standalone service |
 | Standalone service implementation project | Service capability that does not belong to a module |
 | Module abstractions project | Public contract for one module |
@@ -47,7 +47,7 @@ You get the operational simplicity of a monolith (one Dockerfile, one CI pipelin
 |---|---|---|
 | `{Organization}.{Product}.Abstractions` | App-wide cross-module contracts | Types depended on by multiple modules without forcing a module-to-module dependency |
 | Optional shared persistence boundary | Models/Data/Migrations projects selected and owned by [`solution-structure`](../../solution-structure/SKILL.md#canonical-shared-persistence-project-placement) | One canonical shared database-model topology when selected |
-| `{Organization}.{Product}.Host` | Process entry point, configuration composition, module registration, hosting/readiness | One thin Host runner; additional Gateway/AppHost runners remain separate composition-only projects, never homes for contracts or business logic |
+| `{Organization}.{Product}.Host` | Process entry point, configuration composition, module registration, hosting/readiness | One thin Host runner; other runner roles and their permitted process-intrinsic artifacts are resolved by `solution-structure` |
 | `{Organization}.{Product}.Services.{ServiceName}.Abstractions` | Public contract for a standalone service, when another project consumes it | Consumers reference contracts without pulling in the standalone implementation |
 | `{Organization}.{Product}.Services.{ServiceName}` | Standalone service implementation | One sibling project for a capability that does not belong to a module |
 | `{Organization}.{Product}.Modules.{ModuleName}.Abstractions` | Module's public contract | Other modules reference contracts without pulling in implementation |
@@ -117,7 +117,7 @@ Application- and module-level `Abstractions` are separate projects. Component- a
 
 ### Standalone Mode
 
-For a service that does not belong to a module (for example, an infrastructure service or single-purpose utility), drop the `Modules.{ModuleName}` segment and generate a sibling service project under `src/`. Never place it inside Host or another deployable runner such as Gateway or AppHost:
+After applying [`Canonical Gateway edge-adapter ownership`](../../solution-structure/SKILL.md#canonical-gateway-edge-adapter-ownership), an application service that does not belong to a module (for example, an infrastructure service or single-purpose utility) drops the `Modules.{ModuleName}` segment and uses a sibling service project under `src/`:
 
 ```
 src/{Organization}.{Product}.Services.{ServiceName}/

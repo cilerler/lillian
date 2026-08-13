@@ -32,6 +32,9 @@ Interactive scaffolder for .NET services with full observability support.
 > defines both the modular service folder and sibling standalone-service project paths. This skill owns
 > service-root file names, generated code, and capability-specific contents; it does not place business
 > artifacts beneath any deployable composition/app-runner wrapper or redraw the repository layout.
+> Before treating code currently beneath a runner as a service, apply
+> [`Canonical Gateway edge-adapter ownership`](../solution-structure/SKILL.md#canonical-gateway-edge-adapter-ownership).
+> Only a target classified there as an application service enters this workflow.
 
 ## Workflow
 
@@ -51,7 +54,7 @@ Ask these questions (one or two at a time):
 3. **Purpose** - Brief description (used to identify dependencies)
 4. **Structure mode** - Modular (requires PascalCase module and component names) or standalone sibling
    project. "Standalone" never means "inside a deployable runner."
-5. **Output location** - Confirm the complete service root (standalone sibling project: `src/{Organization}.{Product}.Services.{ServiceName}/`; modular polylith: `src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`). Never generate a service beneath a deployable composition/app-runner wrapper such as `{Organization}.{Product}.Host/`, `.Gateway/`, or `.AppHost/`.
+5. **Output location** - After the runner-boundary classification above, confirm the complete application-service root (standalone sibling project: `src/{Organization}.{Product}.Services.{ServiceName}/`; modular polylith: `src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`).
 6. **Interaction boundary and API adapter** - Classify each interaction and select its adapter using
    [`API Patterns — Select the API Adapter`](references/api-patterns.md#select-the-api-adapter). One service may
    expose more than one adapter for distinct confirmed consumers; never generate one merely because the service

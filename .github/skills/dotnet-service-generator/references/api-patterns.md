@@ -643,9 +643,9 @@ type. `{EntityTypeName}` and `{EntitySetName}` are gathered per
 exposed entity set; substitute their actual CLR and EDM identities rather than copying the sample as a one-set
 implementation.
 
-The deployable runner is still composition-only: it creates one builder, invokes only the contributions from
-the capabilities selected in its immutable snapshot, builds one EDM for the selected OData route, and
-configures MVC/OData. Module-level selection may add or remove that module assembly as an MVC application
+For this module/standalone-service OData branch, the deployable runner performs composition only: it creates
+one builder, invokes only the contributions from the capabilities selected in its immutable snapshot, builds
+one EDM for the selected OData route, and configures MVC/OData. Module-level selection may add or remove that module assembly as an MVC application
 part. Component/service selection cannot use application-part removal because those controllers share the
 module assembly: when a child OData gate exists, register a controller-feature convention at composition time
 from the same immutable snapshot so actions on a disabled child are not candidates. Never implement a child

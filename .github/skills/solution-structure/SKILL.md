@@ -167,10 +167,10 @@ Full examples:
 
 ## .NET Solution Folder Structure
 
-> **Deployable-runner boundary:** `{Organization}.{Product}.Host` is a composition/app-runner wrapper only.
-> Any additional deployable runner, such as `{Organization}.{Product}.Gateway` or an orchestration AppHost,
-> follows the same boundary. A runner may reference and register sibling projects, but application contracts,
-> domain/business logic, data access, clients, and service implementations never live beneath its directory.
+> **Deployable-runner boundary:** `{Organization}.{Product}.Host` is a composition/app-runner wrapper only,
+> and an orchestration AppHost owns orchestration declarations only. A Gateway is also a deployable runner, but
+> its process responsibility includes intrinsic edge adapters as defined below. No runner owns reusable
+> application contracts, domain/business logic, or data access.
 
 ### Canonical deployable-runner identities
 
@@ -180,13 +180,17 @@ organization/product identity. Do not abbreviate these project names.
 | Runner role | Canonical project root | Canonical project file | Responsibility |
 |---|---|---|---|
 | Application host | `/src/{Organization}.{Product}.Host/` | `{Organization}.{Product}.Host.csproj` | Application process entry point and composition. |
-| Edge gateway | `/src/{Organization}.{Product}.Gateway/` | `{Organization}.{Product}.Gateway.csproj` | Edge/proxy process entry point and route/cluster composition. |
+| Edge gateway | `/src/{Organization}.{Product}.Gateway/` | `{Organization}.{Product}.Gateway.csproj` | Edge/proxy process entry point, route/cluster composition, and process-intrinsic ingress or egress adapters. |
 | Orchestration AppHost | `/src/{Organization}.{Product}.AppHost/` | `{Organization}.{Product}.AppHost.csproj` | Local/distributed application orchestration declarations. |
 
 `{DeployableProcessName}` is the exact complete project stem selected from this table, such as
 `{Organization}.{Product}.Host`. Reuse it for the runner directory, project file, assembly, and process
 identity. Kubernetes deployment identities are resolved once in the
 [canonical Kubernetes directory structure](#canonical-kubernetes-directory-structure).
+
+`{GatewayEdgeAdapterName}` is the exact PascalCase capability name of a selected process-intrinsic Gateway
+adapter, such as `Webhook`. It names a contextual folder and its implementation prefix beneath the complete
+Gateway project root; it is not a second or shortened Gateway identity.
 
 ### Canonical shared-persistence project placement
 
@@ -472,6 +476,24 @@ global.json                                 // Pinned .NET SDK selection
     /wwwroot                                           // Optional static assets owned by this deployable process
       - ...
 
+  /{Organization}.{Product}.Gateway
+    - Program.cs                                       // Gateway process entry point
+    - ProgramExtensions.cs                             // Gateway composition
+    - appsettings.json                                 // Gateway process configuration
+    - appsettings.Development.json                     // Development overrides
+    - Dockerfile                                       // Deployable-process container definition
+    - {Organization}.{Product}.Gateway.csproj          // Gateway runner project
+    /Configuration
+      - CapabilitySelection.cs                         // Immutable edge-capability gate snapshot
+    /{GatewayEdgeAdapterName}                          // Optional process-intrinsic edge adapter, such as Webhook
+      /Api                                             // Thin edge endpoints and filters
+      /Configuration                                   // Adapter-specific process settings
+      /Contracts                                       // Internal contracts used only by this adapter
+      /Extensions                                      // Adapter registration and mapping
+      /Serialization                                   // Adapter-owned wire serialization metadata
+      - Constants.cs
+      - {GatewayEdgeAdapterName}Service.cs              // Edge translation/forwarding; no domain behavior
+
   /{Organization}.{Product}.Services.{ServiceName}.Abstractions // Optional standalone-service contract project when another project consumes its contracts
     - {Organization}.{Product}.Services.{ServiceName}.Abstractions.csproj
     /Events
@@ -646,13 +668,12 @@ structural filename conventions explicitly shown in the tree. After that root is
 capability-specific files exist. That single delegation is not permission to invent shortened filenames,
 redefine a shown structural filename, or omit a folder required by a selected capability.
 
-The Host—and any additional deployable runner such as a Gateway or orchestration AppHost—is a
-composition/app-runner wrapper, not an application layer. A runner owns only its process entry point,
-configuration and dependency composition, deployable-process assets, startup/readiness adapters, and
-process-specific edge, proxy, or orchestration wiring. It must not own reusable application contracts, domain
-or business logic, data access, embedded business SQL, clients, or service implementations. Those belong in
-the sibling app-wide abstractions/domain projects, module projects, or sibling standalone service projects.
-Modules and services never reference a deployable runner.
+The Host is a composition/app-runner wrapper, and AppHost is an orchestration wrapper; neither is an
+application layer. A Gateway additionally owns edge adapters intrinsic to that process. Every runner owns its
+entry point, configuration and dependency composition, deployable-process assets, and role-specific process
+wiring. No runner owns reusable application contracts, domain or business logic, data access, or embedded
+business SQL. Those belong in sibling app-wide abstractions/domain projects, module projects, or sibling
+standalone service projects. Modules and services never reference a deployable runner.
 
 The former Host-local `Contracts/`, `Exceptions/`, and `Internals/` buckets are deliberately retired rather
 than moved as app-wide catch-alls. Resolve each artifact by responsibility:
@@ -672,13 +693,21 @@ A deployable runner never owns `IDesignTimeDbContextFactory`, migration-only con
 classes. Applying migrations from a running application process is not part of the runner boundary; use the
 dedicated migrations project from an explicit development or deployment workflow.
 
-A runner may own only process-specific UI shell/composition files and static assets. Reusable feature UI and
-all business behavior remain with the owning sibling capability.
+A runner may own process-specific UI shell/composition files and static assets. A Gateway may also own the
+process-intrinsic edge adapters described below. Reusable feature UI and all application/domain behavior remain
+with the owning sibling capability.
 
-A Gateway runner may own YARP route/cluster composition and its process-level proxy mapping. A reusable
-ingress capability—such as a webhook service with its own settings, contracts, clients, handlers, and thin
-API endpoints—is a sibling standalone service that the Gateway registers and maps. Likewise, an AppHost may
-own orchestration declarations, but it does not become the home of the services it orchestrates.
+### Canonical Gateway edge-adapter ownership
+
+A Gateway runner owns YARP route/cluster composition, process-level proxy mapping, and an ingress or egress
+adapter that exists only as part of that Gateway process. For example, a Gateway-owned `Webhook` adapter may
+own its authentication and validation, bounded body handling, process-local settings and contracts, thin API
+endpoints, serialization metadata, broker forwarding client, resilience, and telemetry under
+`/src/{Organization}.{Product}.Gateway/{GatewayEdgeAdapterName}/`. Those are edge translation responsibilities, not a standalone service merely because their
+implementation spans several files. The adapter must not make application/domain decisions or access business
+data. Extract it to a sibling project only when another process/project consumes it, it gains an independent
+deployment or lifecycle, or it becomes reusable application behavior. Likewise, an AppHost may own
+orchestration declarations, but it does not become the home of the services it orchestrates.
 
 A standalone service keeps contracts used only by its implementation inside that implementation project.
 When another project consumes its public contracts, place them in the sibling

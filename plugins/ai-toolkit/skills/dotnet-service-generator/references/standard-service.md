@@ -114,8 +114,24 @@ public static class Constants
 > - **Feature-gated exception:** when a domain value is required only while `Enabled` is true, do not use unconditional `[Required]`. Keep `= null!;` and add an options validator that accepts the disabled state and requires a nonblank value in the enabled state. Disabled services must not fail startup for unused provider configuration.
 > - **OK** to set defaults for **operational** properties of type `TimeSpan`, `int`, `long`, `byte`, `double`, `decimal`, `float`, `bool`, or `enum` — timeouts, retry counts, batch sizes, polling intervals, feature toggles, log levels. These are tuning knobs with sensible cross-environment defaults, not values that change per deployment.
 > - **Exception for strings/timestamps:** a default is acceptable *only* if the value is a genuine universal constant that is not environment-specific (e.g. a format string used for serialization) — in which case prefer declaring it as a `const` rather than a property default when possible.
-> - **Connection-string catalog entries use `ConnectionStringKey` only:** the Settings property holds the catalog key (e.g. `"MsSqlConnection"`), never a duplicate `ConnectionString` value. The actual connection string lives under the top-level `ConnectionStrings` section and is resolved at use-site with `IConfiguration.GetConnectionString(settings.ConnectionStringKey)`. Validate both that the key is nonblank and that it resolves to a configured value while the service is enabled.
-> - **URLs and endpoints are not connection-string keys:** bind each deployment URL or endpoint directly to a clearly named Settings property such as `ApiBaseUrl` or `ManagementEndpoint`. Give it no source-code default and validate its required shape while the capability is enabled.
+> - **Classify connection values by semantics, not URI syntax:** bind a credential-free URL used only as an
+>   endpoint directly to a clearly named Settings property such as `ApiBaseUrl`. A provider connection URI, or
+>   any value expected to carry credentials or other connection secrets, remains a connection string even when it
+>   uses HTTP or HTTPS; never move it into an ordinary endpoint property such as `ManagementEndpoint`.
+> - **Provider connections use descriptive `*ConnectionStringKey` indirection:** the Settings property holds
+>   only the catalog key, never the resolved connection value. Keep the lookup in the provider's typed settings
+>   section and name it by role, such as `RabbitMq:ManagementConnectionStringKey`; do not flatten the resolved
+>   value or a duplicate provider key into unrelated service settings. Store the actual value under the top-level
+>   `ConnectionStrings` section and resolve it at use-site with
+>   `IConfiguration.GetConnectionString(settings.ManagementConnectionStringKey)`. While the capability
+>   is enabled, validate that the key is nonblank, that it resolves to a configured value, and that the resolved
+>   value has any provider-required shape. Validation messages and logs may identify the property or catalog key,
+>   but must never include the resolved value or embedded credentials.
+> - **`ConnectionStrings` is a configuration catalog, not a secret store:** checked-in settings may contain a
+>   safe local-development placeholder when the template requires one. Supply real credentials through the
+>   corresponding connection-string environment variable, such as
+>   `ConnectionStrings__RabbitMqManagement`, .NET user-secrets, or the deployed
+>   secret/vault configuration provider; never commit production credentials.
 
 The base Settings file has no namespace imports. When `ApiBaseUrl` and `[AbsoluteHttpUrl]` are selected,
 merge `using {ServiceNamespace}.Validators;` together with that property; omit the import when the validator
@@ -131,9 +147,6 @@ public class {ServiceName}Settings
     
     public bool Enabled { get; internal set; }
     
-    // Include only when a connection-string catalog entry is selected.
-    public string ConnectionStringKey { get; set; } = null!;
-
     // Include only when a direct HTTP endpoint is selected.
     [AbsoluteHttpUrl]
     public string ApiBaseUrl { get; set; } = null!;
@@ -141,6 +154,37 @@ public class {ServiceName}Settings
 ```
 
 Include only the properties selected by the service's capabilities, together with their matching startup validators.
+
+When RabbitMQ management access is selected, keep its lookup key in the provider-specific settings object:
+
+```csharp
+namespace {ServiceNamespace}.Configuration;
+
+public sealed class RabbitMqSettings
+{
+    public const string ConfigurationSectionName = "RabbitMq";
+
+    public string ManagementConnectionStringKey { get; set; } = null!;
+}
+```
+
+Keep the credential-bearing value in the top-level connection-string catalog and place only its descriptive
+lookup key in ordinary typed settings:
+
+```json
+{
+  "ConnectionStrings": {
+    "RabbitMqManagement": "http://guest:guest@rabbitmq:15672"
+  },
+  "RabbitMq": {
+    "ManagementConnectionStringKey": "RabbitMqManagement"
+  }
+}
+```
+
+The credential shown above is a local-development example only. Use
+`ConnectionStrings__RabbitMqManagement`, user-secrets, or the deployed secret/vault provider for a real
+credential.
 
 ## Validators/AbsoluteHttpUrlAttribute.cs
 
@@ -184,7 +228,9 @@ Common validators for Settings:
 - `[AbsoluteHttpUrl]` - Must be an absolute HTTP or HTTPS URL
 - `[ScheduleValidation]` - Must be valid cron expression
 
-Do not apply a connection-string parser attribute to `ConnectionStringKey`; validate the configured value resolved from `IConfiguration` instead.
+Do not apply a connection-string parser attribute to a `*ConnectionStringKey` property. Perform any
+provider-specific parsing against the value resolved from `IConfiguration`, and do not echo that value in a
+validation result, exception, or log message.
 
 ## Models/{ServiceName}Item.cs
 
@@ -554,6 +600,7 @@ using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Ruya.Diagnostics.DistributedTracing;
 using Ruya.Extensions.Configuration;
 using Ruya.Extensions.DependencyInjection;
@@ -582,17 +629,19 @@ public static class StartupExtensions
                 settings.Enabled = config.GetFeatureFlag<{ServiceName}Settings>();
             })
             .ValidateDataAnnotations()
-            // Include only when ConnectionStringKey is selected.
-            .Validate<IConfiguration>(
-                (settings, configuration) => !settings.Enabled ||
-                    (!string.IsNullOrWhiteSpace(settings.ConnectionStringKey) &&
-                     !string.IsNullOrWhiteSpace(
-                         configuration.GetConnectionString(settings.ConnectionStringKey))),
-                "ConnectionStringKey must identify a configured connection string when the service is enabled.")
             // Include only when ApiBaseUrl is selected.
             .Validate(
                 settings => !settings.Enabled || !string.IsNullOrWhiteSpace(settings.ApiBaseUrl),
                 "ApiBaseUrl is required when the service is enabled.")
+            .ValidateOnStart();
+
+        // Example: include when a RabbitMQ management connection is selected.
+        services.AddOptions<RabbitMqSettings>()
+            .BindConfiguration(RabbitMqSettings.ConfigurationSectionName)
+            .Validate<IConfiguration, IOptions<{ServiceName}Settings>>(
+                (settings, configuration, serviceOptions) => !serviceOptions.Value.Enabled ||
+                    HasValidRabbitMqManagementConnectionString(settings, configuration),
+                "ManagementConnectionStringKey must identify a configured absolute HTTP or HTTPS connection string when the service is enabled.")
             .ValidateOnStart();
 
         if (setupAction is not null)
@@ -603,6 +652,23 @@ public static class StartupExtensions
         services.Add{ServiceLifetime}<I{ServiceName}, {ServiceName}Service>();
 
         return services;
+    }
+
+    // Example: keep the resolved value local and never include it in validation messages or logs.
+    private static bool HasValidRabbitMqManagementConnectionString(
+        RabbitMqSettings settings,
+        IConfiguration configuration)
+    {
+        if (string.IsNullOrWhiteSpace(settings.ManagementConnectionStringKey))
+        {
+            return false;
+        }
+
+        var connectionString = configuration.GetConnectionString(
+            settings.ManagementConnectionStringKey);
+
+        return Uri.TryCreate(connectionString, UriKind.Absolute, out var uri) &&
+            uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps;
     }
 
     // Include this method only when versioned Minimal API exposure is selected.
