@@ -844,7 +844,7 @@ using {ServiceContractNamespace};
 
 public static class StartupExtensions
 {
-    public static IServiceCollection Add{ServiceName}(
+    public static IServiceCollection Add{ServiceName}Service(
         this IServiceCollection services,
         Action<{ServiceName}Settings>? setupAction = null)
     {
@@ -937,7 +937,10 @@ public override async Task DoWorkAsync(CancellationToken cancellationToken)
 }
 ```
 
-API mapping is independent of the worker. Generate the conditional `Map{ServiceName}` method from [`standard-service.md`](standard-service.md#extensionsstartupextensionscs) only when API exposure is selected.
+API mapping is independent of the worker. Generate the conditional `Map{ServiceName}Service` method from
+[`standard-service.md`](standard-service.md#extensionsstartupextensionscs) only when the versioned Minimal API
+adapter is selected. An OData controller adapter is mapped by the application-wide controller/OData
+composition and does not add a service mapper.
 
 ## Configuration
 

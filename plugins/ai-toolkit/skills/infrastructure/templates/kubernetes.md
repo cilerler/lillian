@@ -1,133 +1,109 @@
 # Kubernetes Templates
 
-Kustomize-based Kubernetes manifests for .NET services.
+Kustomize-based Kubernetes manifests for .NET deployable processes.
 
 The [canonical Kubernetes directory structure](../../solution-structure/SKILL.md#canonical-kubernetes-directory-structure)
-owns every directory and filename. This template supplies manifest content for that exact layout; it does not
-introduce another layer or path alias.
+owns every directory and filename. This template owns manifest content for that structure; it does not create
+another repository layout. Resolve every identity, environment, and image token through
+[Deployable identity and image tokens](../SKILL.md#deployable-identity-and-image-tokens) before applying the
+manifest bodies below.
 
----
+## Base manifests
 
-## Directory Structure
-
-Use the complete tree in
-[Canonical Kubernetes directory structure](../../solution-structure/SKILL.md#canonical-kubernetes-directory-structure).
-It explicitly enumerates the shared `/tools/Kubernetes/base/` and literal
-`overlays/{integration,testing,staging,production}/{base,default,alternative}/` locations. There is no separate
-image-transform layer and no environment-level kustomization between an environment directory and its three
-components. The manifest bodies below map to those exact files.
-
-## Resolve deployable identity once
-
-Resolve the full `{DeployableProcessName}` from `solution-structure`, then derive
-`{DeployableProcessKebabName}` exactly once using the rule in
-[the infrastructure skill](../SKILL.md#deployable-identity-and-image-tokens). Every DNS-label field below uses
-the derived token; do not shorten the source identity to a service or application nickname.
-
----
-
-## Base Templates
-
-### /tools/Kubernetes/base/kustomization.yaml
+### `/tools/Kubernetes/base/{DeploymentName}/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- deployment.yaml
-- service.yaml
+  - deployment.yaml
 ```
 
-### /tools/Kubernetes/base/deployment.yaml
+Add `service.yaml` only when the deployment exposes a stable network Service. Add `configmap.yaml` only when
+it has actual non-secret configuration:
+
+```yaml
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+```
+
+### `/tools/Kubernetes/base/{DeploymentName}/deployment.yaml`
+
+This is the complete restricted baseline. An overlay may change replicas, measured resource values, or role
+configuration. Remove a probe only when its endpoint is not mapped. Optional mounts and registry settings are
+shown separately below and must not be copied unless used.
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {DeployableProcessKebabName}
+  name: "{DeploymentKebabName}"
+  labels:
+    app.kubernetes.io/name: "{DeploymentKebabName}"
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: {DeployableProcessKebabName}
+      app.kubernetes.io/name: "{DeploymentKebabName}"
   template:
     metadata:
       labels:
-        app: {DeployableProcessKebabName}
+        app.kubernetes.io/name: "{DeploymentKebabName}"
     spec:
-      nodeSelector:
-        cloud.google.com/gke-nodepool: standard
       enableServiceLinks: false
-      imagePullSecrets:
-      - name: github-dockerconfigjson
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-      - name: {DeployableProcessKebabName}
-        image: app-image:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-          name: http
-        - containerPort: 8081
-          protocol: TCP
-          name: https
-        livenessProbe:
-          httpGet:
-            path: /healthz/live
-            port: 8080
-            httpHeaders:
-            - name: probe
-              value: liveness
-          initialDelaySeconds: 0
-          timeoutSeconds: 1
-          periodSeconds: 60
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /healthz/ready
-            port: 8080
-            httpHeaders:
-            - name: probe
-              value: readiness
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
-          periodSeconds: 180
-          failureThreshold: 3
-        startupProbe:
-          httpGet:
-            path: /healthz/startup
-            port: 8080
-            httpHeaders:
-            - name: probe
-              value: startup
-          initialDelaySeconds: 0
-          timeoutSeconds: 1
-          periodSeconds: 10
-          failureThreshold: 30
-        resources:
-          requests:
-            memory: 256Mi
-            cpu: 250m
-            ephemeral-storage: "1Gi"
-          limits:
-            memory: 512Mi
-            cpu: 500m
-            ephemeral-storage: "2Gi"
-        env:
-        - name: ASPNETCORE_ENVIRONMENT
-          value: Development
-        volumeMounts:
-        - name: secret-volume
-          mountPath: /app/configuration/secret
-        - name: configmap-volume
-          mountPath: /app/configuration/configmap
-      volumes:
-      - name: secret-volume
-        secret:
-          secretName: {DeployableProcessKebabName}
-      - name: configmap-volume
-        configMap:
-          name: {DeployableProcessKebabName}
+        - name: "{DeploymentKebabName}"
+          image: app-image:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: http
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+            periodSeconds: 60
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 180
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz/startup
+              port: http
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+            periodSeconds: 10
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+              ephemeral-storage: 1Gi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 2Gi
       terminationGracePeriodSeconds: 60
   strategy:
     type: RollingUpdate
@@ -136,264 +112,261 @@ spec:
       maxUnavailable: 100%
 ```
 
-### /tools/Kubernetes/base/service.yaml
+### Optional `/tools/Kubernetes/base/{DeploymentName}/service.yaml`
+
+Create this only when the deployment exposes a stable network Service. Expose only ports the process actually
+listens on. Add an HTTPS port only when TLS terminates in the pod.
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: {DeployableProcessKebabName}
+  name: "{DeploymentKebabName}"
+  labels:
+    app.kubernetes.io/name: "{DeploymentKebabName}"
 spec:
   type: ClusterIP
   selector:
-    app: {DeployableProcessKebabName}
+    app.kubernetes.io/name: "{DeploymentKebabName}"
   ports:
-  - name: http
-    port: 80
-    protocol: TCP
-    targetPort: http
-  - name: https
-    port: 443
-    protocol: TCP
-    targetPort: https
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
 ```
 
----
+### Optional `/tools/Kubernetes/base/{DeploymentName}/configmap.yaml`
 
-## Root Kustomization
-
-### /tools/Kubernetes/kustomization.yaml
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ./base
-```
-
----
-
-## Environment Overlays
-
-### Environment base kustomization files
-
-These four exact files share the same composition:
-
-- `/tools/Kubernetes/overlays/integration/base/kustomization.yaml`
-- `/tools/Kubernetes/overlays/testing/base/kustomization.yaml`
-- `/tools/Kubernetes/overlays/staging/base/kustomization.yaml`
-- `/tools/Kubernetes/overlays/production/base/kustomization.yaml`
+Create this file only when there is real non-secret configuration. The example value is a scaffold token, not
+permission to commit an empty object or secret.
 
 ```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ../../../base
-patches:
-- path: deployment.yaml
-- path: service.yaml
-```
-
-### Environment base patches
-
-Generate each literal environment's `base/deployment.yaml` and `base/service.yaml` from the complete patch
-shapes below. Resolve the content-only tokens with this closed table; they do not change any directory name:
-
-| Directory | `{KubernetesEnvironmentName}` | `{KubernetesEnvironmentLabel}` |
-|---|---|---|
-| `integration` | `Integration` | `integration` |
-| `testing` | `Testing` | `testing` |
-| `staging` | `Staging` | `staging` |
-| `production` | `Production` | `production` |
-
-#### Environment `base/deployment.yaml`
-
-The deployment patch targets the full deployable process, sets its matching ASP.NET Core environment, and
-includes the matching resource block from [Environment-Specific Resource Limits](#environment-specific-resource-limits)
-under the container. Do not leave either environment token unresolved in a committed file.
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: {DeployableProcessKebabName}
+  name: "{DeploymentKebabName}"
   labels:
-    deployment-environment: {KubernetesEnvironmentLabel}
+    app.kubernetes.io/name: "{DeploymentKebabName}"
+data:
+  appsettings.json: |
+    {NonSecretJsonConfiguration}
+```
+
+When this ConfigMap exists, add the matching mount to the base Deployment:
+
+```yaml
 spec:
   template:
-    metadata:
-      labels:
-        deployment-environment: {KubernetesEnvironmentLabel}
     spec:
       containers:
-      - name: {DeployableProcessKebabName}
-        env:
-        - name: ASPNETCORE_ENVIRONMENT
-          value: {KubernetesEnvironmentName}
-        # Insert this environment's complete resources block from the section below.
+        - name: "{DeploymentKebabName}"
+          volumeMounts:
+            - name: configmap-volume
+              mountPath: /app/configuration/configmap
+              readOnly: true
+      volumes:
+        - name: configmap-volume
+          configMap:
+            name: "{DeploymentKebabName}"
 ```
 
-#### Environment `base/service.yaml`
+The base already uses the complete deployment resource identity; overlays never add a role suffix.
 
-The service patch targets the same full deployable process and records the literal environment without
-renaming the Service:
+## Deployment leaves
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: {DeployableProcessKebabName}
-  labels:
-    deployment-environment: {KubernetesEnvironmentLabel}
-```
+Use the literal environment directory names `integration`, `testing`, `staging`, and `production`, but create
+only those supported by the product. Beneath an environment, create one overlay per actual `{DeploymentName}`
+that also exists under `base/`. Even a single deployment uses this full form.
 
-### Selectable component kustomization files
-
-The selected component is one of these exact directories, each layered on its sibling `base`:
-
-- `/tools/Kubernetes/overlays/integration/default/`
-- `/tools/Kubernetes/overlays/integration/alternative/`
-- `/tools/Kubernetes/overlays/testing/default/`
-- `/tools/Kubernetes/overlays/testing/alternative/`
-- `/tools/Kubernetes/overlays/staging/default/`
-- `/tools/Kubernetes/overlays/staging/alternative/`
-- `/tools/Kubernetes/overlays/production/default/`
-- `/tools/Kubernetes/overlays/production/alternative/`
-
-Each component's `kustomization.yaml` uses this shape. Its local `deployment.yaml` and `service.yaml` use the
-complete patch shapes below. Resolve `{KubernetesVariantName}` to the literal directory name, `default` or
-`alternative`; do not leave it unresolved in a committed file.
+### `overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/kustomization.yaml`
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../base
+  - ../../../base/{DeploymentName}
 patches:
-- path: deployment.yaml
-- path: service.yaml
+  - path: deployment.yaml
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/environment: "{KubernetesEnvironmentKebabName}"
+      app.kubernetes.io/instance: "{DeploymentKebabName}"
 ```
 
-#### Selectable component `deployment.yaml`
+Add `service.yaml` or `configmap.yaml` to `patches` only when the overlay changes a corresponding resource
+that exists in `base/{DeploymentName}`. Do not use `nameSuffix`; the base resource is already named from the
+complete deployment identity.
+
+### `overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/deployment.yaml`
+
+Every deployment overlay sets its literal ASP.NET Core environment and its deployment-specific replicas and
+resources. It may also carry the command, arguments, or feature-selection variables that distinguish roles of
+the same binary.
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {DeployableProcessKebabName}
-  labels:
-    deployment-variant: {KubernetesVariantName}
+  name: "{DeploymentKebabName}"
 spec:
+  replicas: {ReplicaCount}
   template:
-    metadata:
-      labels:
-        deployment-variant: {KubernetesVariantName}
+    spec:
+      containers:
+        - name: "{DeploymentKebabName}"
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "{KubernetesEnvironmentName}"
+          resources:
+            requests:
+              cpu: {CpuRequest}
+              memory: {MemoryRequest}
+              ephemeral-storage: 1Gi
+            limits:
+              cpu: {CpuLimit}
+              memory: {MemoryLimit}
+              ephemeral-storage: 2Gi
 ```
 
-#### Selectable component `service.yaml`
+Resolve environment tokens using this closed table; do not leave them in committed manifests:
+
+| `{KubernetesEnvironmentKebabName}` | `{KubernetesEnvironmentName}` | CPU request/limit | Memory request/limit |
+|---|---|---|---|
+| `integration` | `Integration` | `250m` / `500m` | `256Mi` / `512Mi` |
+| `testing` | `Testing` | `500m` / `1000m` | `512Mi` / `1024Mi` |
+| `staging` | `Staging` | `500m` / `1000m` | `512Mi` / `1024Mi` |
+| `production` | `Production` | `500m` / `2000m` | `512Mi` / `2048Mi` |
+
+These are starting budgets, not reasons to overwrite measured values.
+
+### Optional overlay `service.yaml`
+
+Create this patch only when an environment changes Service type, ports, or annotations. The patch targets the
+complete base resource name; no role suffix is applied afterward.
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: {DeployableProcessKebabName}
-  labels:
-    deployment-variant: {KubernetesVariantName}
+  name: "{DeploymentKebabName}"
+spec:
+  type: LoadBalancer
 ```
 
----
+### Optional overlay `configmap.yaml`
 
-## Environment-Specific Resource Limits
-
-### Integration
+Create this patch only when `base/{DeploymentName}/configmap.yaml` exists and the selected deployment changes
+non-secret values. It targets the base ConfigMap name; never put credentials, keys, tokens, or certificates
+here.
 
 ```yaml
-resources:
-  requests:
-    memory: 256Mi
-    cpu: 250m
-  limits:
-    memory: 512Mi
-    cpu: 500m
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{DeploymentKebabName}"
+data:
+  appsettings.json: |
+    {EnvironmentAndDeploymentSpecificNonSecretJsonConfiguration}
 ```
 
-### Testing
+## Optional Deployment additions
+
+Add these blocks to a deployment base or overlay only when the workload requires them.
+
+### External Secret mount
 
 ```yaml
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 500m
-  limits:
-    memory: 1024Mi
-    cpu: 1000m
+spec:
+  template:
+    spec:
+      containers:
+        - name: "{DeploymentKebabName}"
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /app/configuration/secret
+              readOnly: true
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: "{SecretName}"
 ```
 
-### Staging
+### Private image registry
 
 ```yaml
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 500m
-  limits:
-    memory: 1024Mi
-    cpu: 1000m
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: "{ImagePullSecretName}"
 ```
 
-### Production
+### In-pod HTTPS
+
+Add the container port and matching Service port only when the process is configured to terminate TLS:
 
 ```yaml
-resources:
-  requests:
-    memory: 512Mi
-    cpu: 500m
-  limits:
-    memory: 2048Mi
-    cpu: 2000m
+# Deployment container ports
+- name: https
+  containerPort: 8081
+  protocol: TCP
+
+# Service ports
+- name: https
+  port: 443
+  protocol: TCP
+  targetPort: https
 ```
 
----
+## Deployment strategy
 
-## Scaffold-time identity and deploy-time image pinning
+The base uses a resource-conserving rolling update. Use this leaf patch only when the service requires
+zero-downtime deployment and the cluster has capacity for the surge:
 
-Resolve `{DeployableProcessName}` and `{DeployableProcessKebabName}` while scaffolding; committed manifests
-contain their literal resolved values. At deployment time, CI changes only deploy-time state: it pins
-`app-image:latest` and sets the namespace in the actual selected component kustomization.
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{DeploymentKebabName}"
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0%
+```
 
-### GitHub Actions Example
+## CI image pinning and apply
 
-Deployment is pure Kustomize—no identity-template substitution occurs at deploy time. The workflow validates
-the exact environment and component names, edits that selected component's `kustomization.yaml`, and applies
-that same component:
+CI changes only deploy-time state. It validates the selected literal environment and complete deployment
+identity, pins the image and namespace in that leaf, and applies the same leaf.
 
 ```yaml
 - name: Deploy
   shell: pwsh
   run: |
-    $environmentName = "${{ inputs.environment }}"
-    $componentName = "${{ inputs.component }}"
-    $allowedEnvironmentNames = @("integration", "testing", "staging", "production")
-    $allowedComponentNames = @("default", "alternative")
+    $kubernetesEnvironmentKebabName = "${{ inputs.environment }}"
+    $deploymentName = "${{ inputs.deployment }}"
+    $allowedKubernetesEnvironmentKebabNames = @("integration", "testing", "staging", "production")
 
-    if ($environmentName -notin $allowedEnvironmentNames) {
-      throw "Unsupported Kubernetes environment: $environmentName"
+    if ($kubernetesEnvironmentKebabName -notin $allowedKubernetesEnvironmentKebabNames) {
+      throw "Unsupported Kubernetes environment: $kubernetesEnvironmentKebabName"
     }
-    if ($componentName -notin $allowedComponentNames) {
-      throw "Unsupported Kubernetes component: $componentName"
+    if ($deploymentName -notmatch '^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$') {
+      throw "Invalid complete deployment identity: $deploymentName"
     }
 
-    $kubernetesRoot = "./tools/Kubernetes"
-    $selectedComponentDirectory = Join-Path $kubernetesRoot "overlays/$environmentName/$componentName"
-    $selectedKustomization = Join-Path $selectedComponentDirectory "kustomization.yaml"
+    $selectedDeploymentDirectory = Join-Path "./tools/Kubernetes/overlays/$kubernetesEnvironmentKebabName" $deploymentName
+    $selectedKustomization = Join-Path $selectedDeploymentDirectory "kustomization.yaml"
     if (-not (Test-Path -LiteralPath $selectedKustomization -PathType Leaf)) {
-      throw "Selected Kubernetes kustomization does not exist: $selectedKustomization"
+      throw "Selected Kubernetes deployment does not exist: $selectedKustomization"
     }
 
-    Push-Location $selectedComponentDirectory
+    Push-Location $selectedDeploymentDirectory
     try {
       kustomize edit set image "app-image:latest=${{ env.IMAGE }}:${{ github.sha }}"
-      kustomize edit set namespace "${{ env.NAMESPACE_PREFIX }}-$environmentName"
+      kustomize edit set namespace "${{ env.NAMESPACE_PREFIX }}-$kubernetesEnvironmentKebabName"
       kubectl kustomize . | kubectl apply -f -
     }
     finally {
@@ -401,12 +374,5 @@ that same component:
     }
 ```
 
----
-
-## Maintaining supported overlays
-
-- Keep `integration`, `testing`, `staging`, and `production` aligned with the exact structure in
-  `solution-structure`.
-- Keep both `default` and `alternative` selectable beneath every environment's `base`.
-- If the canonical environment set ever changes, update `solution-structure` first; this content template
-  follows that authority.
+The workflow may list fewer allowed environments when the product supports fewer. It must not accept a
+shortened deployment alias or synthesize a missing overlay.

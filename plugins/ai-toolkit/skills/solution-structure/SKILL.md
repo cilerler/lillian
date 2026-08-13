@@ -1,6 +1,6 @@
 ---
 name: solution-structure
-description: Source of truth for the opinionated .NET solution folder structure, including in-repo documentation paths and filenames, test-project paths and names, root scaffolding, sibling Host and contract projects, modular or standalone services under /src, /tools/Kubernetes, and /tests. Use when deciding folder structure, directory layout, repo layout, or where a file belongs.
+description: Source of truth for the opinionated .NET solution folder structure, including in-repo documentation and test naming, root scaffolding, deployable runners, modular or standalone services, optional shared persistence projects, dashboards, /tools/Kubernetes, and /tests. Use when deciding folder structure, directory layout, repo layout, or where a file belongs.
 type: guidance
 applies_to:
   - Developer
@@ -22,7 +22,7 @@ triggers:
   - file placement
   - opinionated folder
 references: []
-summary: Source of truth for the opinionated .NET solution folder structure, including in-repo documentation paths and filenames, test-project paths and names, root scaffolding, sibling Host and contract projects, modular or standalone services under /src, /tools/Kubernetes, and /tests.
+summary: Source of truth for the opinionated .NET solution folder structure, including documentation and test naming, deployable runners, modular or standalone services, optional shared persistence projects, dashboards, Kubernetes, and tests.
 ---
 
 # Solution Structure
@@ -35,10 +35,10 @@ Source of truth for the opinionated **.NET solution** folder structure. When any
 
 | Skill | Reads from this skill |
 |-------|-----------------------|
-| `dotnet-service-generator` | Complete modular and standalone service roots plus the folder shape defined here; after the root is resolved, the generator owns capability-specific service implementation artifact filenames inside it |
+| `dotnet-service-generator` | Complete modular and standalone service roots, the folder shape defined here, and the optional shared `Models`, `Data`, and `Migrations` roots and dependency direction; after a service root is resolved, the generator owns capability-specific service implementation artifact filenames inside it |
 | `documentation-generator` | Every in-repo documentation directory, filename, scoped placement, and attachment folder shape; that skill owns document purpose, content, lifecycle, metadata, and identifiers |
 | `infrastructure` | `/tools/Kubernetes/{base,overlays}` Kustomize layout |
-| `observability` | `/Observability/Grafana/` dashboard placement at app/module/component/service tiers |
+| `observability` | Optional `/Observability/Grafana/dashboard.json` placement at product, runner, module, component, and service scopes |
 | `mssql-table-scaffolder` | `/Resources/SQL/` placement when SQL is embedded in a service |
 | `mssql-bulk-data-operations` | `/docs/tickets/.../attachments/` or `/docs/runbooks/.../attachments/` placement for operational SQL scripts |
 | `pressure-test` | Repository/product Pressure-test result directory and timestamped Markdown/HTML basename |
@@ -184,8 +184,47 @@ organization/product identity. Do not abbreviate these project names.
 | Orchestration AppHost | `/src/{Organization}.{Product}.AppHost/` | `{Organization}.{Product}.AppHost.csproj` | Local/distributed application orchestration declarations. |
 
 `{DeployableProcessName}` is the exact complete project stem selected from this table, such as
-`{Organization}.{Product}.Host`. Reuse it for the runner directory, project file, assembly, process identity,
-and deployment resource identity. Do not introduce a second token for the same value.
+`{Organization}.{Product}.Host`. Reuse it for the runner directory, project file, assembly, and process
+identity. `{DeploymentName}` equals that value for a single-role deployment and appends an explicit role only
+when one process binary has multiple deployments; do not introduce another token for either concept.
+
+### Canonical shared-persistence project placement
+
+When a solution intentionally uses one application-wide Entity Framework database model and `DbContext`, use
+this optional sibling-project topology as one matched persistence boundary. These projects are not required in
+solutions whose capabilities own separate persistence models.
+
+`{DatabaseName}` is the exact PascalCase semantic name of that shared database model. Resolve it once from the
+actual schema/context identity and reuse it in every shown directory, `DbContext`, and EDM-contribution name;
+it is not an alias for `{Product}` and must not be left unresolved.
+
+| Project | Owns | Must not own |
+|---|---|---|
+| `{Organization}.{Product}.Models` | Generated DB-first entity partials, hand-authored entity partial extensions, persistence-policy marker interfaces, and database-tied schema/seed/status constants or enums | API DTOs, application contracts, domain services or rules, `DbContext`, clients, or migrations |
+| `{Organization}.{Product}.Data` | The shared `DbContext`, EF configurations and conventions, interceptors and query filters, provider/options registration, shared-context EDM contributions when OData is selected, and shared persistence integrations | Business services, API contracts, migration classes, or design-time startup |
+| `{Organization}.{Product}.Migrations` | EF migration classes and model snapshot, `IDesignTimeDbContextFactory`, and migration-only configuration | Runtime composition, business logic, or reusable data access |
+
+`Models/Abstractions` is a contextual persistence folder, not an alternative application-wide abstractions
+project. It contains only marker contracts whose semantics are inseparable from persistence policy, such as
+audit stamping, timestamps, soft deletion, or temporal history. Cross-project application contracts still use
+the sibling `{Organization}.{Product}.Abstractions` project, and domain behavior still uses its owning
+`Domain`, module, component, or service boundary.
+
+The dependency direction is acyclic:
+
+```text
+{Organization}.{Product}.Models
+    ↑
+{Organization}.{Product}.Data
+    ↑
+{Organization}.{Product}.Migrations
+```
+
+Any module, service, runner, or test adds a direct reference to each persistence project whose types its own
+source compiles against; it does not rely on transitive references. A module that injects the shared context
+references `Data`; one that also names an entity references `Models` directly. A deployable runner may
+reference `Data` only to compose runtime registration. Production runners and capability projects never
+reference `Migrations`; tests reference it only when they explicitly apply or verify migrations.
 
 ```
 /.vscode                                    // Visual Studio Code settings
@@ -288,76 +327,44 @@ and deployment resource identity. Do not introduce a second token for the same v
 
 ### Canonical Kubernetes directory structure
 
-This is the complete structural authority for `/tools/Kubernetes/`. Every supported environment has the same
-three components (`base`, `default`, and `alternative`), and every component explicitly contains its required
-files.
+This is the complete structural authority for `/tools/Kubernetes/`. Each actual deployment owns one complete
+base and only the environment overlays that the product supports. A solution with one deployment still uses
+the same complete form; it does not introduce a shorter layout.
 
 ```
 /tools
   /Kubernetes
-    - kustomization.yaml                    // Kustomize configuration for Kubernetes
     /base
-      - kustomization.yaml                  // Base kustomize configuration for Kubernetes
-      - deployment.yaml                     // Base deployment configuration for Kubernetes
-      - service.yaml                        // Base service configuration for Kubernetes
+      /{DeploymentName}                     // One actual complete deployment identity
+        - kustomization.yaml                // Required base composition for this deployment
+        - deployment.yaml                   // Required complete Deployment baseline
+        - service.yaml                      // Optional; only when the deployment exposes a Service
+        - configmap.yaml                    // Optional; only when real non-secret configuration exists
     /overlays
-      /integration
-        /base                               // Base configuration for Integration environment
-          - kustomization.yaml              // Base kustomize configuration for Integration environment
-          - deployment.yaml                 // Base deployment configuration for Integration environment
-          - service.yaml                    // Base service configuration for Integration environment
-        /default                            // Default configuration for Integration environment
-          - kustomization.yaml              // Default kustomize configuration for Integration environment
-          - deployment.yaml                 // Default deployment configuration for Integration environment
-          - service.yaml                    // Default service configuration for Integration environment
-        /alternative                        // Alternative configuration for Integration environment
-          - kustomization.yaml              // Alternative kustomize configuration for Integration environment
-          - deployment.yaml                 // Alternative deployment configuration for Integration environment
-          - service.yaml                    // Alternative service configuration for Integration environment
-      /testing
-        /base
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /default
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /alternative
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-      /staging
-        /base                               // Base configuration for Staging environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /default                            // Default configuration for Staging environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /alternative                        // Alternative configuration for Staging environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-      /production
-        /base                               // Base configuration for Production environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /default                            // Default configuration for Production environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
-        /alternative                        // Alternative configuration for Production environment
-          - kustomization.yaml
-          - deployment.yaml
-          - service.yaml
+      /{KubernetesEnvironmentKebabName}      // One supported environment; no empty environment directories
+        /{DeploymentName}                   // One actual complete deployment identity
+          - kustomization.yaml              // Required; composes base/{DeploymentName} and selected patches
+          - deployment.yaml                 // Required environment/role/resource patch
+          - service.yaml                    // Optional; only when Service behavior differs from base
+          - configmap.yaml                  // Optional; only when selected non-secret values differ from base
 ```
 
-There is deliberately no separate image-transform directory and no environment-level `kustomization.yaml`.
-Image pinning and namespace selection operate on the selected environment component's `kustomization.yaml`;
-the infrastructure guidance owns that manifest behavior, not another directory.
+`{KubernetesEnvironmentName}` is one supported semantic environment value: `Integration`, `Testing`,
+`Staging`, or `Production`. `{KubernetesEnvironmentKebabName}` is its one lowercase path/label rendering:
+`integration`, `testing`, `staging`, or `production`. Create only the values the product supports.
+
+`{DeploymentName}` is the complete deployment identity. It equals `{DeployableProcessName}` when that process
+has one runtime role. When one binary has several roles, append the explicit role to the complete process
+identity, such as `{Organization}.{Product}.Host.Api` and `{Organization}.{Product}.Host.Worker`; never replace
+it with positional aliases such as `default` or `alternative`.
+
+Every base and overlay pair uses the same complete `{DeploymentName}`, so multiple runners such as Host and
+Gateway—and multiple explicit roles of one binary—coexist without sharing or overwriting a manifest identity.
+There is deliberately no root `kustomization.yaml`, environment-level `kustomization.yaml`, `repo/` image
+layer, or mandatory empty environment. Image pinning and namespace selection operate on the selected
+deployment overlay's `kustomization.yaml`, and CI applies that overlay directly. The infrastructure guidance
+owns the manifest content, optional resources and patches, DNS-label rendering, security, probes, resources,
+configuration, and deployment behavior; it does not add another directory layer.
 
 ### Canonical tests, root, and source directory structure
 
@@ -405,7 +412,30 @@ global.json                                 // Pinned .NET SDK selection
     /Exceptions                                       // App-wide domain exceptions
     /Models                                           // App-wide domain types and rules
 
-  /Observability                                      // App-wide operational assets, outside Host
+  /{Organization}.{Product}.Models                    // Optional shared-persistence model project
+    - {Organization}.{Product}.Models.csproj
+    /Abstractions                                     // Persistence-policy markers only; not app contracts
+    /{DatabaseName}                                   // Generated DB-first entity partials; overwrite-safe
+    /{DatabaseName}Extend                             // Hand-authored entity partial extensions; survives re-scaffold
+    /{DatabaseName}Constants                          // Database-tied schemas, seeds, statuses, and enums
+
+  /{Organization}.{Product}.Data                      // Optional shared runtime persistence project
+    - {Organization}.{Product}.Data.csproj
+    - {DatabaseName}DbContext.cs                      // Generated partial DbContext
+    - _{DatabaseName}DbContext.cs                     // Hand-authored partial hooks; survives re-scaffold
+    - IDbContextConfigurer.cs                         // Optional runtime options-extension seam
+    - ODataExtensions.cs                              // Shared-context EDM contributions when OData is selected
+    - SoftDeleteSaveChangesInterceptor.cs             // Example persistence-policy interceptor, when selected
+    - StartupExtensions.cs                            // Runtime persistence registration
+    /Configurations                                   // IEntityTypeConfiguration implementations
+
+  /{Organization}.{Product}.Migrations                // Optional shared EF design-time project
+    - {Organization}.{Product}.Migrations.csproj
+    - DbContextFactory.cs                             // IDesignTimeDbContextFactory; never runner-owned
+    - appsettings.Migration.json                      // Migration-only configuration
+    /Migrations                                       // Generated migrations and model snapshot, when present
+
+  /Observability                                      // Optional app-wide operational assets, outside Host
     /Grafana
       - dashboard.json                                // Platform overview dashboard
 
@@ -429,6 +459,7 @@ global.json                                 // Pinned .NET SDK selection
       - launchSettings.json                             // Local process launch settings
     /Configuration
       - CapabilitySelection.cs                         // Immutable registration/mapping gate snapshot
+      - CapabilityControllerFeatureProvider.cs         // Optional process-specific OData controller gate
     /Extensions
       - StartupExtensions.cs                           // Registers modules/services selected for this process
     /Components                                       // Optional process-specific Blazor/UI shell; thin presentation only
@@ -471,8 +502,9 @@ global.json                                 // Pinned .NET SDK selection
     /Exceptions                                      // Module-level base exceptions
     /Extensions
       - StartupExtensions.cs                         // Registers all components in this module
+      - ODataExtensions.cs                           // Optional module EDM aggregation/contributions
     /Internals                                       // Module-wide shared helper implementations
-    /Observability
+    /Observability                                   // Optional module-scoped operational assets
       /Grafana                                       // Module-level domain health dashboard
         - dashboard.json
 
@@ -488,8 +520,9 @@ global.json                                 // Pinned .NET SDK selection
       /Exceptions                                    // Component-level base exceptions
       /Extensions
         - StartupExtensions.cs                       // Registers all services in this component
+        - ODataExtensions.cs                         // Optional component EDM aggregation/contributions
       /Internals                                     // Component-wide shared helper implementations
-      /Observability
+      /Observability                                 // Optional component-scoped operational assets
         /Grafana                                     // Component-level aggregated dashboard
           - dashboard.json
       - Constants.cs                                 // Component-wide constants
@@ -501,7 +534,7 @@ global.json                                 // Pinned .NET SDK selection
           /Models                                    // Enums, value objects, shared DTOs
           /Requests                                  // Request DTOs
           /Responses                                 // Response DTOs
-        /Api                                         // HTTP endpoints (optional)
+        /Api                                         // HTTP adapters (optional): selected Minimal API endpoints or OData controllers
         /Clients                                     // External HTTP API wrappers
         /Configuration                               // Settings and config binding
         /Contracts                                   // Internal interfaces (DI/testing)
@@ -509,10 +542,11 @@ global.json                                 // Pinned .NET SDK selection
           - README.md                                // Service overview singleton
         /Exceptions                                  // Service-specific exceptions
         /Extensions                                  // DI registration, model extensions
+          - ODataExtensions.cs                       // Optional service-owned EDM contributions
         /Internals                                   // Internal helper implementations
         /Mappers                                     // Object mapping between types
         /Models                                      // Internal entities/domain objects
-        /Observability                               // Dashboards and diagnostics
+        /Observability                               // Optional service-scoped dashboards and diagnostics
           /Grafana                                   // Per-service dashboard
             - dashboard.json
         /Resources                                   // Embedded resource files — optional (SQL, templates, etc.)
@@ -543,13 +577,16 @@ Every generated Grafana dashboard uses the fixed filename `dashboard.json` at th
 | Monitored scope | Canonical path |
 |---|---|
 | Product / platform | `/src/Observability/Grafana/dashboard.json` |
+| Deployable runner | `/src/{DeployableProcessName}/Observability/Grafana/dashboard.json` |
 | Module | `/src/{Organization}.{Product}.Modules.{ModuleName}/Observability/Grafana/dashboard.json` |
 | Component | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/Observability/Grafana/dashboard.json` |
 | Modular service | `/src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/Observability/Grafana/dashboard.json` |
 | Standalone service | `/src/{Organization}.{Product}.Services.{ServiceName}/Observability/Grafana/dashboard.json` |
 
-These are scope placements of one full dashboard form, not long and short filename conventions. Dashboard
-content, variables, queries, and identity semantics belong to the observability guidance.
+These are optional scope placements of one full dashboard form, not long and short filename conventions.
+Create a dashboard only when that exact scope has useful monitoring requirements and enough meaningful panels;
+do not generate empty or duplicative dashboards merely because parent or child scopes exist. Dashboard content,
+variables, queries, and identity semantics belong to the observability guidance.
 
 ### Canonical embedded SQL structure
 
@@ -593,6 +630,9 @@ Test projects use the same complete target identity and only the applicable test
 | Subject under test | Complete `{TestTarget}` | Allowed `{TestType}` |
 |---|---|---|
 | Domain project | `{Organization}.{Product}.Domain` | `Unit`, `Integration` |
+| Shared persistence models | `{Organization}.{Product}.Models` | `Unit` |
+| Shared runtime persistence | `{Organization}.{Product}.Data` | `Unit`, `Integration` |
+| Shared EF migrations | `{Organization}.{Product}.Migrations` | `Integration` |
 | Module project | `{Organization}.{Product}.Modules.{ModuleName}` | `Unit`, `Integration` |
 | Component boundary | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}` | `Unit`, `Integration` |
 | Modular service boundary | `{Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName}` | `Unit`, `Integration` |
@@ -626,7 +666,14 @@ than moved as app-wide catch-alls. Resolve each artifact by responsibility:
 - reusable technical helpers, together with contracts and technical exceptions owned only by those helpers,
   belong in the sibling `{Organization}.{Product}.Extensions` project when that project is present; and
 - capability-specific internal contracts, exceptions, and helpers remain with their owning module, component,
-  or service.
+  or service; and
+- persistence entities and persistence-policy markers belong in `{Organization}.{Product}.Models`, runtime EF
+  infrastructure belongs in `{Organization}.{Product}.Data`, and EF design-time artifacts belong in
+  `{Organization}.{Product}.Migrations` when the optional shared-persistence topology is selected.
+
+A deployable runner never owns `IDesignTimeDbContextFactory`, migration-only configuration, or migration
+classes. Applying migrations from a running application process is not part of the runner boundary; use the
+dedicated migrations project from an explicit development or deployment workflow.
 
 A runner may own only process-specific UI shell/composition files and static assets. Reusable feature UI and
 all business behavior remain with the owning sibling capability.

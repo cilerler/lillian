@@ -116,25 +116,29 @@ See [templates/grafana-dashboard.md](templates/grafana-dashboard.md) for Grafana
 
 This section is the single canonical home of all dashboard generation rules.
 
-1. **Output location and file naming**: Use the path for the scope being monitored from
+1. **Owner scope and placement**: A dashboard may monitor a deployable runner, product, module, component, or
+   service. Use the path for that scope from
    [`Canonical Grafana dashboard placement`](../solution-structure/SKILL.md#canonical-grafana-dashboard-placement).
    This skill does not restate those paths.
-2. **Environment variable**: Every dashboard must include an `env` query variable populated from the Prometheus `env` label. Do not enumerate environment names in the dashboard; deployments own the available `ASPNETCORE_ENVIRONMENT` values.
-3. **Datasource variable**: Every dashboard must include the `$datasource` template variable.
-4. **Service variable**: A dashboard that queries service-emitted telemetry must include a `$service` query variable populated from a guaranteed series for that workload; do not assume an HTTP series. A broker-only dashboard omits `$service` unless an explicit mapping attributes the broker series to a service.
-5. **Query filtering**: Queries over service-emitted telemetry include `env="$env"` and `service_name="$service"`. Broker/exporter queries use the selected provider's documented environment and destination/subscription labels. If those labels cannot map a broker series unambiguously to a service, add an explicit relabeling or recording-rule mapping before generating the panel; do not apply nonexistent service resource labels.
-6. **Dashboard identity placeholders**: Use `$(DASHBOARD_SUBJECT_NAME)` in the title for the complete canonical
+2. **Optional at every scope**: Generate a dashboard only when concrete operational requirements and useful,
+   supported panels exist at that scope. Do not create empty dashboards or duplicate a narrower dashboard at
+   broader scopes merely to populate every possible location. A single useful panel is sufficient.
+3. **Environment variable**: Every generated dashboard must include an `env` query variable populated from the Prometheus `env` label. Do not enumerate environment names in the dashboard; deployments own the available `ASPNETCORE_ENVIRONMENT` values.
+4. **Datasource variable**: Every generated dashboard must include the `$datasource` template variable.
+5. **Service variable**: A dashboard that queries service-emitted telemetry must include a `$service` query variable populated from a guaranteed series for that workload; do not assume an HTTP series. A broker-only dashboard omits `$service` unless an explicit mapping attributes the broker series to a service.
+6. **Query filtering**: Queries over service-emitted telemetry include `env="$env"` and `service_name="$service"`. Broker/exporter queries use the selected provider's documented environment and destination/subscription labels. If those labels cannot map a broker series unambiguously to a service, add an explicit relabeling or recording-rule mapping before generating the panel; do not apply nonexistent service resource labels.
+7. **Dashboard identity placeholders**: Use `$(DASHBOARD_SUBJECT_NAME)` in the title for the complete canonical
    identity of the monitored scope resolved from `solution-structure` (deployable process, module, component,
-   or service). Use `$(DASHBOARD_UID)` only for Grafana's separate stable, provider-safe dashboard identifier.
+   product, or service). Use `$(DASHBOARD_UID)` only for Grafana's separate stable, provider-safe dashboard identifier.
    The UID is a technical identifier, not a shortened second form of the subject name; deployment tooling must
    replace both placeholders.
-7. **Tags**: Include the `generated` tag on all dashboards.
-8. **Worker metric naming**: Resolve the authoring token `{WorkerSnakeName}` once by converting the complete
+8. **Tags**: Include the `generated` tag on all dashboards.
+9. **Worker metric naming**: Resolve the authoring token `{WorkerSnakeName}` once by converting the complete
    `{ServiceName}Worker` class name to snake_case. For example, `PaymentProcessorWorker` becomes
    `payment_processor_worker`. The placeholder name is PascalCase even though its resolved value is snake_case.
    `WorkerBackgroundService` emits `app_{WorkerSnakeName}_{metric}`; the `_worker` suffix is therefore part of
    every worker metric prefix.
-9. **Polylith service identity**: `service.name` / Prometheus `service_name` identifies the deployable process,
+10. **Polylith service identity**: `service.name` / Prometheus `service_name` identifies the deployable process,
    not an internal module service. Generated custom instruments use the bounded
    `app_{ServiceSnakeName}_*` prefix, where `{ServiceSnakeName}` is the canonical snake_case token resolved by
    [`dotnet-service-generator`](../dotnet-service-generator/SKILL.md#step-1-gather-basic-info). Internal spans may use the bounded
@@ -144,7 +148,7 @@ This section is the single canonical home of all dashboard generation rules.
 
 ### Service Health Dashboard
 
-Required panels:
+Candidate panels; select only those backed by the dashboard's operational purpose and available telemetry:
 1. **Request Rate** - req/s over time
 2. **Error Rate** - % errors with breakdown by status code
 3. **Latency Histogram** - p50, p95, p99 percentiles
@@ -154,7 +158,7 @@ Required panels:
 
 ### API Performance Dashboard
 
-Required panels:
+Candidate panels; select only those backed by the dashboard's operational purpose and available telemetry:
 1. **Endpoint Latency Breakdown** - Latency by endpoint
 2. **Top 10 Slowest Endpoints** - Sorted by p95 latency
 3. **Error Breakdown by Status Code** - 4xx vs 5xx distribution
@@ -163,7 +167,8 @@ Required panels:
 
 ### Background Worker Dashboard
 
-Required panels for services extending `WorkerBackgroundService<TSettings>`:
+Candidate panels for services extending `WorkerBackgroundService<TSettings>`; select only those backed by the
+dashboard's operational purpose and available telemetry:
 1. **Execution Rate** - Executions per second over time
 2. **Success / Failure Ratio** - Stacked success vs failed executions
 3. **Active Executions** - Currently running executions gauge
@@ -172,7 +177,8 @@ Required panels for services extending `WorkerBackgroundService<TSettings>`:
 
 ### Message Consumer Dashboard
 
-Required panels for long-lived broker subscribers:
+Candidate panels for long-lived broker subscribers; select only those backed by the dashboard's operational
+purpose and available telemetry:
 1. **Consume Rate** - Deliveries processed per second
 2. **Success / Retry / Reject / Unhandled Ratio** - Mutually exclusive delivery-attempt outcomes over time
 3. **Processing Duration** - p50, p95, p99 handler duration
@@ -211,7 +217,7 @@ Dashboard queries use the metric names documented by the selected implementation
 
 ### Resource Usage Dashboard
 
-Required panels:
+Candidate panels; select only those backed by the dashboard's operational purpose and available telemetry:
 1. **CPU Utilization** - Per instance over time
 2. **Memory Usage** - Heap, working set, GC metrics
 3. **GC Metrics** - Gen0/Gen1/Gen2 collections, pause times
@@ -328,8 +334,11 @@ The value shown for `OTEL_EXPORTER_OTLP_ENDPOINT` is the documented default and 
 ```csharp
 app.UseRouting();
 app.UseHttpBodyCapture(); // Must be after UseRouting
-app.MapControllers();
+// Map the architecture's selected API adapter after observability middleware.
 ```
+
+Observability does not select `MapControllers`, Minimal API endpoint mapping, OData routing, or another API
+adapter. Apply the mapping required by the selected architecture.
 
 ### Instrumentation Example
 
@@ -450,7 +459,7 @@ When defining observability requirements in technical design:
 
 1. [ ] Which SLIs matter for this service?
 2. [ ] What are the target values for each SLI?
-3. [ ] Which dashboards are required?
+3. [ ] Would a dashboard at any valid owner scope provide useful, non-duplicated panels? If so, which panels?
 4. [ ] What alert conditions and thresholds apply?
 5. [ ] What custom metrics are needed?
 6. [ ] What traces should be captured?
@@ -467,6 +476,6 @@ When implementing observability:
 3. [ ] Custom metrics created per Architect's requirements
 4. [ ] Critical operations have traces with appropriate tags
 5. [ ] Structured logging with event IDs for significant operations
-6. [ ] Grafana dashboard JSON created
+6. [ ] Grafana dashboard JSON created when concrete, non-duplicated panels are required
 7. [ ] Alert rules configured
 8. [ ] Runbook draft includes observability section

@@ -52,7 +52,17 @@ Ask these questions (one or two at a time):
 4. **Structure mode** - Modular (requires PascalCase module and component names) or standalone sibling
    project. "Standalone" never means "inside a deployable runner."
 5. **Output location** - Confirm the complete service root (standalone sibling project: `src/{Organization}.{Product}.Services.{ServiceName}/`; modular polylith: `src/{Organization}.{Product}.Modules.{ModuleName}/{ComponentName}/{ServiceName}/`). Never generate a service beneath a deployable composition/app-runner wrapper such as `{Organization}.{Product}.Host/`, `.Gateway/`, or `.AppHost/`.
-6. **Consumer boundary** - Classify each interface, request, response, and event independently: used only
+6. **Interaction boundary and API adapter** - Classify each interaction before selecting an adapter:
+   in-process callers use the producer-owned contract directly; synchronous callers in another deployment
+   use a versioned Minimal API; UI data/query clients use OData controllers; asynchronous cross-deployment
+   interactions use messaging. One service may expose more than one adapter when it has distinct confirmed
+   consumers, but an adapter is never generated merely because the service exists.
+7. **OData contract** - When OData is selected, confirm each complete PascalCase `{EntitySetName}` and its
+   exact PascalCase CLR `{EntityTypeName}`, the enabled query options, a positive integer maximum `$top`, a positive integer
+   server page size, navigations and `$expand` paths, concurrency/ETag properties, functions/actions, and
+   whether `$batch` is required. Confirm any independently gated child controller surface. When the shared
+   persistence topology supplies the EDM, also confirm the structure-owned `{DatabaseName}`.
+8. **Consumer boundary** - Classify each interface, request, response, and event independently: used only
    by this service's implementation, exposed as this service's HTTP/message wire contract, consumed by
    another service in the same component, consumed by another component in the same module, consumed by
    another module, or shared across modules/app-wide. Default `I{ServiceName}` to service-internal
@@ -62,6 +72,19 @@ Ask these questions (one or two at a time):
 
 After selecting modular or standalone mode, calculate the service tokens once. Resolve each contract
 artifact's namespace separately from its confirmed consumer boundary:
+
+`{ModuleName}`, `{ComponentName}`, and `{ServiceName}` are logical PascalCase identities without the structural
+suffixes `Module`, `Component`, or `Service`. The generated public composition methods append the applicable
+suffix exactly once: `Add{ModuleName}Module`, `Add{ComponentName}Component`, and
+`Add{ServiceName}Service`, with matching `Map*` methods only where endpoint mapping is required. Reject or
+normalize an input such as `CatalogComponent` before token substitution; never generate
+`AddCatalogComponentComponent`, and never preserve a suffix-free alias such as `AddCatalog`.
+
+For a selected OData branch, resolve `{ODataMaximumTop}` and `{ODataPageSize}` from the confirmed positive
+integer limits and substitute them in registration, controller attributes, and tests. Resolve each
+`{EntitySetName}` / `{EntityTypeName}` pair and `{DatabaseName}` through the selected EDM/persistence ownership.
+`{EntityTypeName}` is the unqualified semantic CLR type name; its namespace comes from that resolved owner.
+Do not leave any of these tokens in generated code.
 
 | Token | Modular value | Standalone value |
 |-------|---------------|------------------|
@@ -110,7 +133,9 @@ Based on service purpose:
 | Needs coordination/locking | IDistributedLock |
 | Runs discrete work on a schedule or polling loop | `{ServiceName}Worker.cs` (extends `WorkerBackgroundService`) |
 | Holds a long-lived broker subscription | A descriptively named `BackgroundService` subscriber adapter |
-| Exposes HTTP endpoints | `Api/` folder |
+| Serves a UI data/query surface | OData controller adapter in `Api/` |
+| Serves a synchronous caller in another deployment | Versioned Minimal API adapter in `Api/` |
+| Serves only in-process callers | Producer-owned contract; no HTTP adapter |
 
 ## Step 3: Confirm Dependencies
 
@@ -130,10 +155,24 @@ Additional options:
 [ ] 8. IMessageQueueFactory
 [ ] 9. {ServiceName}Worker.cs (scheduled/polling background service)
 [ ] 10. Broker subscriber adapter (long-lived BackgroundService; automatically includes option 8)
-[ ] 11. Api/ folder (HTTP endpoints)
+[ ] 11. Versioned Minimal API adapter (cross-deployment synchronous service API)
+[ ] 12. OData controller adapter (UI data/query API)
 
 Confirm or adjust (e.g., "add 4, remove 2"):
 ```
+
+When `DbContext` is selected, also confirm whether the context and persistence model are owned by this one
+capability or by the optional application-wide `Models` / `Data` / `Migrations` topology resolved through
+`solution-structure`. The shared topology is appropriate for one database model intentionally consumed by
+multiple modules or services. It is not permission to turn the service's `Models/` folder into a public or
+shared persistence project. The complete dependency rules are in
+[`references/dependencies.md`](references/dependencies.md#dbcontext-direct).
+
+When HTTP exposure is selected, confirm the consumer rather than asking only whether an `Api/` folder is
+wanted. Generate OData for a UI data/query surface and a versioned Minimal API for a synchronous
+cross-deployment service contract. In-process consumers call the producer-owned contract without an HTTP
+loopback; asynchronous cross-deployment communication follows the messaging pattern. Both HTTP branches are
+thin adapters over `I{ServiceName}`; neither controller nor endpoint owns business rules or persistence.
 
 When a broker subscriber is selected, also confirm the producer-owned event contract, the event and subscriber names, the provider/topic configuration keys, and the concrete transient-versus-invalid exception policy before generating code. The canonical artifact and lifecycle pattern is in [`references/dependencies.md`](references/dependencies.md#imessagequeuefactory).
 
@@ -173,7 +212,7 @@ of duplicating it under the service root:
 |------|---------|
 | `Configuration/{ServiceName}Settings.cs` | Configuration with validation |
 | Resolved `I{ServiceName}.cs` artifact (default `Contracts/I{ServiceName}.cs`) | Service interface; move this one file to the selected producer boundary when it is externally consumed |
-| `Extensions/StartupExtensions.cs` | DI registration |
+| `Extensions/StartupExtensions.cs` | DI registration through canonical `Add{ServiceName}Service` |
 | `Constants.cs` | Domain constants + Metrics nested class |
 | `{ServiceName}Service.cs` | Core business logic implementation |
 | Standalone mode only: `{Organization}.{Product}.Services.{ServiceName}.csproj` | Sibling service project using repository build/package conventions and capability-selected references |
@@ -193,8 +232,10 @@ capability's settings, operations, validation, or registrations.
 | Contract consumed by another module | Producer module's sibling `{Organization}.{Product}.Modules.{ModuleName}.Abstractions/{Role}/` project |
 | Contract shared app-wide or without one producer module | Sibling `{Organization}.{Product}.Abstractions/{Role}/` project |
 | Contract crossing a standalone-service project boundary | Sibling `{Organization}.{Product}.Services.{ServiceName}.Abstractions/{Role}/` project |
-| API exposure | `Api/{ServiceName}Api.cs` + `Api/{OperationName}Endpoint.cs` per endpoint |
-| API exposure | `Serialization/{ServiceName}JsonSerializerContext.cs` |
+| Versioned Minimal API exposure | `Api/{ServiceName}Api.cs` + `Api/{OperationName}Endpoint.cs` per endpoint |
+| Versioned Minimal API exposure | `Serialization/{ServiceName}JsonSerializerContext.cs` |
+| OData UI data/query exposure | `Api/{EntitySetName}Controller.cs` per exposed entity set plus the EDM contribution described in `references/api-patterns.md` |
+| OData UI data/query exposure | Serializer metadata only when the selected OData formatter or an additional selected transport requires it; do not force a System.Text.Json context for OData |
 | External HTTP API wrappers | `Clients/` |
 | Custom exceptions | `Exceptions/` |
 | Internal helper implementations | `Internals/` (interfaces go to `Contracts/`) |
@@ -207,7 +248,7 @@ capability's settings, operations, validation, or registrations.
 | Long-lived broker subscription | `{EventName}Subscriber.cs` (thin `BackgroundService` adapter) |
 | Health monitoring | `{ServiceName}HealthCheck.cs` |
 | Startup dependency lacks a concrete readiness check | `{DependencyName}HealthCheck.cs` only when a complete applicable pattern or user-confirmed side-effect-free readiness contract exists; otherwise stop before generation |
-| API exposure | The complete `{TestTarget}.http` path resolved from `solution-structure`; never shorten the target to `{ServiceName}` |
+| HTTP exposure | The complete `{TestTarget}.http` path resolved from `solution-structure`; never shorten the target to `{ServiceName}` |
 
 `{Role}` is `Events`, `Interfaces`, `Models`, `Requests`, or `Responses`. Contracts with no consumer beyond
 the service implementation and no public wire role remain in `Contracts/` or internal `Models/`; do not
@@ -217,6 +258,10 @@ event namespace tokens apply only when that public/cross-boundary artifact is se
 `{OperationName}` is the exact PascalCase endpoint operation, such as `GetAll`, `GetById`, `Create`, or a
 semantic action name. Substitute it in both the endpoint filename and endpoint class; it is not an HTTP-verb
 placeholder.
+
+`{EntitySetName}` is the exact PascalCase entity-set identity declared in the composed EDM. Its controller,
+EDM entity-set registration, route convention, and tests use the same value. Do not shorten or pluralize it
+independently in one layer.
 
 ## Code Patterns
 
@@ -245,8 +290,10 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 - Remove the neutral `DoWorkAsync` placeholder once, then merge the union of interface operations required
   by every selected capability (API, scheduled worker, subscriber, health); selecting one capability must not
   erase operations required by another
-- `{ServiceName}Worker.cs`, broker subscribers, and `Api/` endpoints are **thin adapters** — they translate between their trigger/protocol and `I{ServiceName}`, never containing business logic themselves
-- API endpoints call `I{ServiceName}` methods and map results to HTTP responses — nothing more
+- `{ServiceName}Worker.cs`, broker subscribers, Minimal API endpoints, and OData controllers are **thin adapters** — they translate between their trigger/protocol and `I{ServiceName}`, never containing business logic themselves
+- Minimal API endpoints call `I{ServiceName}` methods and map results to HTTP responses; OData controllers
+  expose only the query/command surface deliberately returned by `I{ServiceName}` and delegate mutations to
+  it. Neither adapter accesses `DbContext` or performs business decisions directly
 - Scheduled workers call `I{ServiceName}` methods and manage scheduling/lifecycle — nothing more
 - Broker subscribers own subscription lifecycle and resolve `I{ServiceName}` from a new scope per delivery — nothing more; this supports a scoped service while remaining valid if the chosen lifetime is singleton
 
@@ -255,7 +302,10 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
 - `Abstractions/` = a contract at the exact producer boundary selected above; a service-local folder must
   not be used for cross-module contracts because it remains in the implementation assembly
 - `Contracts/` = internal interfaces (what stays within this service module)
-- `Models/` = internal entities only (public DTOs go in `Abstractions/`)
+- Service-root `Models/` = internal entities only (public Minimal API/message DTOs go in `Abstractions/`). It is unrelated to the
+  optional sibling `{Organization}.{Product}.Models` persistence project and never substitutes for that
+  application-wide boundary. OData entity ownership follows the composed EDM and may use the shared
+  persistence model when that topology is selected
 - `Internals/` = internal helper implementations (their interfaces go in `Contracts/`)
 - Core service files use the `{ServiceName}` prefix: `{ServiceName}Service.cs`, `{ServiceName}Settings.cs`,
   `{ServiceName}Worker.cs`, `{ServiceName}HealthCheck.cs`, `I{ServiceName}.cs`,
@@ -263,6 +313,14 @@ For log level selection and `ActivityKind` usage in generated code, see the [Obs
   validator, and helper files use descriptive class-matching names without inventing a second service-name form.
 
 ### Naming
+- Public composition methods use one complete form only:
+  `Add{ModuleName}Module` / `Map{ModuleName}Module`,
+  `Add{ComponentName}Component` / `Map{ComponentName}Component`, and
+  `Add{ServiceName}Service` / `Map{ServiceName}Service`. The low-level Minimal API mapper is the one internal
+  `Map{ServiceName}Api`. Append each structural suffix exactly once and do not generate suffix-free aliases.
+- Generate a `Map*` method only when its boundary has a descendant that needs explicit endpoint mapping.
+  OData controllers are mapped once by the application's controller/OData composition and do not create a
+  per-service `Map{ServiceName}Service`; see `references/api-patterns.md`.
 - Variables match interface: `IDistributedCache` → `_distributedCache`
 - Settings class: `{ServiceName}Settings` (in `Configuration/` folder — keeps the prefix for cross-service disambiguation)
 - ConfigurationSectionName: `nameof({ServiceName})`

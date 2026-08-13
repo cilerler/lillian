@@ -72,8 +72,11 @@ public record {ServiceName}CompletedEvent(
     [property: JsonPropertyName("completedAt")] DateTimeOffset CompletedAt);
 ```
 
-Every serialized contract uses explicit JSON field names and is included in at least one source-generated
-`JsonSerializerContext`. Context ownership follows its purpose:
+Every contract serialized by a selected System.Text.Json transport uses explicit JSON field names and is
+included in at least one source-generated `JsonSerializerContext`. This requirement applies to the versioned
+Minimal API and JSON message branches shown here. OData controllers use the selected OData formatter and
+composed EDM; do not add System.Text.Json attributes or a source-generation context solely because the type
+appears in OData. Context ownership for a selected System.Text.Json branch follows its purpose:
 
 - A reusable producer-owned context belongs at the same selected contract boundary as the contracts it
   describes. Keep it in that boundary's project or folder, under the nearest common namespace that does not
@@ -186,7 +189,10 @@ Do not apply a connection-string parser attribute to `ConnectionStringKey`; vali
 
 ## Models/{ServiceName}Item.cs
 
-Internal entities and domain objects. Public DTOs (requests, responses) belong in `Abstractions/`.
+Internal entities and domain objects owned by this service. Public Minimal API/message DTOs belong at their
+producer-owned `Abstractions/` boundary. An OData entity comes from the selected EDM owner; when the optional
+shared persistence topology is selected, that may be `{Organization}.{Product}.Models`, never this
+service-local folder merely because the controller is here.
 
 ```csharp
 namespace {ServiceNamespace}.Models;
@@ -538,6 +544,13 @@ Resources/
 
 ## Extensions/StartupExtensions.cs
 
+The canonical public service registration name is `Add{ServiceName}Service`. When the versioned Minimal API
+adapter is selected, its matching public route gate is `Map{ServiceName}Service` and the only low-level mapper
+it invokes is the internal `Map{ServiceName}Api`. `{ServiceName}` is the logical service identity without a
+`Service` suffix, so each generated name receives that suffix exactly once. Do not emit `Add{ServiceName}` or
+`Map{ServiceName}` aliases. OData controllers do not receive a per-service map method; they are mapped once by
+the composed controller/OData pipeline described in [`api-patterns.md`](api-patterns.md#odata-controller-adapter-ui-data-and-query-surface).
+
 ```csharp
 namespace {ServiceNamespace}.Extensions;
 
@@ -550,14 +563,14 @@ using Ruya.Diagnostics.DistributedTracing;
 using Ruya.Extensions.Configuration;
 using Ruya.Extensions.DependencyInjection;
 using Ruya.Primitives;
-// Include this using only when API exposure is selected.
+// Include this using only when versioned Minimal API exposure is selected.
 using {ServiceNamespace}.Api;
 using {ServiceNamespace}.Configuration;
 using {ServiceContractNamespace};
 
 public static class StartupExtensions
 {
-    public static IServiceCollection Add{ServiceName}(
+    public static IServiceCollection Add{ServiceName}Service(
         this IServiceCollection services,
         Action<{ServiceName}Settings>? setupAction = null)
     {
@@ -597,8 +610,8 @@ public static class StartupExtensions
         return services;
     }
 
-    // Include this method only when API exposure is selected.
-    public static WebApplication Map{ServiceName}(
+    // Include this method only when versioned Minimal API exposure is selected.
+    public static WebApplication Map{ServiceName}Service(
         this WebApplication app,
         bool enabled)
     {

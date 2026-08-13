@@ -57,7 +57,8 @@ Validate that the migration from `{OldServicePath}` to `{NewServicePath}` in `{O
 1. **Compare business logic**: Ensure all domain logic, calculations, workflows, and business rules from the old service are present and unchanged in the new service
 2. **Compare error handling**: Verify that all exception handling, validation logic, and error cases from the old service are preserved in the new service with equivalent behavior
 3. **Verify dependencies**: Confirm that all external dependencies (database, APIs, services) are correctly wired by comparing injection patterns and initialization
-4. **Compare request/response flow**: Ensure the request handling and response generation logic follows the same path with the same transformations
+4. **Compare request/response flow**: Ensure the selected API adapter/protocol, request handling, response
+   generation, and transformations remain behaviorally equivalent
 5. **Validate state management**: Confirm that any state, caching, or data persistence patterns are preserved
 
 ## Exhaustive Coverage Requirements
@@ -87,6 +88,13 @@ You must explicitly cover all of the following:
 - Confirm all critical dependencies from old service exist in new service with equivalent usage semantics
 - Validate retries, timeouts, and fallback behavior where applicable
 
+7. **API adapter and protocol coverage**
+- Identify the old and new adapter for every API surface; do not treat Minimal API and OData as interchangeable
+- For Minimal API, compare routes, HTTP methods, binding, authorization, result/status behavior, and serialization
+- For OData, compare the metadata document and entity sets, routing, supported query behavior, expansions,
+  paging/continuation behavior, concurrency/ETag handling, and batch behavior wherever each existed
+- Treat removal, narrowing, or semantic alteration of any exposed protocol capability as a behavior change
+
 ## What NOT to validate
 - Code style or formatting differences
 - Performance optimizations beyond the expected improvements
@@ -109,6 +117,7 @@ Return **PASS** only if all are true:
 4. Existing logging/observability behavior is preserved (or improved without loss)
 5. No unresolved questions remain
 6. Evidence table is complete and specific
+7. Every selected API adapter and exposed protocol behavior is proven equivalent
 
 If any item above is false, do not return PASS.
 
@@ -121,6 +130,8 @@ Return **FAIL** immediately if any of the following is found:
 - Any security/authorization/tenant-isolation validation is missing
 - Any side effect is removed, reordered unsafely, or changed semantically
 - Any existing logging/trace/metric signal is silently dropped
+- Any API adapter is replaced, or any exposed protocol behavior is removed or narrowed, without an explicitly
+  approved behavioral change
 
 ## Automatic ESCALATE Triggers
 Return **ESCALATE** if you cannot conclusively verify due to:
@@ -151,11 +162,15 @@ Provide:
 	- old signal
 	- new signal
 	- status and evidence
-7. **Issues Found**:
+7. **API Adapter/Protocol Equivalence Matrix**:
+	- old entrypoint and adapter/protocol behavior
+	- new equivalent
+	- status and evidence, including OData metadata, query, expansion, paging, ETag, and batch checks where present
+8. **Issues Found**:
 	- severity: Blocker / Major / Minor
 	- impact if deployed
 	- exact old -> new location mapping
-8. **Unresolved Questions**:
+9. **Unresolved Questions**:
 	- if non-empty, verdict cannot be PASS
-9. **Production Sign-off Statement**:
+10. **Production Sign-off Statement**:
 	- explicit statement whether deployment is safe now

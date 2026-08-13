@@ -58,8 +58,11 @@ Scan `{ServicePath}` and produce a report:
 1. **Inventory** — list every file and folder and classify its current responsibility.
 2. **Identity confirmation** — confirm the repository, organization, product, service, structure mode, and any
    required module/component values against the repository. Ask before proceeding if they are ambiguous.
-3. **Capability inventory** — identify APIs, scheduled or polling work, broker subscriptions, health checks,
-   configuration, clients, contracts, models, persistence, observability, and other selected capabilities.
+3. **Capability inventory** — classify each interaction as in-process, cross-deployment machine communication,
+   or UI query/data access; identify its current adapter/protocol (including Minimal API, messaging, or OData),
+   plus scheduled or polling work, broker subscriptions, health checks, configuration, clients, contracts,
+   models, persistence, observability, and other selected capabilities. Record the protocol behaviors currently
+   exposed; do not infer an adapter conversion from the target folder structure.
 4. **Contract-boundary analysis** — classify each contract independently by producer and consumer boundary.
    Never duplicate a consumed contract or move it merely because another artifact moved.
 5. **Canonical resolution** — use solution-structure to resolve the containing project, service root, folders,
@@ -70,7 +73,8 @@ Scan `{ServicePath}` and produce a report:
    structure. Only propose folders that will contain an artifact.
 7. **Behavior split analysis** — identify business logic currently held by process runners, API adapters,
    workers, or subscribers and show how the generator's boundaries preserve that behavior while making each
-   adapter thin.
+   adapter thin. Preserve the selected API adapter and its protocol semantics unless a separately approved
+   behavioral change explicitly replaces them.
 8. **Observability analysis** — map every existing log, trace, metric, dashboard, and health signal; identify
    required additions without silently replacing or dropping an existing signal.
 9. **Reference comparison** — when supplementary repositories were supplied, record useful evidence and every
@@ -89,7 +93,9 @@ Present a table covering every intended change:
 6. **Registration changes** — every affected application, module, component, and service composition layer.
 7. **Hosted-adapter split** — trigger type, business behavior delegated to the service, and lifecycle behavior
    retained by the thin adapter.
-8. **API split** — route-group and endpoint artifacts selected by the generator, when applicable.
+8. **API-adapter plan** — selected adapter/protocol, generator-resolved artifacts, business behavior delegated
+   to the service, and protocol behavior retained by the thin adapter. For OData, include every existing
+   metadata, query, expansion, paging, concurrency/ETag, and batch behavior that the migration must preserve.
 9. **Observability changes** — preserved signals, required additions, operational identity, and dashboard impact.
 10. **Dependent updates** — tests and consumers whose references will become invalid.
 
@@ -108,7 +114,8 @@ After approval:
 5. Move public contracts to their resolved producer boundaries and update project references without creating
    implementation-project dependencies from consumers.
 6. Split business behavior from thin APIs, scheduled/polling adapters, and broker subscribers exactly as
-   approved, preserving behavior and lifecycle semantics.
+   approved, preserving the selected API adapter, protocol behavior, and lifecycle semantics. Do not convert
+   OData to Minimal API, or Minimal API to OData, as an incidental part of structural migration.
 7. Update every affected composition and registration layer.
 8. Apply the generator-owned configuration, metrics, serialization, and capability patterns selected during
    analysis, plus the selected observability patterns.
@@ -138,8 +145,10 @@ After approval:
    mechanically from folders during verification.
 6. Confirm no empty migration-created folders or orphaned imports remain.
 7. Confirm the complete resolved registration chain and project-reference direction.
-8. Build the affected solution/projects and run the relevant tests. Report exact commands and evidence.
-9. Report any verification that could not run; never infer success from an unexecuted check.
+8. Confirm every API entrypoint and protocol behavior recorded before migration. For OData, verify metadata,
+   query options, expansions, paging, concurrency/ETag handling, and batch behavior wherever each existed.
+9. Build the affected solution/projects and run the relevant tests. Report exact commands and evidence.
+10. Report any verification that could not run; never infer success from an unexecuted check.
 
 ## Constraints
 
@@ -147,6 +156,8 @@ After approval:
 - **Do not restructure other services** — outside the target service, change only references invalidated by
   this migration.
 - **Ask before splitting** — the approved plan must explicitly authorize any hosted-adapter or API split.
+- **Preserve the API contract** — adapter selection and protocol semantics are behavior, not structural details;
+  changing them requires separate explicit approval.
 - **Authorities win** — examples and existing repositories are evidence, never naming or placement authority.
 - **No shortened migration path** — always perform analysis, approval, execution, dependent updates, and
   verification; do not substitute a reduced workflow based on the command name or existing layout.

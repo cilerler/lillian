@@ -9,6 +9,9 @@ The exact paths and folder contents are defined once in [`solution-structure`](.
 | Boundary | Responsibility |
 |----------|----------------|
 | Application abstractions project | Sibling project under `src/` for contracts shared across modules |
+| Shared persistence models project | Optional sibling project for one intentionally shared database model; owns persistence entities, not service DTOs or business behavior |
+| Shared data project | Optional sibling project for the shared `DbContext`, entity configuration, and runtime persistence registration |
+| Shared migrations project | Optional sibling project for migrations, model snapshots, and design-time migration tooling; never a runtime composition dependency |
 | Host or other deployable-runner project | Composition/app-runner wrapper and deployable process; no business logic or service implementation |
 | Standalone service abstractions project | Optional sibling contract project for a standalone service |
 | Standalone service implementation project | Service capability that does not belong to a module |
@@ -46,13 +49,24 @@ You get the operational simplicity of a monolith (one Dockerfile, one CI pipelin
 | Project | Scope | Why separate? |
 |---|---|---|
 | `{Organization}.{Product}.Abstractions` | App-wide cross-module contracts | Types depended on by multiple modules without forcing a module-to-module dependency |
-| `{Organization}.{Product}.Host` | Process entry point, configuration composition, module registration, hosting/readiness | One thin deployable wrapper per repo; no application contracts or business logic |
+| `{Organization}.{Product}.Models` | Shared persistence entities and generated/model partials for one intentionally shared database model | Multiple capability projects compile against the same storage representation without moving persistence types into Host or a service's internal `Models/` folder |
+| `{Organization}.{Product}.Data` | Shared `DbContext`, entity configuration, and runtime persistence registration | Centralizes one selected database model and references `{Organization}.{Product}.Models` |
+| `{Organization}.{Product}.Migrations` | EF migrations, model snapshot, and design-time context creation | Keeps schema-evolution and design-time tooling out of Host and out of the runtime dependency graph |
+| `{Organization}.{Product}.Host` | Process entry point, configuration composition, module registration, hosting/readiness | One thin Host runner; additional Gateway/AppHost runners remain separate composition-only projects, never homes for contracts or business logic |
 | `{Organization}.{Product}.Services.{ServiceName}.Abstractions` | Public contract for a standalone service, when another project consumes it | Consumers reference contracts without pulling in the standalone implementation |
 | `{Organization}.{Product}.Services.{ServiceName}` | Standalone service implementation | One sibling project for a capability that does not belong to a module |
 | `{Organization}.{Product}.Modules.{ModuleName}.Abstractions` | Module's public contract | Other modules reference contracts without pulling in implementation |
 | `{Organization}.{Product}.Modules.{ModuleName}` | Module implementation (components, services) | One module = one project, one feature-flag toggle |
 
 Components and services stay as **folders** inside the module project — they're internal implementation that ships and changes together. Only contracts that cross the **module** boundary get their own `.csproj`. Component-level and service-level `Abstractions/` are folders within the module project, not separate projects, since they only need to be visible inside the module.
+
+The optional shared persistence topology is selected only when one `DbContext` and storage model are
+intentionally shared across multiple modules or services. It is not the default for every database-backed
+service and it does not redefine the service-root layout. A capability-owned database remains with that
+capability. The sibling `{Organization}.{Product}.Models` project is a persistence representation boundary;
+the service-root `Models/` folder remains internal to one service, and public API/message DTOs still belong at
+their producer-owned abstractions boundary. Resolve the three sibling project roots and contents from
+`solution-structure`; this behavioral reference does not reproduce that physical tree.
 
 ## Concepts
 
@@ -92,6 +106,9 @@ Namespaces follow the project name plus folder hierarchy:
 ```
 {Organization}.{Product}.Abstractions                                      # separate app-wide contract project
 {Organization}.{Product}.Abstractions.Events                               # folder in app-wide Abstractions project
+{Organization}.{Product}.Models                                            # optional shared persistence entity project
+{Organization}.{Product}.Data                                              # optional shared DbContext/runtime persistence project
+{Organization}.{Product}.Migrations                                        # optional migration/design-time project
 {Organization}.{Product}.Host                                              # composition-only project
 {Organization}.{Product}.Modules.{ModuleName}.Abstractions                  # separate project
 {Organization}.{Product}.Modules.{ModuleName}.Abstractions.Events           # folder in Abstractions project
@@ -158,10 +175,27 @@ Module A (.csproj)                          Module B (.csproj)
 
 ## Registration Chain
 
-Registration and endpoint mapping use matching cascades:
+Registration always uses the complete ownership cascade:
 
-- Modular: Host → Module → Component → Service
-- Standalone: Host → Standalone service
+- Modular: Host → `Add{ModuleName}Module` → `Add{ComponentName}Component` → `Add{ServiceName}Service`
+- Standalone: Host → `Add{ServiceName}Service`
+
+Every existing modular boundary owns exactly one canonical registration method. A module method registers
+all of its components, and a component method registers all of its services; neither Host nor a sibling
+boundary skips a level to register a descendant. `{ModuleName}`, `{ComponentName}`, and `{ServiceName}` are
+the logical identities without structural suffixes, and `Module`, `Component`, or `Service` is appended
+exactly once. Do not publish suffix-free aliases such as `Add{ComponentName}` or `Add{ServiceName}`.
+
+Endpoint mapping has the same complete names but exists only where explicit mapping is required:
+
+- Modular: Host → `Map{ModuleName}Module` → `Map{ComponentName}Component` → `Map{ServiceName}Service`
+- Standalone: Host → `Map{ServiceName}Service`
+
+Generate a `Map*` method at a boundary only when that boundary has an explicitly mapped endpoint descendant,
+such as a Minimal API. OData controllers are the important adapter-specific distinction: the gated
+registration/application-part and EDM-contribution cascade selects them, then the deployable runner calls
+`MapControllers()` once for the composed application. Do not invent per-service OData mappers and do not call
+`MapControllers()` at module, component, or service level.
 
 Host evaluates its module and standalone-service gates once, before registration, and stores that immutable
 selection in DI. Registration and mapping both consume the same snapshot. A disabled parent is therefore not
@@ -232,7 +266,7 @@ public static class StartupExtensions
         // Standalone mode only.
         if (capabilities.{ServiceName})
         {
-            services.Add{ServiceName}();
+            services.Add{ServiceName}Service();
         }
 
         return services;
@@ -253,7 +287,7 @@ public static class StartupExtensions
         // Standalone mode only.
         if (capabilities.{ServiceName})
         {
-            app.Map{ServiceName}(capabilities.{ServiceName});
+            app.Map{ServiceName}Service(capabilities.{ServiceName});
         }
 
         return app;
@@ -311,7 +345,8 @@ This bootstrap binding is required before the service provider exists because th
 graph itself; runtime service options continue to use `AddOptions<T>().BindConfiguration(...)`. If a
 repository selects a richer feature-management provider, evaluate it at the composition boundary and still
 capture one strongly typed selection snapshot for both cascades. In standalone mode, the sibling service
-project owns `Add{ServiceName}` and `Map{ServiceName}`; Host only invokes them. The standalone project never
+project owns `Add{ServiceName}Service` and, when it has explicitly mapped endpoints,
+`Map{ServiceName}Service`; Host only invokes them. The standalone project never
 references Host.
 
 The restriction applies to application-owned `Add*` and `Map*` API parameters; it does not prohibit a
@@ -344,8 +379,8 @@ public static class StartupExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.Add{ComponentName}();
-        services.Add{OtherComponentName}();
+        services.Add{ComponentName}Component();
+        services.Add{OtherComponentName}Component();
         return services;
     }
 
@@ -355,8 +390,8 @@ public static class StartupExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        app.Map{ComponentName}(serviceNameEnabled);
-        app.Map{OtherComponentName}();
+        app.Map{ComponentName}Component(serviceNameEnabled);
+        app.Map{OtherComponentName}Component();
         return app;
     }
 }
@@ -375,31 +410,33 @@ using {Organization}.{Product}.Modules.{ModuleName}.{ComponentName}.{ServiceName
 
 public static class StartupExtensions
 {
-    public static IServiceCollection Add{ComponentName}(
+    public static IServiceCollection Add{ComponentName}Component(
         this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.Add{ServiceName}();
-        services.Add{OtherServiceName}();
+        services.Add{ServiceName}Service();
+        services.Add{OtherServiceName}Service();
         return services;
     }
 
-    public static WebApplication Map{ComponentName}(
+    public static WebApplication Map{ComponentName}Component(
         this WebApplication app,
         bool serviceNameEnabled)
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        app.Map{ServiceName}(serviceNameEnabled);
-        app.Map{OtherServiceName}(true);
+        app.Map{ServiceName}Service(serviceNameEnabled);
+        app.Map{OtherServiceName}Service(true);
         return app;
     }
 }
 ```
 
-Generate each `Map*` method and descendant call only when that boundary contains API-exposed services.
-Non-HTTP services remain in the registration cascade but add no mapping call. Pass every independently gated
+Generate each `Map*` method and descendant call only when that boundary contains explicitly mapped endpoint
+descendants. Non-HTTP services and OData-controller-only services remain in the mandatory registration
+cascade but add no explicit mapping call. The deployable runner maps the composed OData controller surface
+once after gated application-part selection. Pass every independently gated
 route decision from the immutable Host snapshot through the owning module/component cascade; an ungated child
 may receive literal `true`. The service wrapper from
 [`standard-service.md`](standard-service.md#extensionsstartupextensionscs) consumes that captured Boolean and
@@ -415,6 +452,7 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 ```
 {Organization}.{Product}.Host.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only when Host composition directly consumes app-wide contracts
+├── ProjectReference: {Organization}.{Product}.Data   # when this process composes the selected shared runtime DbContext
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}   # modular mode: compose the module implementation
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions   # modular mode only when Host directly consumes its contracts
 ├── ProjectReference: {Organization}.{Product}.Services.{ServiceName}   # standalone mode: compose the service implementation
@@ -422,6 +460,8 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 
 {Organization}.{Product}.Modules.{ModuleName}.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only if app-wide types are used
+├── ProjectReference: {Organization}.{Product}.Models   # when shared persistence entity types are compiled against
+├── ProjectReference: {Organization}.{Product}.Data   # when the shared DbContext/runtime persistence API is compiled against
 ├── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions
 └── ProjectReference: {Organization}.{Product}.Modules.{OtherModuleName}.Abstractions   # only when consuming producer-owned contracts from that module
 
@@ -430,6 +470,8 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 
 {Organization}.{Product}.Services.{ServiceName}.csproj
 ├── ProjectReference: {Organization}.{Product}.Abstractions   # only if app-wide types are used
+├── ProjectReference: {Organization}.{Product}.Models   # when shared persistence entity types are compiled against
+├── ProjectReference: {Organization}.{Product}.Data   # when the shared DbContext/runtime persistence API is compiled against
 ├── ProjectReference: {Organization}.{Product}.Services.{ServiceName}.Abstractions   # when the standalone contract project exists
 └── ProjectReference: {Organization}.{Product}.Modules.{ModuleName}.Abstractions   # only when consuming that module's contracts
 
@@ -440,6 +482,13 @@ See [standard-service.md](standard-service.md#extensionsstartupextensionscs) for
 
 {Organization}.{Product}.Services.{OtherServiceName}.csproj
 └── ProjectReference: {Organization}.{Product}.Services.{ServiceName}.Abstractions   # when consuming that standalone service's contracts
+
+{Organization}.{Product}.Data.csproj
+└── ProjectReference: {Organization}.{Product}.Models   # owns DbContext over the shared persistence entities
+
+{Organization}.{Product}.Migrations.csproj
+├── ProjectReference: {Organization}.{Product}.Data   # migrations, model snapshot, and design-time context construction
+└── ProjectReference: {Organization}.{Product}.Models   # only when migration source directly compiles against entity types
 ```
 
 A project declares a direct reference to every abstractions assembly whose types it compiles against, including
@@ -450,6 +499,14 @@ producer-to-consumer direction; reciprocal or transitive cycles are forbidden. W
 need mutually shared signature types, move those types to `{Organization}.{Product}.Abstractions` and have
 both contract projects reference that broader boundary instead. This explicit acyclic check keeps the
 dependency graph DAG-shaped and makes feature-flagged exclusions safe at runtime.
+
+The shared persistence graph is one-way: `Models` ← `Data` ← `Migrations`. `Models` never references
+`Data`, `Migrations`, a deployable runner, or a module/service implementation. A runtime runner may reference
+`Data` to compose the context but never references `Migrations`; design-time context creation and migration
+execution remain in the migrations project or deployment tooling. Every module, service, runner, or migration
+project declares a direct reference to each persistence assembly whose CLR types it compiles against; do not
+rely on `Data` to transitively expose `Models`. A capability using only its own private persistence does not
+create these three sibling projects.
 
 ## Example
 
@@ -500,18 +557,14 @@ src/
         └── NotificationPreferences/                # Email/push settings
 ```
 
-### Observability Drill-Down
+### Observability Scopes
 
-Dashboards cascade from broad to specific, enabling incident triage:
-
-| Level | Dashboard scope | Example | Owned by |
-|---|---|---|---|
-| App | All modules side by side | "Platform Overview" — module health matrix, error budget | SRE / on-call |
-| Module | All components in one domain | "RecipeManagement" — SLA status, cross-component event lag | Domain owner |
-| Component | All services in one sub-domain | "Authoring" — request volume by service, error rate breakdown | Team lead |
-| Service | One service's metrics | "RecipeEditor" — latency p50/p95/p99, active connections | Service developer |
-
-The pattern is a drill-down: app dashboard shows a red module → module dashboard shows which component → component dashboard shows which service → service dashboard shows the details.
+A useful dashboard may monitor a deployable runner, product/platform, module, component, or service. These are
+independent optional ownership scopes, not a mandatory cascade. Create only dashboards with concrete,
+non-duplicated operational questions and supported panels; one useful panel is enough. A broad dashboard may
+link to a narrower one when both independently add value, but an absent parent dashboard does not invalidate a
+child dashboard, and no scope receives an empty placeholder. Resolve physical placement from
+`solution-structure` and dashboard content/identity from the observability guidance.
 
 ### Abstractions/ Content
 

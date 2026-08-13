@@ -1,6 +1,23 @@
 # API Patterns
 
-Minimal API patterns using `Api/` folder with route group definition and separate endpoint files.
+Select an API adapter from the confirmed consumer boundary; `Api/` is not synonymous with one transport:
+
+| Consumer / interaction | Canonical adapter |
+|---|---|
+| In-process caller | Producer-owned `I{ServiceName}` contract; no HTTP loopback |
+| Synchronous caller in another deployment | Versioned Minimal API |
+| UI data and query client | OData controller and composed EDM |
+| Asynchronous caller in another deployment | Producer-owned message contract and messaging adapter |
+
+Minimal API and OData are first-class, deliberately different adapters. A service may select both for
+different consumers, but both remain thin and call the same `I{ServiceName}` business boundary. Never place
+business rules or direct persistence mutations in an endpoint or controller. Protocol authorization metadata
+may live on the adapter; the service still enforces mandatory domain and data-scope rules. The service owns
+business behavior and persistence interaction.
+
+## Versioned Minimal API Adapter (Cross-Deployment Machine API)
+
+Use the `Api/` folder with a route group definition and separate endpoint files.
 
 ## File Structure
 
@@ -16,7 +33,7 @@ Api/
 
 > **Error handling**: Unhandled exceptions flow to the centralized exception-handling middleware, which maps them to ProblemDetails responses. Endpoints catch only expected, actionable exceptions (for example, `{ServiceName}ValidationException` maps to validation ProblemDetails with HTTP 400) — never `catch (Exception)`.
 
-When CRUD API exposure is selected, generate `Create{ServiceName}Request` and
+When versioned Minimal API CRUD exposure is selected, generate `Create{ServiceName}Request` and
 `Update{ServiceName}Request` at the selected request-contract boundary, use the response contract from its
 selected response-contract boundary, and replace the neutral `I{ServiceName}.DoWorkAsync` placeholder with
 the operations used by these endpoints:
@@ -111,7 +128,7 @@ internal static class {ServiceName}Api
 ```
 
 `Map{ServiceName}Api` is assembly-internal so Host cannot bypass the owning service's feature and DI gate.
-Only `Extensions/StartupExtensions.Map{ServiceName}` calls this low-level mapper.
+Only `Extensions/StartupExtensions.Map{ServiceName}Service` calls this low-level mapper.
 
 ## Api/GetAllEndpoint.cs
 
@@ -355,13 +372,13 @@ internal partial class {ServiceName}JsonSerializerContext : JsonSerializerContex
 }
 ```
 
-When API exposure is selected, add this registration to `Add{ServiceName}`:
+When the versioned Minimal API adapter is selected, add this registration to `Add{ServiceName}Service`:
 
 ```csharp
 // StartupExtensions.cs import
 using {ServiceNamespace}.Serialization;
 
-// Inside Add{ServiceName}
+// Inside Add{ServiceName}Service
 services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(
         0,
@@ -381,8 +398,8 @@ app.MapConfiguredEndpoints();
 
 Use the matching registration and mapping cascade from
 [`modular-polylith.md`](modular-polylith.md#registration-chain). For a modular service, Host traverses
-Host → Module → Component → `Map{ServiceName}`. For a standalone service, Host traverses Host →
-`Map{ServiceName}` directly. Program calls only the Host-owned cascade; it never calls either service mapper.
+Host → Module → Component → `Map{ServiceName}Service`. For a standalone service, Host traverses Host →
+`Map{ServiceName}Service` directly. Program calls only the Host-owned cascade; it never calls either service mapper.
 The public service wrapper receives the captured route decision from that cascade and maps only after
 confirming `I{ServiceName}` is registered. It never re-reads live configuration. The low-level
 `Map{ServiceName}Api` method remains service-owned and internal.
@@ -545,12 +562,269 @@ public static class ExecuteEndpoint
 }
 ```
 
-## Required API verification
+## OData Controller Adapter (UI Data and Query Surface)
+
+Select OData when a UI needs a discoverable entity model and composable data/query behavior. ASP.NET Core
+OData routing is controller-based: generate one `{EntitySetName}Controller` per deliberately exposed entity
+set in the owning service's `Api/` folder and preserve the exact entity-set identity in the EDM, controller,
+route conventions, and tests. OData is not a second business implementation. Controllers translate the
+protocol and delegate writes and non-query behavior to `I{ServiceName}`; they do not inject `DbContext`, call
+`SaveChanges`, or implement domain decisions.
+
+### Required OData semantics
+
+During discovery, confirm and then preserve each selected semantic rather than generating generic CRUD:
+
+- `$metadata` describes every exposed entity set, complex type, navigation, function, action, key, and
+  concurrency token required by the UI contract.
+- Enable only the agreed query options (`$select`, `$filter`, `$orderby`, `$expand`, `$count`, and paging).
+  Apply `[EnableQuery]` only to actions intended to be composable, retain `IQueryable<T>` until the selected
+  provider translates it, and enforce query validation and finite limits.
+- Preserve every required cross-entity `$expand` path in the EDM and verify it against the backing query
+  provider. Do not materialize first and accidentally move an unbounded query into memory.
+- Configure both client-driven limits (`SetMaxTop`) and server-driven paging (`[EnableQuery(PageSize = ...)]`)
+  where selected. Verify the continuation/next-link behavior; `SetMaxTop` alone is not server paging.
+- Mark every selected optimistic-concurrency property as an EDM concurrency token. Mutations honor
+  `If-Match`, reject a stale ETag with the selected precondition response, and keep the EF/domain concurrency
+  rule aligned with the EDM rule.
+- When `$batch` is selected, pass a batch handler to `AddRouteComponents` and call `UseODataBatching` before
+  routing. Preserve batch quotas, transaction/change-set behavior, and partial-failure semantics defined by
+  the application; do not assume batching is enabled merely because OData is registered.
+- Preserve selected functions and actions in the owning EDM contribution and keep their side-effect semantics
+  honest: functions are query/read operations; commands with side effects are actions.
+
+### EDM ownership and composition
+
+Do not make Host the author of the data model. The boundary that owns an entity or behavior owns a complete,
+descriptively named `ODataConventionModelBuilder` contribution extension:
+
+- a selected shared `Data` project contributes shared persistence entity sets and concurrency metadata;
+- a module contributes module-owned entity sets, complex types, functions, and actions;
+- a component contributes component-owned model elements; and
+- a service may contribute service-private model elements when neither broader boundary owns them.
+
+Use complete contribution names: `Add{ModuleName}ModuleEdmContributions`,
+`Add{ComponentName}ComponentEdmContributions`, and `Add{ServiceName}ServiceEdmContributions`. As with DI
+registration, a module contribution calls its component contributions and a component contribution calls its
+service contributions; the runner invokes only the selected top-level module contributions rather than
+skipping directly to descendants. Generate a contribution method only where that boundary actually owns or
+aggregates OData model elements.
+
+Place module, component, and service contributions beside their owners as `Extensions/ODataExtensions.cs`.
+The selected shared `Data` project uses its structure-owned root `ODataExtensions.cs` file (omit it when no
+shared Data project owns entity sets):
+
+```csharp
+namespace {Organization}.{Product}.Data;
+
+using System;
+using Microsoft.OData.ModelBuilder;
+using {Organization}.{Product}.Models.{DatabaseName};
+
+public static class ODataExtensions
+{
+    public static ODataConventionModelBuilder Add{DatabaseName}EntitySets(
+        this ODataConventionModelBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        // Add only entity sets and concurrency metadata deliberately owned by the shared model.
+        builder.EntitySet<{EntityTypeName}>("{EntitySetName}");
+        return builder;
+    }
+}
+```
+
+Module, component, and service contribution files use the same complete extension shape, add only their
+confirmed model elements, and call the next level's selected contribution methods. When a component or
+service has an independent gate, its parent contribution accepts the explicitly named captured Boolean and
+calls that child contribution only when enabled. It never accepts the runner-owned `CapabilitySelection`
+type. `{EntityTypeName}` and `{EntitySetName}` are gathered per
+exposed entity set; substitute their actual CLR and EDM identities rather than copying the sample as a one-set
+implementation.
+
+The deployable runner is still composition-only: it creates one builder, invokes only the contributions from
+the capabilities selected in its immutable snapshot, builds one EDM for the selected OData route, and
+configures MVC/OData. Module-level selection may add or remove that module assembly as an MVC application
+part. Component/service selection cannot use application-part removal because those controllers share the
+module assembly: when a child OData gate exists, register a controller-feature convention at composition time
+from the same immutable snapshot so actions on a disabled child are not candidates. Never implement a child
+gate by returning 404 from an already-routable controller, and do not duplicate an entity set in multiple
+contributions.
+
+The runner may own this process-specific controller-selection adapter in
+`Configuration/CapabilityControllerFeatureProvider.cs`; it contains no business behavior:
+
+```csharp
+namespace {Organization}.{Product}.Host.Configuration;
+
+using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
+
+internal sealed class CapabilityControllerFeatureProvider(
+    IEnumerable<Type> disabledControllerTypes)
+    : IApplicationFeatureProvider<ControllerFeature>
+{
+    private readonly HashSet<Type> _disabledControllerTypes = new(disabledControllerTypes);
+
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+    {
+        for (var index = feature.Controllers.Count - 1; index >= 0; index--)
+        {
+            if (_disabledControllerTypes.Contains(feature.Controllers[index].AsType()))
+            {
+                feature.Controllers.RemoveAt(index);
+            }
+        }
+    }
+}
+```
+
+After `AddControllers()`, append that provider to the application-part manager using the exact controller
+types owned by independently disabled children. A controller type may be public for MVC discovery and Host
+composition without becoming a public application contract:
+
+```csharp
+var disabledODataControllers = new List<Type>();
+if (!capabilities.{ServiceName})
+{
+    disabledODataControllers.Add(typeof({EntitySetName}Controller));
+}
+
+mvcBuilder.ConfigureApplicationPartManager(parts =>
+    parts.FeatureProviders.Add(
+        new CapabilityControllerFeatureProvider(disabledODataControllers)));
+```
+
+List every controller owned by the disabled child. The matching module/component EDM contribution cascade
+receives the same captured Boolean and omits that child's entity sets, functions, actions, and complex types.
+
+```csharp
+var edmBuilder = new ODataConventionModelBuilder();
+edmBuilder.Add{DatabaseName}EntitySets();
+
+if (capabilities.{ModuleName})
+{
+    edmBuilder.Add{ModuleName}ModuleEdmContributions(
+        serviceNameEnabled: capabilities.{ServiceName});
+}
+
+builder.Services
+    .AddControllers()
+    .AddOData(options =>
+    {
+        options
+            .Select()
+            .Filter()
+            .OrderBy()
+            .Expand()
+            .Count()
+            .SkipToken()
+            .SetMaxTop({ODataMaximumTop})
+            .AddRouteComponents(
+                "odata",
+                edmBuilder.GetEdmModel(),
+                new DefaultODataBatchHandler()); // Include the handler only when $batch is selected.
+    });
+```
+
+The runner resolves each named Boolean from the same immutable `CapabilitySelection` used for DI and endpoint
+mapping, then passes those values through the owning module/component contribution cascade. This preserves the
+project-reference direction: a module never references the runner's selection type. Do not re-read
+configuration or create a second OData selection snapshot. `{DatabaseName}` comes from the selected shared
+persistence structure. `{ODataMaximumTop}` is the confirmed positive integer query limit gathered by the
+generator. Substitute both; they are not literal placeholders in generated code. Include only the query
+features and batch handler actually selected. If no shared `Data` project owns entity sets, omit its
+contribution instead of inventing one.
+
+OData controller mapping is deliberately controller-wide. After the gated registration and application-part
+selection are complete, the deployable runner calls `MapControllers()` exactly once. When batching is
+selected, it calls `UseODataBatching()` before routing. Do not generate `Map{ServiceName}Service`,
+`Map{ComponentName}Component`, or `Map{ModuleName}Module` merely for OData discovery, and never call
+`MapControllers()` from a module, component, or service. Those explicit `Map*` cascades exist only for
+descendants with explicitly mapped endpoints such as Minimal APIs.
+
+### OData serialization
+
+OData owns its payload format through the selected OData formatter and EDM. Do not force
+`Serialization/{ServiceName}JsonSerializerContext.cs`, `[JsonPropertyName]`, or System.Text.Json
+source-generation metadata solely for OData. Generate such a context only when the same contract also uses a
+selected System.Text.Json transport or the chosen serializer explicitly requires it. Preserve OData names and
+compatibility through the EDM and protocol-specific tests.
+
+### OData controller shape
+
+The exact operations come from the confirmed UI contract. This read branch illustrates the boundary without
+putting persistence in the controller:
+
+```csharp
+namespace {ServiceNamespace}.Api;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using {ServiceContractNamespace};
+
+public sealed class {EntitySetName}Controller : ODataController
+{
+    private readonly I{ServiceName} _service;
+
+    public {EntitySetName}Controller(I{ServiceName} service)
+    {
+        _service = service;
+    }
+
+    [EnableQuery(PageSize = {ODataPageSize})]
+    public IActionResult Get()
+    {
+        return Ok(_service.Query{EntitySetName}());
+    }
+}
+```
+
+Merge one entity-set-specific query operation into `I{ServiceName}` and `{ServiceName}Service` for every
+selected controller:
+
+```csharp
+IQueryable<{EntityTypeName}> Query{EntitySetName}();
+```
+
+The service—not the controller—constructs that queryable read surface and applies mandatory tenant,
+authorization-scope, soft-delete, or other non-negotiable restrictions before OData options are applied. The
+operation name remains unambiguous when one service owns several entity sets. Substitute the confirmed
+`{EntityTypeName}`, `{EntitySetName}`, and positive integer `{ODataPageSize}` values gathered by the generator.
+For create, update, patch, delete, action, and function operations, define explicit service methods and keep
+the controller's role to parsing OData input such as `If-Match` into the service operation's input. The
+service owns concurrency enforcement, patch-field policy, transactions, persistence mutation, and business
+rules.
+
+### Required OData verification
+
+- Snapshot or structurally verify `$metadata`, including entity sets, navigations, complex types,
+  functions/actions, keys, and concurrency annotations.
+- Verify every enabled query option, rejected non-enabled option, maximum `$top`, server page size, stable
+  ordering/continuation behavior, and representative nested `$expand` paths.
+- Verify controller/application-part gating: a disabled module contributes neither controllers nor
+  module-private EDM behavior; shared EDM elements remain only when their owning shared data boundary is
+  intentionally active.
+- Verify independently gated components/services contribute neither controller actions nor their private EDM
+  entity sets, functions, actions, or complex types; the same captured selection must drive both exclusions.
+- Verify successful and stale `If-Match` mutations, emitted/read ETags, and atomic persistence behavior.
+- When batch is selected, verify `$batch` routing, configured quotas, change-set transaction behavior,
+  independent-request behavior, and partial failures. Verify batching middleware precedes routing.
+- Verify controllers contain protocol translation only and every write/non-query operation delegates to
+  `I{ServiceName}`; test the service's behavior separately from the adapter.
+- Verify the selected OData formatter without requiring an unrelated System.Text.Json source-generation
+  context.
+
+## Required Minimal API verification
 
 - Prove a disabled module is absent from DI and the Host mapping cascade does not traverse it, even when a
   child service flag is true.
 - Prove a disabled standalone service is absent from DI and maps no routes.
-- Prove an enabled parent registers `I{ServiceName}` before the snapshot-gated `Map{ServiceName}` wrapper maps
+- Prove an enabled parent registers `I{ServiceName}` before the snapshot-gated `Map{ServiceName}Service` wrapper maps
   the versioned `/api/v1/{ServiceKebabName}` routes; deliberately mismatched composition must fail at startup
   before a route is added.
 - Verify validation failures use validation ProblemDetails and unexpected failures use centralized

@@ -29,6 +29,8 @@ Before generating, ask:
 2. **Title** - Diagram subject (e.g., "Service Flow for XYZ Feature")
 3. **Participant Groupings** - Which services belong together? (backend, messaging, external)
 4. **Classification** - Header label (e.g., "Confidential\nINTERNAL USE ONLY", "Public")
+5. **Interaction architecture** - Which API adapter/protocol and persistence interactions are selected by the
+   design or existing implementation?
 
 ## Template Structure
 
@@ -177,14 +179,21 @@ db --> wrk: <<recordSet>>
 ### HTTP Endpoints
 
 ```plantuml
-' OData (primary)
-wrk -> svc: <<createRecord>> \n""POST /odata/resource""
-wrk -> svc: <<updateRecord>> \n""PATCH /odata/resource(**{id}**)""
-wrk -> svc: <<query>> \n""GET /odata/resource?$top=1""
+' UI query/data example — use when OData is the selected adapter/protocol
+wrk -> svc: <<createRecord>> \n""POST /odata/{EntitySetName}""
+wrk -> svc: <<updateRecord>> \n""PATCH /odata/{EntitySetName}(**{id}**)""
+wrk -> svc: <<query>> \n""GET /odata/{EntitySetName}?$top=1""
 
-' REST
-wrk -> svc: <<request>> \n""POST /api/classify""
+' Cross-deployment machine API example — use when Minimal API is the selected adapter
+wrk -> svc: <<request>> \n""POST /api/v1/{ServiceKebabName}/{OperationKebabName}""
 ```
+
+Show only the interaction pattern selected by the architecture being documented. Represent a direct database
+interaction only when that participant actually owns it; API adapter selection and persistence access are
+independent architectural decisions. Substitute the actual entity-set, service, operation, and identifier
+values from the documented implementation; the braces above are diagram-authoring tokens, not literal routes.
+`{OperationKebabName}` is the kebab-case rendering of the selected semantic `{OperationName}` from the
+versioned Minimal API contract.
 
 ### Arrow Types
 
@@ -233,7 +242,8 @@ destroy component1  ' lifeline end
 
 1. Hex notes ALWAYS above sender, NEVER on receiver
 2. Control structure text MUST be readable (use appropriate `<color:>` tags)
-3. OData endpoints preferred over raw SQL calls
+3. Reflect the selected API adapter/protocol and actual persistence boundary; never substitute OData for a
+   direct database interaction, or raw SQL for an API call, merely as a diagram preference
 4. Use rnote spanning components for WHERE clauses
 5. Double `====` in hex: Parameters → Unique IDs → Fields
 6. Parameter values: `<color:#795548>`

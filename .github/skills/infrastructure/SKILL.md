@@ -80,25 +80,56 @@ See [templates/kubernetes.md](templates/kubernetes.md) for complete templates.
 
 Use the [canonical Kubernetes directory structure](../solution-structure/SKILL.md#canonical-kubernetes-directory-structure)
 before creating or moving a manifest. It alone owns the complete `/tools/Kubernetes/` tree. This skill supplies
-content for its shared `base` and for its literal
-`overlays/{integration,testing,staging,production}/{base,default,alternative}` directories; it does not add an
-environment-level or image-transform layer. `default` and `alternative` are selectable components layered
-over the environment's `base`, not shorter forms of the deployable process.
+content for each actual `base/{DeploymentName}/` and matching
+`overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/` pair. Create only deployments and environments
+the product really supports. Do not create empty environment directories, generic `default` or `alternative`
+roles, an environment-level kustomization, a repository/image-transform layer, or a root kustomization.
+
+Every deployment uses the same full form, including a repository with only one deployment. Its overlay
+`kustomization.yaml` composes `base/{DeploymentName}` and only the Deployment, Service, and ConfigMap patches
+that environment needs. CI edits and applies that selected overlay directly.
 
 ### Deployable identity and image tokens
 
-- `{DeployableProcessName}` is the full canonical deployable runner/project identity resolved from
-  `solution-structure`. It is a scaffold-time input, not a shortened service or application name.
-- `{DeployableProcessKebabName}` is the only derived identity token. Derive it once from
-  `{DeployableProcessName}` for Kubernetes DNS-label fields: lowercase the full identity, replace dots and
-  other non-alphanumeric runs with one hyphen, and trim leading/trailing hyphens. If that result exceeds
-  Kubernetes' 63-character label limit, take its first 54 characters, trim any trailing hyphen, then append a
-  hyphen and the first eight lowercase hexadecimal characters of the SHA-256 of the unshortened kebab value.
-  Committed manifests contain the resulting literal value.
+- `{DeployableProcessName}` is the complete canonical deployable runner/project identity resolved from
+  `solution-structure`; for example, `{Organization}.{Product}.Host`. It identifies the built process and must
+  never be shortened to `app`, `host`, or a product nickname.
+- `{DeploymentName}` is the complete identity of one Kubernetes deployment of that process. Use
+  `{DeployableProcessName}` when the process has one runtime role. When the same binary is deployed in multiple
+  roles, append the explicit role to the complete process identity, for example
+  `{Organization}.{Product}.Host.Api` and `{Organization}.{Product}.Host.Worker`. The overlay directory uses
+  this full scaffold-time value; never use positional names such as `default` or `alternative`.
+- `{DeploymentKebabName}` is the only Kubernetes resource-name rendering. Lowercase the complete
+  `{DeploymentName}`, replace dots and other non-alphanumeric runs with one hyphen, and trim leading/trailing
+  hyphens. If the result exceeds Kubernetes' 63-character label limit, take its first 54 characters, trim any
+  trailing hyphen, then append a hyphen and the first eight lowercase hexadecimal characters of the SHA-256
+  of the unshortened kebab value. Resolve it at scaffold time; committed manifests contain the literal.
+- `{KubernetesEnvironmentName}` is the selected semantic environment value: `Integration`, `Testing`,
+  `Staging`, or `Production`. `{KubernetesEnvironmentKebabName}` is its lowercase Kubernetes directory and
+  label rendering: `integration`, `testing`, `staging`, or `production`. Use this one derived value in every
+  overlay path, label, namespace suffix, and CI selection; do not introduce an environment alias.
 - `app-image:latest` is the deploy-time image placeholder. CI rewrites it with
   `kustomize edit set image "app-image:latest=<image>:<tag>"` in the selected
-  `/tools/Kubernetes/overlays/<selected-environment>/<selected-component>/kustomization.yaml`; there is no
-  separate image-transform layer. CI may set the namespace in that same selected component.
+  `/tools/Kubernetes/overlays/{KubernetesEnvironmentKebabName}/{DeploymentName}/kustomization.yaml`; there is no
+  separate image-transform layer. CI may set the namespace in that same selected deployment overlay.
+
+### Conditional manifest content
+
+- Keep each base `Deployment` and its `kustomization.yaml` complete and deployable. Add `service.yaml` only
+  when that deployment exposes a stable network Service; a worker-only deployment does not generate one.
+- Add `base/{DeploymentName}/configmap.yaml` only when the deployment has non-secret configuration to mount. Add an overlay ConfigMap
+  patch only when that deployment or environment changes those values. Never create an empty ConfigMap as a
+  structural placeholder.
+- Mount a Secret only when the workload consumes one. Secrets are externally supplied; never commit secret
+  values or put them in a ConfigMap.
+- Configure liveness and readiness probes when the corresponding endpoints exist. Add a startup probe when
+  initialization can delay readiness. A manifest must not probe an endpoint the process does not map.
+- Declare resource requests and limits for deployed workloads. Start from the environment defaults below,
+  then replace them with measured values when profiling supports the change.
+- Use the restricted security context by default. Relax only an incompatible setting, document why, and prefer
+  a writable volume over disabling `readOnlyRootFilesystem` for the whole container.
+- Add private-registry pull secrets, in-pod HTTPS ports, configuration mounts, node selectors, affinity,
+  tolerations, and workload-specific volumes only when the deployment actually requires them.
 
 ---
 
@@ -215,8 +246,8 @@ app.Lifetime.ApplicationStopping.Register(() =>
 
 | Path | Source | Purpose |
 |------|--------|---------|
-| `/app/configuration/secret` | Kubernetes Secret | Sensitive configuration |
-| `/app/configuration/configmap` | ConfigMap | Non-sensitive configuration |
+| `/app/configuration/secret` | Kubernetes Secret | Sensitive configuration, when used |
+| `/app/configuration/configmap` | ConfigMap | Non-sensitive configuration, when used |
 
 ### Configuration Loading
 
@@ -275,10 +306,10 @@ When reviewing infrastructure changes:
 - [ ] Health probes configured with appropriate timing
 - [ ] Resource requests and limits defined
 - [ ] Graceful shutdown period set
-- [ ] Secrets mounted from Kubernetes Secrets (not ConfigMaps)
-- [ ] Image pull secrets configured
-- [ ] The canonical integration, testing, staging, and production overlay components are present as required by `solution-structure`
-- [ ] The full deployable identity was resolved once and only DNS-label fields use its canonical kebab derivation
-- [ ] CI pins the image and namespace in the actual selected `default` or `alternative` component kustomization
+- [ ] Any sensitive configuration is mounted from a Kubernetes Secret, never a ConfigMap
+- [ ] Optional pull secrets, ports, probes, volumes, and ConfigMaps exist only when the workload uses them
+- [ ] Only supported environments and actual complete deployment identities have overlay leaves
+- [ ] The full process and deployment identities were resolved once; DNS-label fields use their canonical kebab renderings
+- [ ] CI pins the image and namespace in the actual selected deployment overlay
 - [ ] The change was exercised locally with the repository's applicable container/orchestration harness; use
       Docker Compose or Minikube when that is the repository's established local runtime
