@@ -35,6 +35,17 @@ Use `{Method}_{Scenario}_{Expected}` for test method names.
   implementation also requires options, cache, telemetry, or another prerequisite. Resolve every service under
   test during fixture startup so missing composition fails before test execution.
 
+## Application test boundary ownership
+
+- Use `WebApplicationFactory<TEntryPoint>` to exercise one ASP.NET Core deployable in-process, with every
+  test-only substitution at an external process or resource boundary made explicit.
+- Use `Aspire.Hosting.Testing` for closed-box E2E tests that exercise multiple processes or orchestrated
+  resources through their public boundaries.
+- Use both layers when both scopes exist, but assign every scenario to exactly one owning layer. A scenario
+  **MUST NOT** be duplicated between `WebApplicationFactory` and Aspire tests.
+- Put broad process-local behavior in `WebApplicationFactory` tests. Keep Aspire E2E coverage thin and limited
+  to critical cross-process or cross-resource paths.
+
 ## Options validation tests
 
 - Test property-level data annotations independently from cross-property or `IValidatableObject` invariants.
