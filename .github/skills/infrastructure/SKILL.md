@@ -143,18 +143,21 @@ For health check implementation and registration patterns, see the dotnet-servic
 app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 {
     Predicate = _ => false // Always healthy if process is running
-});
+}).AllowAnonymous();
 
 app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
-});
+}).AllowAnonymous();
 
 app.MapHealthChecks("/healthz/startup", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("startup")
-});
+}).AllowAnonymous();
 ```
+
+Probe endpoints are anonymous so orchestrators can call them without application credentials. Their responses
+must not expose secrets, dependency connection material, or other sensitive diagnostics.
 
 ---
 

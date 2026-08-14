@@ -45,6 +45,9 @@ Use `{Method}_{Scenario}_{Expected}` for test method names.
   **MUST NOT** be duplicated between `WebApplicationFactory` and Aspire tests.
 - Put broad process-local behavior in `WebApplicationFactory` tests. Keep Aspire E2E coverage thin and limited
   to critical cross-process or cross-resource paths.
+- Generic Host reachability and authentication WAF coverage follows
+  [`Deployable-process HTTP endpoints`](csharp.instructions.md#deployable-process-http-endpoints).
+  Do not move module or service behavior into a Host test merely to prove that the runner started.
 
 ## Options validation tests
 

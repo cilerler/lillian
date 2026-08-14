@@ -44,11 +44,27 @@ This file is the canonical authority for C# implementation conventions.
 
 ## APIs, time, money, and serialization
 
-- Document HTTP APIs with OpenAPI and version their routes.
+- Document business and service HTTP APIs with OpenAPI and version their routes.
 - Use idempotency keys for applicable POST operations.
 - Use `DateTimeOffset` at application boundaries and UTC for storage.
 - Use `decimal` for money and culture-invariant parsing.
 - Use System.Text.Json source generation, stable serialized field names, and backward-compatible DTO changes.
+
+### Deployable-process HTTP endpoints
+
+The application Host owns these deliberately unversioned process endpoints. They are thin runner behavior,
+not a service, module, domain capability, or substitute for operational health probes:
+
+- `GET /ping` allows anonymous access and returns HTTP 200 with content type `text/plain` and the exact body
+  `pong`. Keep it dependency-free and domain-free. Add future response behavior only when it is deliberately
+  part of this process contract; do not turn it into a readiness probe.
+- `GET /me` requires the real application authentication and authorization pipeline. An unauthenticated call
+  returns HTTP 401. An authenticated call returns a deliberately bounded current-user projection with stable
+  identity fields such as `subject` and `name`; never return the access token or an unfiltered claim dump.
+
+The Gateway may proxy these Host endpoints but does not duplicate their implementation. Operational liveness,
+readiness, and startup behavior remains owned by the
+[`Health Probes`](../skills/infrastructure/SKILL.md#health-probes) contract.
 
 For observability implementation, see
 [`OpenTelemetry Patterns`](../skills/observability/SKILL.md#opentelemetry-patterns).

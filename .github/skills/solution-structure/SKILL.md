@@ -172,6 +172,10 @@ Full examples:
 > its process responsibility includes intrinsic edge adapters as defined below. No runner owns reusable
 > application contracts, domain/business logic, or data access.
 
+The application Host's process-level HTTP utility behavior comes from
+[`Deployable-process HTTP endpoints`](../../instructions/csharp.instructions.md#deployable-process-http-endpoints).
+Those endpoints remain runner composition behavior and do not make Host an application or domain layer.
+
 ### Canonical deployable-runner identities
 
 Runner roles are genuinely different process responsibilities, but every runner keeps the complete
@@ -462,6 +466,9 @@ global.json                                 // Pinned .NET SDK selection
     /Configuration
       - CapabilitySelection.cs                         // Immutable registration/mapping gate snapshot
       - CapabilityControllerFeatureProvider.cs         // Optional process-specific OData controller gate
+    /Api                                               // Thin process-level HTTP endpoints
+      - PingEndpoint.cs                                // Anonymous application reachability contract
+      - MeEndpoint.cs                                  // Authenticated current-user projection
     /Extensions
       - StartupExtensions.cs                           // Registers modules/services selected for this process
     /Components                                       // Optional process-specific Blazor/UI shell; thin presentation only
