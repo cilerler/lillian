@@ -126,6 +126,10 @@ identity tokens. This skill owns the content and deployment behavior of those st
 | Readiness | `/healthz/ready` | Can accept traffic | `ready` |
 | Startup | `/healthz/startup` | Initialization complete | `startup` |
 
+These are the canonical probe paths for new integrations. An existing aggregate or compatibility endpoint may
+remain when current consumers depend on it; it is not a fourth canonical probe. Do not remove, rename, or
+retarget an established alias without an explicit compatibility and consumer-migration decision.
+
 ### Probe Configuration
 
 | Probe | initialDelay | period | timeout | failureThreshold |
