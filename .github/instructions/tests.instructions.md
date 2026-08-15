@@ -45,9 +45,15 @@ Use `{Method}_{Scenario}_{Expected}` for test method names.
   **MUST NOT** be duplicated between `WebApplicationFactory` and Aspire tests.
 - Put broad process-local behavior in `WebApplicationFactory` tests. Keep Aspire E2E coverage thin and limited
   to critical cross-process or cross-resource paths.
-- Generic Host reachability and authentication WAF coverage follows
-  [`Deployable-process HTTP endpoints`](csharp.instructions.md#deployable-process-http-endpoints).
-  Do not move module or service behavior into a Host test merely to prove that the runner started.
+- Apply the endpoint scenarios defined by
+  [`Deployable-process HTTP endpoints`](csharp.instructions.md#deployable-process-http-endpoints) without
+  restating their response contracts. When a Gateway proxies those Host endpoints, Aspire E2E owns anonymous
+  `/ping` and unauthenticated `/me` traversal through the public Gateway, while Host
+  `WebApplicationFactory` owns authenticated `/me` projection. The WAF substitution **MUST** replace only the
+  external identity-provider token-validation boundary while retaining the real application authentication and
+  authorization pipeline. Do not duplicate those scenarios across layers. When no Gateway participates, assign
+  each applicable scenario once at the nearest public boundary.
+- Do not move module or service behavior into a Host test merely to prove that the runner started.
 
 ## Options validation tests
 
