@@ -307,6 +307,8 @@ await _distributedCache.SetStringAsync(key, value, options, cancellationToken);
 
 ## IDistributedLock
 
+[Ruya.Services.DistributedLock](https://github.com/cilerler/ruya/blob/main/src/Ruya.Services.DistributedLock/README.md) is the reference implementation for the callback-based API below. The callback receives a token that is cancelled if heartbeat renewal loses ownership; generated code must pass that token through every operation in the critical section.
+
 ```csharp
 // Field
 private readonly IDistributedLock _distributedLock;
@@ -321,13 +323,26 @@ _distributedLock = distributedLock;
 typeof(IDistributedLock)
 
 // Usage
-await using var lockHandle = await _distributedLock.AcquireAsync(
-    $"lock:{resourceId}", 
-    timeout: TimeSpan.FromSeconds(30),
+LockResult lockResult = await _distributedLock.AcquireAndExecuteWithLockAsync(
+    lockCancellationToken => ProcessResourceAsync(resourceId, lockCancellationToken),
+    $"lock:{resourceId}",
+    lockValue: null,
+    options: new LockOptions
+    {
+        CustomExpiry = TimeSpan.FromSeconds(30),
+        HeartbeatInterval = TimeSpan.FromSeconds(10)
+    },
     cancellationToken);
+
+if (!lockResult.IsSuccess)
+{
+    // Apply the service's confirmed retry or failure policy.
+}
 ```
 
 ## ICloudStorageFactory
+
+[Ruya.Services.CloudStorage](https://github.com/cilerler/ruya/blob/main/src/Ruya.Services.CloudStorage.Abstractions/README.md) is the reference implementation for the provider-keyed API below.
 
 ```csharp
 // Field
@@ -343,8 +358,13 @@ _cloudStorageFactory = cloudStorageFactory;
 typeof(ICloudStorageFactory)
 
 // Usage
-var storage = _cloudStorageFactory.Create(_settings.StorageProvider);
-await storage.UploadAsync(stream, path, cancellationToken);
+ICloudFileService storage = _cloudStorageFactory.GetService(_settings.StorageProvider);
+CloudFileMetadata metadata = await storage.UploadStreamAsync(
+    bucketName,
+    stream,
+    path,
+    contentType,
+    cancellationToken);
 ```
 
 ## IMessageQueueFactory

@@ -306,12 +306,21 @@ For traces, an activity processor should also stamp each span with `deployment.e
       "Name": "{DeployableProcessName}",
       "Version": "1.0.0"
     },
+    "Sampling": {
+      "Type": "ParentBased",
+      "ParentBasedRootSampler": "TraceIdRatio",
+      "Ratio": 0.1
+    },
     "Http": {
-      "RecordException": true,
-      "CaptureBody": true
+      "CaptureRequestBody": false,
+      "CaptureResponseBody": false,
+      "MaxBodySizeBytes": 32768,
+      "AllowedContentTypes": [ "application/json" ]
     },
     "Sql": {
-      "CaptureParameters": true
+      "RecordException": true,
+      "CaptureCommandText": true,
+      "SanitizeStatements": true
     }
   },
   "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317"
@@ -329,6 +338,11 @@ second namespace token or substitute the namespace of an internal modular servic
 The value shown for `OTEL_EXPORTER_OTLP_ENDPOINT` is the documented default and a reminder of the expected OTLP gRPC endpoint shape. Deployments whose collector uses a different hostname or port must override it.
 
 ### Middleware (Optional)
+
+Use body capture only for a concrete diagnostic requirement. It stays disabled by default, must be bounded,
+and may emit only valid JSON after configured redaction; invalid, oversized, and non-JSON bodies are represented
+by marker values rather than raw content. Do not use synchronous instrumentation callbacks to read asynchronous
+request or response bodies.
 
 ```csharp
 app.UseRouting();
