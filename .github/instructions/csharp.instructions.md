@@ -6,6 +6,24 @@ applyTo: "**/*.cs"
 
 This file is the canonical authority for C# implementation conventions.
 
+## Symbol-derived string identifiers
+
+When a string identifier is intentionally the exact name of an available C# symbol, derive it from that symbol
+instead of duplicating the name in a string literal.
+
+- Use `nameof(...)` when the required value is a simple type, member, parameter, namespace segment, or other
+  symbol name.
+- Compose qualified or otherwise composite identifiers from those symbol-derived parts instead of repeating
+  available symbol segments as text.
+- Use `typeof(T).Namespace`, `typeof(T).FullName`, or `typeof(T).Assembly` metadata when that metadata is the
+  actual identity contract and a `nameof(...)` composition cannot express it correctly. Handle nullable metadata
+  explicitly.
+- Apply this rule to configuration identifiers, `EventId` names, logging identifiers, and `ActivitySource` or
+  `Meter` identities when those values are defined by CLR symbols.
+- Keep an explicit literal when the value is deliberately independent of CLR naming, such as a route, protocol
+  value, serialized field, semantic telemetry name, or deployment-owned resource identity. Document a
+  non-obvious exception.
+
 ## Concurrency and async
 
 - Assume multithreaded execution.
